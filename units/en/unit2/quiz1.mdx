@@ -1,0 +1,149 @@
+# Quiz 1: MCP Fundamentals
+
+Test your understanding of MCP architecture and core concepts. Choose the best answer for each question.
+
+## Question 1: The M×N Integration Problem
+
+<Question
+  choices={[
+    {
+      text: "Without MCP, you need M agents × N tools separate integrations",
+      explain: "Correct! This is the integration complexity MCP solves. With MCP, you build N servers once, and any agent can use them.",
+      correct: true
+    },
+    {
+      text: "Agents can only integrate with one tool at a time",
+      explain: "Not the core issue. The M×N problem is about integration complexity across all agent-tool pairs.",
+      correct: false
+    },
+    {
+      text: "MCP requires a different implementation for every agent",
+      explain: "Opposite! MCP is universal—one server works with all MCP-compatible agents.",
+      correct: false
+    },
+    {
+      text: "Modern APIs eliminate the need for MCP",
+      explain: "APIs are part of the solution, but they don't standardize how agents discover and use capabilities. MCP does.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 2: Hosts, Clients, and Servers
+
+<Question
+  choices={[
+    {
+      text: "Host runs the agent, Client requests capabilities, Server provides them",
+      explain: "Perfect! The Host is the agent's environment (Claude Code, Codex, OpenCode). The Client is the protocol handler requesting from servers. The Server exposes capabilities.",
+      correct: true
+    },
+    {
+      text: "Server runs the agent, Client provides data, Host makes requests",
+      explain: "Incorrect roles. The Host runs the agent, not the Server.",
+      correct: false
+    },
+    {
+      text: "Client runs the agent, Server requests capabilities, Host provides them",
+      explain: "No. The Client requests, not the Server. The Host runs the agent.",
+      correct: false
+    },
+    {
+      text: "All three are interchangeable roles",
+      explain: "Each has a distinct responsibility. They're not interchangeable.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 3: Tools vs. Resources vs. Prompts
+
+<Question
+  choices={[
+    {
+      text: "Tools: callable functions | Resources: read-only data | Prompts: instruction templates",
+      explain: "Exactly! Tools perform actions or queries. Resources provide static data. Prompts guide agent behavior.",
+      correct: true
+    },
+    {
+      text: "Tools: static data | Resources: callable functions | Prompts: configurations",
+      explain: "Backwards. Tools are callable, Resources are data.",
+      correct: false
+    },
+    {
+      text: "All three are the same capability type",
+      explain: "No. Each serves a different purpose and has different characteristics.",
+      correct: false
+    },
+    {
+      text: "Resources and Prompts don't exist in modern MCP",
+      explain: "False. All three capability types are core MCP features.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 4: MCP Transport Mechanisms
+
+<Question
+  choices={[
+    {
+      text: "Stdio for local servers, Streamable HTTP for remote servers",
+      explain: "Correct! Stdio uses subprocess communication (fast, simple, local). Streamable HTTP is the current standard for remote connections, replacing the older HTTP+SSE transport.",
+      correct: true
+    },
+    {
+      text: "HTTP+SSE is the only remote transport option",
+      explain: "HTTP+SSE is now deprecated. Streamable HTTP is the current standard remote transport in the MCP specification.",
+      correct: false
+    },
+    {
+      text: "Always use Streamable HTTP—it's more powerful",
+      explain: "Streamable HTTP has network overhead. Use stdio for local development, which is simpler and faster.",
+      correct: false
+    },
+    {
+      text: "Transport is irrelevant; MCP hides it from agents",
+      explain: "Transport matters for deployment and performance, though the JSON-RPC protocol is the same regardless of transport.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 5: Skills vs. MCP
+
+<Question
+  choices={[
+    {
+      text: "Skills: static context. MCP: dynamic, real-time access to tools and data",
+      explain: "Perfect! Skills are pre-written and bundled. MCP servers provide live access that changes without agent restart.",
+      correct: true
+    },
+    {
+      text: "MCP is just a newer name for Skills",
+      explain: "No. They're complementary but distinct. Skills teach how to think; MCP provides what to access.",
+      correct: false
+    },
+    {
+      text: "MCP is only for APIs; Skills are for everything else",
+      explain: "MCP covers tools, resources, and prompts. Skills are for context teaching.",
+      correct: false
+    },
+    {
+      text: "You have to choose between Skills and MCP",
+      explain: "You use both together. Skills provide knowledge; MCP provides tools.",
+      correct: false
+    }
+  ]}
+/>
+
+## Summary
+
+How did you do? If you got 4-5 questions correct, you have a solid grasp of MCP fundamentals. If you struggled, review "Key Concepts and Architecture" before moving to the next section.
+
+Key concepts to remember:
+- **MCP solves the M×N problem** with universal server standard
+- **Three roles**: Host (agent location), Client (protocol handler), Server (capability provider)
+- **Three capabilities**: Tools (callable), Resources (data), Prompts (instructions)
+- **Two transports**: Stdio (local development), Streamable HTTP (remote/production)
+- **Skills + MCP work together** to teach and enable agent capabilities

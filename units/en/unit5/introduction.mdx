@@ -1,0 +1,99 @@
+# Introduction to Nano Harness
+
+Commercial agent frameworks like Claude Code are powerful but opaque. You rely on their implementation details, trust their security model, and hope they're doing the right thing under the hood.
+
+What if you built your own agent? Not a toy—a real, functional agent that handles the core agentic loop in about 220 lines of Python?
+
+That's nano_harness: a minimal agent framework designed for learning. It demonstrates all the essential concepts: system prompts, the agentic loop, tool execution, message history, error recovery, and sandboxing.
+
+## Why Build Your Own Agent?
+
+Building your own agent teaches you exactly how agents work — you see every decision about when to retry, how to parse output, and how to handle errors, with no black boxes. It gives you control to customize the agentic loop, implement custom security policies, and swap models freely (GPT, Claude, local LLMs via HF router). It provides transparency so you can debug by reading code rather than guessing, and audit for security and compliance. And it supports research — you can test ideas without waiting for commercial updates, run experiments with different parameters, and understand agent behavior from first principles.
+
+## What is Nano Harness?
+
+Nano Harness is a ~220-line Python agent framework that:
+
+1. **Takes a task** — "Inspect the workspace and provide a summary"
+2. **Calls an LLM** — Uses OpenAI-compatible API (defaults to HF router)
+3. **Parses Python code** — Model outputs executable Python code
+4. **Executes safely** — In a sandboxed environment with allowed tools
+5. **Observes results** — stdout, stderr, exceptions
+6. **Updates context** — Feeds observations back to the model
+7. **Repeats** — Until the task is done or we hit step limit
+
+## Key Features
+
+### Code-First Agent
+Instead of returning JSON or text, the model outputs Python code:
+
+```python
+# Model says:
+list_dir('.')  # Lists workspace
+models = read_file('models.txt')  # Reads file
+print(f"Found {len(models)} models")
+final_answer("Summary: " + str(len(models)) + " models")
+```
+
+The agent parses and executes it.
+
+### Constrained Tools
+Four tools available:
+
+| Tool | What It Does | Security |
+|------|-------------|----------|
+| `list_dir(path)` | List directory contents | Path confinement |
+| `read_file(path, max_chars)` | Read file | Path confinement, size limit |
+| `write_file(path, content)` | Create/modify file | Path confinement, disabled by default |
+| `exec_cmd(args)` | Run shell command | Allowlist (only: ls, cat, pwd, echo, head, tail, wc, rg) |
+
+### Sandboxed Execution
+- All file access confined to workspace
+- Commands restricted to allowlist
+- Output size limited to prevent context overflow
+- Timeouts prevent hanging
+
+### Multi-Model Support
+Uses OpenAI-compatible API, defaults to Hugging Face router:
+
+```bash
+# Use any HF model
+export NANO_MODEL="zai-org/GLM-5"
+
+# Or GPT
+export OPENAI_BASE_URL="https://api.openai.com/v1"
+export NANO_MODEL="gpt-4"
+
+# Or local Ollama
+export OPENAI_BASE_URL="http://localhost:11434/v1"
+export NANO_MODEL="llama2"
+```
+
+## The Agentic Loop
+
+Nano Harness implements the core loop:
+
+```
+1. Call LLM with task + message history
+2. Parse model output as Python code
+3. Execute Python (with tools available)
+4. Collect stdout, stderr, exceptions
+5. Append observation to message history
+6. Repeat (max 50 steps)
+7. Done when: final_answer() called or max steps reached
+```
+
+Each step is explicit and understandable.
+
+## What You'll Learn
+
+In this unit, you'll step through the agent loop code to understand each part, learn how tools are designed and sandboxed for safe execution, extend the harness with new tools like web_fetch and HF Hub search, and run the agent with different LLMs to see how behavior varies across models.
+
+## Prerequisites
+
+- Basic Python
+- Familiarity with HTTP APIs
+- Understanding of safety and sandboxing concepts
+- Either HF token (for HF router) or OpenAI API key
+
+Let's dive into the internals.

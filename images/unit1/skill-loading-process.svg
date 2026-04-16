@@ -1,0 +1,65 @@
+<svg viewBox="0 0 520 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
+      .step { font-size: 12px; fill: #c9d1d9; }
+      .detail { font-size: 10px; fill: #8b949e; }
+      .num { font-size: 11px; fill: #7d8590; }
+      line { stroke: #30363d; stroke-width: 1; }
+      polygon { fill: #30363d; }
+    </style>
+  </defs>
+
+  <rect width="520" height="420" fill="#0d1117"/>
+
+  <!-- Step 1 -->
+  <text x="20" y="30" class="num">1</text>
+  <text x="40" y="30" class="step">User starts conversation</text>
+  <text x="40" y="46" class="detail">"Help me publish a dataset"</text>
+
+  <line x1="20" y1="56" x2="20" y2="76"/>
+  <polygon points="20,80 16,72 24,72"/>
+
+  <!-- Step 2 -->
+  <text x="20" y="95" class="num">2</text>
+  <text x="40" y="95" class="step">Agent scans skills</text>
+  <text x="40" y="111" class="detail">project dir / personal / installed</text>
+
+  <line x1="20" y1="121" x2="20" y2="141"/>
+  <polygon points="20,145 16,137 24,137"/>
+
+  <!-- Step 3 -->
+  <text x="20" y="160" class="num">3</text>
+  <text x="40" y="160" class="step">Read metadata</text>
+  <text x="40" y="176" class="detail">name + description only (~100 tokens)</text>
+
+  <line x1="20" y1="186" x2="20" y2="206"/>
+  <polygon points="20,210 16,202 24,202"/>
+
+  <!-- Step 4 -->
+  <text x="20" y="225" class="num">4</text>
+  <text x="40" y="225" class="step">Activate skill</text>
+  <text x="40" y="241" class="detail">full SKILL.md loaded into context</text>
+
+  <line x1="20" y1="251" x2="20" y2="271"/>
+  <polygon points="20,275 16,267 24,267"/>
+
+  <!-- Step 5 -->
+  <text x="20" y="290" class="num">5</text>
+  <text x="40" y="290" class="step">Execute</text>
+  <text x="40" y="306" class="detail">follow instructions, run scripts</text>
+
+  <line x1="20" y1="316" x2="20" y2="336"/>
+  <polygon points="20,340 16,332 24,332"/>
+
+  <!-- Step 6 -->
+  <text x="20" y="355" class="num">6</text>
+  <text x="40" y="355" class="step">Feedback loop</text>
+  <text x="40" y="371" class="detail">issues reported, skill updated, all benefit</text>
+
+  <!-- Feedback loop-back line -->
+  <line x1="20" y1="381" x2="20" y2="395"/>
+  <line x1="20" y1="395" x2="480" y2="395"/>
+  <line x1="480" y1="395" x2="480" y2="25"/>
+  <line x1="480" y1="25" x2="30" y2="25"/>
+</svg>

@@ -1,0 +1,410 @@
+# Using Plugins
+
+Now that you've built a plugin, let's learn how to install and use them, both your own and plugins from others. The process differs slightly across platforms, but the core idea is identical: **discover → install → configure → use**.
+
+## Installing Plugins
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+### Installing Plugins in Claude Code
+
+Claude Code's documented install surface is the `/plugin` browser. Use `claude --plugin-dir` when you're developing a local plugin.
+
+#### From the Plugin Browser
+
+Open the plugin browser inside Claude Code:
+
+```
+/plugin
+```
+
+Browse the **Discover** tab, install the plugin, then start a new session or use it in the current one.
+
+#### From a Local Directory
+
+For local development, use the CLI flag:
+
+```bash
+claude --plugin-dir ./text-processor-plugin
+```
+
+Claude Code:
+1. Reads `.claude-plugin/plugin.json`
+2. Loads skills from `skills/` directory
+3. Starts MCP servers from `.mcp.json` config
+4. Makes any bundled plugin components available under the plugin namespace
+
+### Using Plugin Skills
+
+Once loaded, skills are available conversationally or via explicit syntax:
+
+```
+Analyze the reading level of this paragraph
+```
+
+Or invoke with namespace:
+
+```bash
+/text-processor-plugin:check-reading-level
+```
+
+### Managing Installed Plugins
+
+Use `/plugin` to review installed plugins, enable or disable them, and uninstall them. For local development, reload edited plugin files with:
+
+```
+/reload-plugins
+```
+
+If you're using `--plugin-dir`, stop passing that flag when you no longer want the local plugin loaded.
+
+### Configuring Plugins
+
+Set environment variables required by plugins:
+
+```bash
+export HF_TOKEN="hf_xxxxx"
+```
+
+Claude Code reads these from your shell environment when the plugin loads.
+
+</hfoption>
+<hfoption id="Codex">
+
+### Installing Plugins in Codex
+
+Codex plugins are installed either from the built-in plugin browser or from marketplace configuration files for local and unpublished plugins.
+
+#### From the Plugin Browser
+
+Open the plugin directory in the CLI:
+
+```
+/plugins
+```
+
+Search or browse, install the plugin, then start a new thread to use it.
+
+#### From the Personal Marketplace
+
+Copy the plugin into your personal plugin directory:
+
+```bash
+mkdir -p ~/.codex/plugins
+cp -R /local/path/to/text-processor-plugin ~/.codex/plugins/text-processor-plugin
+```
+
+Then edit or create `~/.agents/plugins/marketplace.json`:
+
+```json
+{
+  "name": "local-example-plugins",
+  "interface": {
+    "displayName": "Local Example Plugins"
+  },
+  "plugins": [
+    {
+      "name": "text-processor-plugin",
+      "source": {
+        "source": "local",
+        "path": "./.codex/plugins/text-processor-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
+```
+
+Codex:
+1. Reads `.codex-plugin/plugin.json`
+2. Loads skills from the `skills/` directory
+3. Sets up optional MCP servers from `.mcp.json`
+4. Caches plugin to `~/.codex/plugins/cache/$MARKETPLACE/$PLUGIN/$VERSION/`
+
+#### From a Repo Marketplace
+
+Create `$REPO_ROOT/.agents/plugins/marketplace.json` in the repo that should expose the plugin list, keep the plugin folders at repo-relative paths such as `./plugins/text-processor-plugin`, then restart Codex and open `/plugins` in that repo.
+
+### Using Plugins in Codex
+
+#### Conversational Invocation
+
+Ask Codex naturally. It routes your request to the right plugin:
+
+```
+What's the reading level of this README?
+```
+
+Codex:
+1. Recognizes this is a text analysis task
+2. Looks up the text-processor plugin's skills
+3. Invokes the appropriate skill with parameters
+4. Returns results
+
+#### Using Plugin Skills
+
+Codex plugins include skills for specific workflows. Type `@` to choose a plugin or bundled skill explicitly:
+
+```
+@text-processor-plugin
+```
+
+Or conversationally:
+
+```
+Extract the top keywords from this document
+```
+
+### Managing Plugins
+
+Open the plugin browser to inspect installed plugins:
+
+```
+/plugins
+```
+
+If you edit `~/.agents/plugins/marketplace.json`, update the local plugin directory, or change a plugin's `enabled` flag in `~/.codex/config.toml`, restart Codex before testing again.
+
+### Configuring Codex Plugins
+
+Set environment variables in your shell:
+
+```bash
+export HF_TOKEN="hf_xxxxx"
+```
+
+Codex reads environment variables when loading plugins. Optional MCP servers are started if `.mcp.json` includes `mcpServers` entries.
+
+</hfoption>
+<hfoption id="OpenCode">
+
+### Installing Plugins in OpenCode
+
+OpenCode plugins are JavaScript/TypeScript modules loaded at startup. Skills and MCP configuration are related extension surfaces, but they are not the plugin itself.
+
+#### From Local Files
+
+Place `.js` or `.ts` plugin files in one of the documented plugin directories:
+
+```text
+.opencode/plugins/              # project-level plugins
+~/.config/opencode/plugins/     # global plugins
+```
+
+Files in those directories are loaded automatically when OpenCode starts.
+
+#### From npm
+
+Add plugin package names to `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@your-org/text-processor-plugin"]
+}
+```
+
+OpenCode installs npm plugins with Bun at startup.
+
+#### What Stays Separate
+
+If you also want reusable skills or the Unit 2 Python MCP server, configure those separately:
+
+```bash
+mkdir -p .opencode/skills/analyze-text
+# Add SKILL.md to the directory
+```
+
+OpenCode discovers skills automatically from `.opencode/skills/`, `.claude/skills/`, and `.agents/skills/`.
+
+Configure MCP servers separately in `opencode.json`:
+
+```json
+{
+  "mcp": {
+    "text-processor": {
+      "type": "remote",
+      "url": "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+#### Using Plugin Behavior
+
+Once OpenCode starts, the plugin's hooks or custom tools are available:
+
+```
+Summarize this file and note any text-analysis follow-up that would help.
+```
+
+If the plugin adds hooks, they run as those events fire. If it adds custom tools, OpenCode can call them alongside built-in tools.
+
+#### Managing Plugins
+
+```bash
+rm .opencode/plugins/text-processor-plugin.ts
+```
+
+Or remove the package name from the `plugin` array in `opencode.json`. Restart OpenCode after editing plugin files or the `plugin` list so startup picks up the new state.
+
+</hfoption>
+</hfoptions>
+
+## Common Plugin Tasks
+
+### Configuring API Keys
+
+All platforms need API keys for plugins that call external services.
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+Set environment variables in your shell before running Claude Code:
+
+```bash
+export HF_TOKEN="hf_xxxxx"
+export OPENAI_API_KEY="sk_xxxxx"
+```
+
+Claude Code reads these when plugins load. No in-app configuration needed.
+  
+</hfoption>
+<hfoption id="Codex">
+
+Set environment variables in your shell:
+
+```bash
+export HF_TOKEN="hf_xxxxx"
+export GITHUB_TOKEN="ghp_xxxxx"
+```
+
+</hfoption>
+<hfoption id="OpenCode">
+
+Set environment variables in your shell:
+
+```bash
+export HF_TOKEN="hf_xxxxx"
+export GITHUB_TOKEN="ghp_xxxxx"
+```
+
+Or configure them directly in `opencode.json` under each MCP server's `environment` block.
+
+</hfoption>
+</hfoptions>
+
+### Troubleshooting Plugin Issues
+
+**Plugin not loading?**
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+Check if `.claude-plugin/plugin.json` exists and is valid:
+
+```bash
+cat ./my-plugin/.claude-plugin/plugin.json
+```
+
+Ensure skills directory exists:
+
+```bash
+ls -la ./my-plugin/skills/
+```
+
+Reload plugins:
+
+```
+/reload-plugins
+```
+
+</hfoption>
+<hfoption id="Codex">
+
+Check if plugin is in marketplace and properly formatted:
+
+```bash
+cat ~/.agents/plugins/marketplace.json
+```
+
+Verify `.codex-plugin/plugin.json` has correct `skills` and `mcpServers` paths:
+
+```json
+{
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}
+```
+
+Open the plugin browser:
+
+```
+/plugins
+```
+
+If you changed marketplace or config files, restart Codex before checking again.
+
+</hfoption>
+<hfoption id="OpenCode">
+
+Check that the plugin file is in a supported directory:
+
+```bash
+ls -la .opencode/plugins/
+```
+
+If you use npm-installed plugins, verify the `plugin` array in `opencode.json`. If the plugin imports external packages, make sure `.opencode/package.json` contains those dependencies. Then restart OpenCode so startup reloads the plugin.
+
+</hfoption>
+</hfoptions>
+
+**Bundled or adjacent MCP server not starting?**
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+Verify `.mcp.json` has valid JSON with `mcpServers` key:
+
+```bash
+cat ./.mcp.json
+```
+
+Reload plugins after editing:
+
+```
+/reload-plugins
+```
+
+</hfoption>
+<hfoption id="Codex">
+
+MCP servers are optional in Codex plugins. If they aren't starting, check:
+- `.codex-plugin/plugin.json` points `mcpServers` at `./.mcp.json`
+- `.mcp.json` contains a valid `mcpServers` object
+- the marketplace entry points to the right plugin directory
+
+</hfoption>
+<hfoption id="OpenCode">
+
+Plugins and MCP servers are separate in OpenCode. If the separately configured server isn't starting, debug the MCP config:
+
+```bash
+opencode mcp debug text-processor
+```
+
+Check that `opencode.json` is valid JSON and MCP server commands point to existing files.
+
+</hfoption>
+</hfoptions>
+
+## Key Takeaways
+
+For Claude Code, use `/plugin` for discovery and management, `claude --plugin-dir ./my-plugin` for local development, and `/reload-plugins` after edits. For Codex, use `/plugins` plus repo or personal marketplace files, with `.mcp.json` at the plugin root and a restart after local marketplace changes. For OpenCode, native plugins are JS/TS modules in `.opencode/plugins/` or npm packages in the `plugin` array, while skills and MCP servers stay separate from the plugin surface.
+
+Next, test your knowledge with a final quiz on plugin distribution and best practices.

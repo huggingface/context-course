@@ -1,0 +1,485 @@
+# Gradio MCP Integration: Web UIs + MCP Servers
+
+Gradio makes it incredibly easy to create MCP servers that also have a beautiful web interface. With one line of code, you get both a user-friendly UI and an MCP server that agents can use.
+
+## What Is Gradio MCP Integration?
+
+Gradio is a Python library for building web UIs for machine learning models and data processing tools. When you enable MCP support, Gradio:
+
+1. Converts your functions into MCP tools automatically
+2. Creates a web interface for humans
+3. Exposes an MCP endpoint for agents
+4. Handles JSON-RPC serialization and protocol details
+
+You get two interfaces for the price of one: humans use the web UI, agents use MCP.
+
+## Creating a Simple Gradio MCP App
+
+Here's the minimal example:
+
+```python
+import gradio as gr
+
+def greet(name: str) -> str:
+    """Greet someone by name.
+    
+    Args:
+        name: The person's name
+    
+    Returns:
+        A greeting message
+    """
+    return f"Hello, {name}!"
+
+demo = gr.Interface(
+    fn=greet,
+    inputs="text",
+    outputs="text",
+    title="Greeting App"
+)
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+When you run this:
+- Web interface appears at `http://localhost:7860`
+- MCP server starts at `http://localhost:7860/gradio_api/mcp/`
+- Agents can immediately call the `greet` tool
+
+> [!TIP]
+> Type hints and docstrings are essential! Gradio uses them to generate the MCP tool schema. Always include:
+> - Type hints on all parameters and return value
+> - Docstring with description
+> - "Args:" section documenting each parameter
+> - "Returns:" section describing output
+
+## Building a Multi-Tool Example
+
+Let's create a practical app with multiple tools:
+
+```python
+import gradio as gr
+import json
+
+def analyze_text(text: str) -> str:
+    """Analyze text and compute statistics.
+    
+    Args:
+        text: The input text to analyze
+    
+    Returns:
+        JSON with analysis results
+    """
+    words = text.split()
+    chars = len(text)
+    
+    return json.dumps({
+        "words": len(words),
+        "characters": chars,
+        "average_word_length": round(chars / len(words), 2) if words else 0
+    })
+
+def reverse_text(text: str) -> str:
+    """Reverse a string.
+    
+    Args:
+        text: Input text
+    
+    Returns:
+        The reversed text
+    """
+    return text[::-1]
+
+def count_vowels(text: str) -> int:
+    """Count vowels in text.
+    
+    Args:
+        text: Input text
+    
+    Returns:
+        Number of vowels
+    """
+    vowels = "aeiouAEIOU"
+    return sum(1 for char in text if char in vowels)
+
+# Create interface
+with gr.Blocks(title="Text Tools") as demo:
+    gr.Markdown("# Text Processing Tools")
+    
+    with gr.Tab("Analyze Text"):
+        text_input1 = gr.Textbox(label="Enter text", lines=5)
+        analysis_output = gr.Textbox(label="Analysis", lines=5)
+        gr.Button("Analyze").click(analyze_text, text_input1, analysis_output)
+    
+    with gr.Tab("Reverse Text"):
+        text_input2 = gr.Textbox(label="Enter text", lines=5)
+        reverse_output = gr.Textbox(label="Reversed", lines=5)
+        gr.Button("Reverse").click(reverse_text, text_input2, reverse_output)
+    
+    with gr.Tab("Count Vowels"):
+        text_input3 = gr.Textbox(label="Enter text")
+        vowel_output = gr.Number(label="Vowel Count")
+        gr.Button("Count").click(count_vowels, text_input3, vowel_output)
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+Each function becomes a separate MCP tool that agents can call independently.
+
+## Installing Gradio with MCP Support
+
+Install Gradio with MCP support:
+
+```bash
+pip install "gradio[mcp]"
+```
+
+Create a `requirements.txt` for deployment:
+
+```
+gradio>=4.0.0
+```
+
+## Advanced Gradio MCP Features
+
+### Exposing Resources with @gr.mcp.resource()
+
+Define read-only data resources that agents can access:
+
+```python
+import gradio as gr
+
+@gr.mcp.resource("config://api")
+def api_documentation() -> str:
+    """API documentation and endpoints."""
+    return """# API Documentation
+    
+## Endpoints
+- GET /users - List all users
+- POST /users - Create user
+- GET /users/{id} - Get specific user
+
+## Authentication
+Use Bearer token in Authorization header.
+"""
+
+# Your tools and UI here...
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+Resources are identified by URIs and provide static or semi-static content that agents can read.
+
+### MCP-Only Functions with @gr.api()
+
+Define tools that exist only in MCP, not in the web UI:
+
+```python
+import gradio as gr
+
+@gr.api()
+def query_database(sql: str) -> str:
+    """Execute a database query (MCP only).
+    
+    Args:
+        sql: SQL query string
+    
+    Returns:
+        Query results
+    """
+    # Only accessible via MCP, not web UI
+    return "Query results..."
+
+@gr.api()
+def send_email(to: str, subject: str, body: str) -> str:
+    """Send an email (MCP only).
+    
+    Args:
+        to: Recipient email
+        subject: Email subject
+        body: Email body
+    
+    Returns:
+        Confirmation message
+    """
+    # Only accessible via MCP
+    return f"Email sent to {to}"
+
+# Regular UI components here...
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+### Authentication for Secured MCP Servers
+
+Protect your MCP endpoint with authentication:
+
+```python
+import gradio as gr
+
+def authenticate(username: str, password: str) -> bool:
+    """Custom authentication logic."""
+    return username == "admin" and password == "secret"
+
+with gr.Blocks(auth=authenticate) as demo:
+    gr.Markdown("# Protected MCP Server")
+    
+    def secret_operation() -> str:
+        """Secret operation (authenticated access only)."""
+        return "This is secret data"
+    
+    gr.Button("Get Secret").click(secret_operation, outputs="text")
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+Only authenticated clients can access the MCP endpoint.
+
+## Deploying to Hugging Face Spaces
+
+Hugging Face Spaces provides free hosting for Gradio apps with MCP support.
+
+### Step 1: Create a New Space
+
+1. Go to [huggingface.co/new-space](https://huggingface.co/new-space)
+2. Name your Space
+3. Select "Gradio" as the SDK
+4. Create the Space
+
+### Step 2: Upload Your Code
+
+Create `app.py` in your Space:
+
+```python
+import gradio as gr
+
+def my_tool(input_text: str) -> str:
+    """Do something with input.
+    
+    Args:
+        input_text: The input
+    
+    Returns:
+        The result
+    """
+    return f"Processed: {input_text}"
+
+demo = gr.Interface(fn=my_tool, inputs="text", outputs="text")
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+### Step 3: Add Dependencies (if needed)
+
+Create `requirements.txt`:
+
+```
+gradio>=4.0.0
+requests>=2.28.0
+```
+
+Your Space automatically installs dependencies on each build.
+
+### Step 4: Access Your MCP Server
+
+Once deployed, your MCP server is available at:
+
+```
+https://[your-username]-[space-name].hf.space/gradio_api/mcp/
+```
+
+Configure your agent to use it:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+claude mcp add --transport http --scope user my-tools https://yourname-space-name.hf.space/gradio_api/mcp/
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```toml
+# In ~/.codex/config.toml
+[mcp_servers.my-tools]
+url = "https://yourname-space-name.hf.space/gradio_api/mcp/"
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```json
+{
+  "mcp": {
+    "my-tools": {
+      "type": "remote",
+      "url": "https://yourname-space-name.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+</hfoption>
+
+</hfoptions>
+
+> [!TIP]
+> Your Space's MCP endpoint uses Streamable HTTP transport. Configuration changes take effect immediately without agent restarts.
+
+## Function Signature Best Practices
+
+For optimal MCP tool generation, follow these patterns:
+
+```python
+# Good: Clear types, docstring, Args/Returns sections
+def process_data(data: str, format: str = "json") -> str:
+    """Process data in specified format.
+    
+    Args:
+        data: Input data string
+        format: Output format (default: json)
+    
+    Returns:
+        Processed data as string
+    """
+    return data
+
+# Good: Handles multiple parameters
+def calculate(a: float, b: float, operation: str) -> float:
+    """Perform mathematical operation.
+    
+    Args:
+        a: First number
+        b: Second number
+        operation: Operation (add, subtract, multiply, divide)
+    
+    Returns:
+        Result of operation
+    """
+    if operation == "add":
+        return a + b
+    # ... more operations
+
+# Avoid: Missing type hints
+def bad_function(data):  # No return type!
+    return data
+
+# Avoid: No docstring
+def also_bad(text: str) -> str:
+    return text.upper()
+
+# Avoid: Complex types without clarification
+def confusing(data: dict) -> list:  # What's in the dict/list?
+    return []
+```
+
+Best practices:
+- Use simple, clear type hints (str, int, float, bool, list)
+- Include docstring with description
+- Document every parameter in Args section
+- Describe the return value in Returns section
+- Return strings, numbers, or lists (simple types)
+- Return JSON strings for complex data
+
+## Troubleshooting Gradio MCP
+
+### Functions Not Appearing as MCP Tools
+
+Check your function signatures:
+- Must have type hints on all parameters
+- Must have a docstring
+- Docstring must include "Args:" section
+- Return type must be specified
+
+```python
+# This will work
+def my_tool(text: str) -> str:
+    """Process text.
+    
+    Args:
+        text: Input text
+    
+    Returns:
+        Processed text
+    """
+    return text.upper()
+
+# This won't work (no docstring)
+def bad_tool(text: str) -> str:
+    return text.upper()
+```
+
+### MCP Endpoint Not Responding
+
+If the endpoint doesn't work:
+1. Check Space is running (not in error state)
+2. Use correct endpoint: `https://user-space.hf.space/gradio_api/mcp/`
+3. Test with curl: `curl https://user-space.hf.space/gradio_api/mcp/`
+4. Check Space logs for errors
+
+### Type Mismatch Errors
+
+Agents may fail if return types don't match specification:
+
+```python
+# Correct: Returns string as declared
+def correct(x: int) -> str:
+    return str(x * 2)
+
+# Wrong: Declares string but returns int
+def wrong(x: int) -> str:
+    return x * 2  # Returns int, not string!
+```
+
+Always ensure actual return types match declared types.
+
+## Performance Tips for Production Spaces
+
+1. **Keep functions fast** — Agents timeout after ~60 seconds
+2. **Validate inputs** — Check data size before processing
+3. **Handle errors gracefully** — Return error messages instead of crashing
+4. **Cache expensive results** — Avoid redundant computation
+5. **Monitor resource usage** — Spaces have limited CPU/memory
+
+```python
+import time
+
+def analyze(data: str) -> str:
+    """Analyze large datasets.
+    
+    Args:
+        data: Input data
+    
+    Returns:
+        Analysis results
+    """
+    # Reject too-large inputs
+    if len(data) > 1_000_000:
+        return "Error: Input too large (max 1MB)"
+    
+    # Show progress
+    start = time.time()
+    # ... do analysis
+    elapsed = time.time() - start
+    
+    if elapsed > 30:
+        return "Error: Processing took too long"
+    
+    return "Results..."
+```
+
+## Key Takeaways
+
+Adding `mcp_server=True` to your Gradio launch gives you both a web UI and an MCP server automatically. Type hints and docstrings are essential — Gradio uses them to generate MCP tool schemas. Deploy to Hugging Face Spaces for free, public MCP servers where each function becomes a tool agents can call. Use `@gr.api()` for MCP-only functions and `@gr.mcp.resource()` for read-only data. Keep tools fast and handle errors gracefully to ensure reliable agent interactions.
+
+Next, let's build a complete hands-on project from start to finish.

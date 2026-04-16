@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
+      .header { font-size: 12px; fill: #c9d1d9; font-weight: bold; }
+      .label { font-size: 11px; fill: #c9d1d9; }
+    </style>
+  </defs>
+
+  <rect width="600" height="200" fill="#0d1117"/>
+
+  <text x="30" y="24" class="header">stdio</text>
+  <line x1="30" y1="30" x2="90" y2="30" stroke="#30363d" stroke-width="1" />
+  <text x="30" y="50" class="label">Local processes</text>
+  <text x="30" y="66" class="label">stdin/stdout pipes</text>
+  <text x="30" y="82" class="label">No auth needed</text>
+  <text x="30" y="98" class="label">Same machine</text>
+
+  <line x1="300" y1="10" x2="300" y2="180" stroke="#30363d" stroke-width="1" />
+
+  <text x="330" y="24" class="header">Streamable HTTP</text>
+  <line x1="330" y1="30" x2="470" y2="30" stroke="#30363d" stroke-width="1" />
+  <text x="330" y="50" class="label">Remote servers</text>
+  <text x="330" y="66" class="label">HTTP requests</text>
+  <text x="330" y="82" class="label">Auth supported</text>
+  <text x="330" y="98" class="label">Cross-network</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg viewBox="0 0 650 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; font-size: 14px; fill: #c9d1d9; }
+      .text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; font-size: 12px; fill: #c9d1d9; }
+      .line { stroke: #30363d; stroke-width: 1; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="650" height="280" fill="#0d1117"/>
+
+  <!-- Left column title -->
+  <text x="20" y="30" class="title">Claude Code</text>
+  <line x1="20" y1="38" x2="120" y2="38" class="line"/>
+
+  <!-- Right column title -->
+  <text x="340" y="30" class="title">Codex</text>
+  <line x1="340" y1="38" x2="420" y2="38" class="line"/>
+
+  <!-- Vertical divider -->
+  <line x1="325" y1="50" x2="325" y2="270" class="line"/>
+
+  <!-- Left column content -->
+  <text x="20" y="65" class="text">my-plugin/</text>
+  <text x="30" y="85" class="text">├── .claude-plugin/</text>
+  <text x="45" y="105" class="text">│   └── plugin.json</text>
+  <text x="30" y="125" class="text">├── skills/</text>
+  <text x="45" y="145" class="text">│   └── my-skill/</text>
+  <text x="60" y="165" class="text">│       └── SKILL.md</text>
+  <text x="30" y="185" class="text">├── .mcp.json</text>
+  <text x="30" y="205" class="text">└── README.md</text>
+
+  <!-- Right column content -->
+  <text x="340" y="65" class="text">my-plugin/</text>
+  <text x="350" y="85" class="text">├── .codex-plugin/</text>
+  <text x="365" y="105" class="text">│   └── plugin.json</text>
+  <text x="350" y="125" class="text">├── skills/</text>
+  <text x="365" y="145" class="text">│   └── my-skill/</text>
+  <text x="380" y="165" class="text">│       └── SKILL.md</text>
+  <text x="350" y="185" class="text">├── .mcp.json</text>
+  <text x="350" y="205" class="text">└── README.md</text>
+</svg>

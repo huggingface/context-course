@@ -1,0 +1,154 @@
+# What Are Agent Skills?
+
+In this lesson, we'll explore skills in depth: what they are, why they matter, and how they solve real problems for code agent users.
+
+## The Problem: Agents Without Context
+
+Let's start with a concrete failure case. Imagine you're working on the Hugging Face Hub and ask your code agent:
+
+> "Train a model on this dataset and publish it when done."
+
+Without proper context, your agent might:
+
+**Failure 1: Authentication Issues**
+```
+Error: Unable to authenticate with Hugging Face Hub
+Hint: Set your HF_TOKEN environment variable
+```   
+The agent knows authentication is needed but not how to set it up in *your* specific environment.
+
+**Failure 2: Incorrect Configuration**
+```
+ValueError: Dataset format not recognized
+Expected: parquet, csv, or arrow
+Got: .npy files
+```
+The agent doesn't know your dataset format or how to convert it.
+
+**Failure 3: Missing Best Practices**
+```
+Model uploaded successfully!
+```
+The model is uploaded, but missing:
+- README documentation
+- Model card with training details
+- License information
+- Example usage code
+
+These failures happen because the agent lacks **domain knowledge**. It knows how to write code, but not the specifics of your workflow, tools, or best practices.
+
+## Skills: The Solution
+
+A **skill** packages domain-specific knowledge in a structured, reusable format that agents can automatically discover and use.
+
+A skill can include:
+- Metadata that helps agents decide when to use it
+- Step-by-step instructions for completing a task
+- Helper scripts that automate common operations
+- Links to documentation and example code
+- Troubleshooting guides for common problems
+
+For example, with a dataset publishing skill, the same agent would:
+1. Automatically discover the skill when you mention publishing
+2. Load authentication instructions and validation scripts
+3. Reference best practices without being prompted
+4. Execute the task reliably and completely
+
+## From Prompts to Portable Knowledge
+
+### The Traditional Approach: Prompt-Based Context
+
+You might try to solve this with a detailed prompt:
+
+```
+You are a Hugging Face expert. When publishing models:
+1. First authenticate with HF_TOKEN environment variable
+2. Validate that the dataset is in CSV format with columns: 
+   - text (string)
+   - label (categorical)
+   - split (train/val/test)
+3. Train using these hyperparameters:
+   - learning_rate: 2e-5
+   - batch_size: 32
+   - epochs: 3
+4. After training, create model card with:
+   - Training data description
+   - Model performance metrics
+   - Example usage
+   - License (CC-BY-4.0)
+5. Push to hub with correct organization...
+
+[This continues for hundreds of lines]
+```
+
+**Problems with prompt-based context:**
+- Not reusable: You paste this into every conversation
+- Not shareable: Team members must copy-paste independently
+- Not maintainable: Update once, update everywhere
+- Not discoverable: How do other teams find this knowledge?
+- Not composable: Hard to combine multiple domains
+- Not versioned: No way to track changes or roll back
+
+### The Skill-Based Approach: Structured, Portable Knowledge
+
+A **skill** packages the same knowledge in a structured and reusable format. It follows a consistent directory structure and contains a single SKILL.md file with metadata and instructions.
+
+In short, the structure is:
+
+1. **File structure**: skill-name/ directory with SKILL.md, scripts/, references/
+2. **Metadata format**: YAML frontmatter with name, description, triggers, etc.
+3. **Discovery protocol**: How agents find and load skills automatically
+4. **Compatibility guarantees**: What agents need to implement to support skills
+
+Think of it like a package.json for skills. It ensures compatibility and enables tooling.
+
+The directory structure is:
+
+```
+skill-name/
+├── SKILL.md              # Required: metadata + instructions
+```
+
+The SKILL.md file contains the metadata like name, description, and version, and the instructions:
+
+```markdown
+---
+name: "huggingface-model-publishing"
+description: "Publish models to Hugging Face Hub. Use when uploading models, creating model cards, or managing model versions."
+---
+# Hugging Face Model Publishing Skill
+
+...
+```
+
+**Benefits of skill-based context:**
+- Reusable across projects and teams
+- Shareable through local repos, team registries, and version control
+- Maintainable in one place with version control
+- Composable with other skills
+- Automatically loaded by compliant agents
+- Follows an open standard (Agent Skills Spec)
+
+## Progressive Disclosure: How Agents Load Skills
+
+Here's how the skill loading process works in practice:
+
+![Skill loading process from user request through discovery, activation, execution, and feedback](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit1/skill-loading-process.svg)
+
+This happens automatically and transparently—users don't need to manually activate skills. Agents discover and load them based on task context.
+
+## Real-World Examples of Skills
+
+Here are skills commonly shared in the Hugging Face skills repository:
+
+| Skill | Description |
+|-------|-------------|
+| [Scientific Paper Review](https://github.com/huggingface/skills/tree/main/skills/huggingface-papers) | Discovers scientific papers |
+| [model-training](https://github.com/huggingface/skills/tree/main/skills/huggingface-llm-trainer) | Train models using TRL and popular frameworks |
+| [gradio-ui-builder](https://github.com/huggingface/skills/tree/main/skills/huggingface-gradio) | Build interactive web interfaces for models |
+
+Each skill encodes domain expertise that would take hours to learn from documentation, and makes agents immediately expert in that domain.
+
+## Next Steps
+
+Now that you understand what skills are, let's examine how they're structured. In the next lesson, we'll look at the anatomy of a skill file — the SKILL.md format — and then move on to building your first skill and using it in a real project.

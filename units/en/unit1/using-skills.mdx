@@ -1,0 +1,257 @@
+# Using Skills with Code Agents
+
+Now that you understand what skills are, let's learn how to actually use them with your code agent. The Agent Skills Specification ensures the SKILL.md format works across agents — the main difference is where each agent looks for skills and how you install them.
+
+## Where Skills Live
+
+Each agent discovers skills from known directories. You create a skill by placing a `SKILL.md` file in a named subdirectory at one of these paths:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+| Scope | Path | Applies to |
+|-------|------|------------|
+| Personal | `~/.claude/skills/<name>/SKILL.md` | All your projects |
+| Project | `.claude/skills/<name>/SKILL.md` | This project only |
+
+Claude Code also watches for changes — adding, editing, or removing a skill takes effect within the current session without restarting.
+
+</hfoption>
+
+<hfoption id="Codex">
+
+| Scope | Path |
+|-------|------|
+| Repository | `.agents/skills/<name>/SKILL.md` |
+| User | `~/.agents/skills/<name>/SKILL.md` |
+| Admin | `/etc/codex/skills/<name>/SKILL.md` |
+
+Codex scans these locations in priority order (repository first, then user, then admin).
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+**Project-local paths:**
+- `.opencode/skills/<name>/SKILL.md`
+- `.claude/skills/<name>/SKILL.md`
+- `.agents/skills/<name>/SKILL.md`
+
+**Global paths:**
+- `~/.config/opencode/skills/<name>/SKILL.md`
+- `~/.claude/skills/<name>/SKILL.md`
+- `~/.agents/skills/<name>/SKILL.md`
+
+OpenCode walks up from the current working directory to the git root, checking each level.
+
+</hfoption>
+
+</hfoptions>
+
+## Installing a Skill
+
+We'll use the [hf-cli](https://github.com/huggingface/skills) skill as a real-world example. It gives agents access to the Hugging Face Hub CLI for downloading, uploading, and managing repositories.
+
+The Hugging Face CLI also provides a cross-agent skill installer. Use it when you want the same skill in more than one agent or want a shared install flow:
+
+```bash
+# Project-local install
+hf skills add
+
+# Agent-specific symlinks
+hf skills add --claude
+hf skills add --codex --opencode --global
+```
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+Skills are distributed as plugins via marketplaces. Add a marketplace, then install the plugin containing the skill:
+
+```bash
+# Add the Hugging Face skills marketplace
+claude plugin marketplace add huggingface/skills
+
+# Install the hf-cli plugin
+claude plugin install hf-cli@huggingface-skills
+
+# Confirm it is installed
+claude plugin list
+```
+
+Plugin skills are namespaced (e.g., `/huggingface-skills:hf-cli`) to prevent conflicts. Browse available plugins in the marketplace UI or with the `claude plugin` CLI.
+
+</hfoption>
+
+<hfoption id="Codex">
+
+Use the built-in skill installer for curated skills:
+
+```text
+$skill-installer hf-cli
+```
+
+Or, you can install the entire Hugging Face plugin:
+
+```text
+/plugins
+```
+
+Then select 'Hugging Face' and click 'Install'.
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+Create the skill directory in any supported location and add a `SKILL.md` file:
+
+```bash
+hf skills add
+```
+
+This will create the skill directory and add the `SKILL.md` file in `.agents/skills/hf-cli/SKILL.md`.
+
+OpenCode discovers it automatically.
+
+You can control which skills agents may use via `opencode.json`:
+
+```json
+{
+  "permission": {
+    "skill": {
+      "*": "allow",
+      "experimental-*": "ask"
+    }
+  }
+}
+```
+
+</hfoption>
+
+</hfoptions>
+
+## Invoking Skills
+
+Once installed, skills activate in two ways: implicitly (the agent matches your request to a skill's description) or explicitly (you invoke a skill by name).
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+# Implicit — Claude matches your request to the skill description
+"Download the latest version of meta-llama/Llama-4-Scout-17B-16E"
+
+# Explicit — invoke by name
+/hf-cli
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```bash
+# Implicit — Codex selects based on task matching
+codex "Upload my model to the Hub"
+
+# Explicit — mention by name
+$hf-cli
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+Agents invoke skills via the native `skill` tool by passing the skill name. OpenCode matches tasks to skills automatically based on the description in frontmatter.
+
+</hfoption>
+
+</hfoptions>
+
+## Troubleshooting Skills
+
+### Skill Doesn't Activate
+
+**Problem**: Skill is installed but the agent doesn't use it.
+
+Check that the `description` field includes keywords matching your request, use terms that align with the skill's stated purpose, or invoke the skill explicitly by name. A description like "Hugging Face Hub CLI for downloading, uploading, and managing repositories" activates on requests mentioning "upload," "download," or "Hugging Face," but a vague request like "push my files somewhere" may not match.
+
+## Did Your Skill Fire?
+
+The fastest way to debug a new skill is to test activation pressure directly:
+
+1. Ask for the skill with an obvious prompt that should match its description.
+2. Ask again with a vaguer prompt that a real user might write.
+3. If only the first prompt works, tighten the `description` until both prompts reliably activate the skill.
+
+For Codex, this is exactly where `$skill-creator` helps. Feed it the skill, the prompt that failed to activate, and the behavior you wanted so it can sharpen the description without rewriting the whole skill.
+
+### Skill Not Found
+
+**Problem**: Agent can't locate the skill.
+
+Verify the skill is in the correct directory for your agent:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+ls .claude/skills/hf-cli/SKILL.md
+```
+
+Or check installed plugins with:
+
+```bash
+claude plugin list
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```bash
+ls .agents/skills/hf-cli/SKILL.md
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```bash
+ls .opencode/skills/hf-cli/SKILL.md
+```
+
+</hfoption>
+
+</hfoptions>
+
+### Skill Conflicts
+
+**Problem**: Multiple skills have overlapping functionality.
+
+Make each skill's `description` field specific enough that the agent can distinguish between them. If two skills cover related tasks (e.g., validation and publishing), give each a clear scope in its description.
+
+## Best Practices
+
+Organize skills by domain — keep related skills together so agents can discover related functionality easily:
+
+```bash
+.claude/skills/
+├── hf-cli/
+│   └── SKILL.md
+├── dataset-validation/
+│   └── SKILL.md
+├── model-training/
+│   └── SKILL.md
+└── model-evaluation/
+    └── SKILL.md
+```
+
+Keep each skill focused on one task. If a SKILL.md exceeds 500 lines, split it into multiple skills or move reference material to supporting files in the same directory.
+
+## Next Steps
+
+You now know how to install and use skills across Claude Code, Codex, and OpenCode. Ready to build your first skill? Let's move to the next lesson.

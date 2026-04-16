@@ -1,0 +1,113 @@
+# Quiz 2: Multi-Agent Workflows
+
+Test your ability to design and implement multi-agent workflows.
+
+<Question
+  choices={[
+    {
+      text: "Always spawn as many subagents as possible for maximum parallelism",
+      explain: "More subagents means more token usage, latency, and coordination overhead. Use subagents selectively."
+    },
+    {
+      text: "Use subagents when tasks are independent and parallelizable, and the overhead is justified by the task complexity",
+      explain: "Correct! Subagent workflows consume more tokens than single-agent runs. Only use them when the parallelism benefit outweighs the overhead.",
+      correct: true
+    },
+    {
+      text: "Subagents are only for research tasks; never use for implementation",
+      explain: "False. Worker subagents can implement fixes, write code, and make changes. Codex even has a built-in 'worker' agent type for this."
+    },
+    {
+      text: "Subagents should always share the same context window as the parent",
+      explain: "Subagents run as isolated instances with their own context. They communicate results back to the parent, not share context directly."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Subagents can directly access the parent agent's memory and variables",
+      explain: "False. Subagents are isolated. They receive context from the parent via their task description and report results back."
+    },
+    {
+      text: "Pass small context in the task description; for large data, write to a file and reference the path",
+      explain: "Correct! Subagents can't access parent memory. Use task descriptions for small context and files for larger data.",
+      correct: true
+    },
+    {
+      text: "Use global variables that all subagents can read",
+      explain: "Subagents are separate instances. Global variables don't cross agent boundaries."
+    },
+    {
+      text: "There's no way to share data between parent and subagent",
+      explain: "False. The parent passes context in the task description, and subagents report results back. File system can also be used."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "If a subagent fails, the entire workflow always fails",
+      explain: "Not necessarily. Good design handles failures gracefully — retry, skip, or use partial results."
+    },
+    {
+      text: "Design for failure: use timeouts, handle partial results, and have fallback strategies",
+      explain: "Correct! Subagents can timeout, produce errors, or return unexpected results. Robust workflows handle these cases.",
+      correct: true
+    },
+    {
+      text: "Assume all subagents will succeed; don't add error handling since it's just overhead",
+      explain: "Risky. Network issues, token limits, and unexpected errors are common in multi-agent workflows."
+    },
+    {
+      text: "If a subagent fails, immediately spawn 5 more to retry the same task",
+      explain: "Wasteful. Diagnose the failure first, then retry selectively. Brute-force retries waste tokens."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Claude Code: use /agent spawn. Codex: use codex-agent spawn. They're identical.",
+      explain: "Neither command exists. Claude Code uses conversational invocation; Codex uses natural language requests to spawn agents."
+    },
+    {
+      text: "Claude Code: conversational invocation + custom agents in .claude/agents/. Codex: natural language requests + custom agents as TOML files in .codex/agents/.",
+      explain: "Correct! Both platforms use natural language to trigger subagent creation, but configure custom agents differently — Claude Code with markdown files, Codex with TOML files.",
+      correct: true
+    },
+    {
+      text: "Claude Code doesn't support subagents. Only Codex does.",
+      explain: "False. Claude Code has robust subagent support via the Agent tool, conversational invocation, and custom agents."
+    },
+    {
+      text: "Both platforms use the exact same subagent API and configuration format",
+      explain: "No. Claude Code uses markdown-based agent definitions; Codex uses TOML. The invocation style is conversational for both but with different capabilities."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Codex has three built-in agent types: default (general), worker (implementation), and explorer (read-heavy codebase exploration)",
+      explain: "Correct! These three built-in types cover the most common subagent use cases without requiring custom agent definitions.",
+      correct: true
+    },
+    {
+      text: "Codex has no built-in agent types; you must always define custom agents",
+      explain: "False. Codex ships with default, worker, and explorer agents that can be used immediately."
+    },
+    {
+      text: "Codex only supports one agent at a time; there's no parallelism",
+      explain: "False. Codex supports up to max_threads (default 6) concurrent agent threads."
+    },
+    {
+      text: "Codex subagents require a separate codex-agent binary to manage",
+      explain: "False. Subagents are managed through Codex itself — use /agent to switch between threads, or ask Codex in natural language."
+    }
+  ]}
+/>

@@ -1,0 +1,572 @@
+# Building Your First Skill
+
+In this hands-on lesson, we'll create a real skill from scratch. You'll build a skill that helps agents work with Hugging Face datasets, then test it with your code agent.
+
+By the end of this lesson, you'll have a working skill that follows the Agent Skills Specification and runs locally with your agent.
+
+## Project Overview
+
+We're building a **Hugging Face Dataset Validation Skill** that validates dataset format and schema, checks for common data quality issues, generates a validation report, and provides remediation suggestions. This is a practical skill that any agent could use when working with datasets.
+
+## Step 1: Create the Skill Directory Structure
+
+Let's set up a skill repository following the Agent Skills Specification:
+
+```bash
+# Create a directory for your skill
+mkdir hf-dataset-validation
+cd hf-dataset-validation
+
+# Create the directory structure per the specification
+mkdir -p scripts references assets
+
+# Create the main files
+touch SKILL.md .gitignore requirements.txt
+```
+
+Your directory now looks like:
+
+```
+hf-dataset-validation/
+├── SKILL.md              # Main skill file (required)
+├── requirements.txt      # Python dependencies
+├── .gitignore           # Git ignore rules
+├── scripts/             # Optional: helper scripts
+│   ├── validate_dataset.py
+│   └── generate_report.py
+├── references/          # Optional: documentation
+│   └── examples.md
+└── assets/              # Optional: templates
+    └── validation-template.txt
+```
+
+## Step 2: Write the SKILL.md File
+
+Create your main skill file with proper frontmatter and instructions:
+
+````markdown
+---
+name: "hf-dataset-validation"
+description: "Validate Hugging Face datasets for schema, format, and data quality issues. Use when checking datasets before publishing, training, or sharing."
+license: "MIT"
+compatibility: "Python 3.8+, requires pandas and datasets"
+metadata:
+  author: "your-username"
+  version: "1.0.0"
+  created: "2026-04-13"
+---
+
+# Dataset Validation Skill
+
+## Overview
+
+This skill teaches agents how to validate Hugging Face datasets for:
+- **Schema validation**: Correct columns and data types
+- **Data quality**: Missing values, duplicates, outliers
+- **Format compliance**: CSV, Parquet, Arrow, JSON formats
+- **Size checks**: File sizes, record counts, memory footprint
+
+Use this skill before publishing datasets or using them for training.
+
+## Prerequisites Checklist
+
+- [ ] Python 3.8 or higher installed
+- [ ] pandas library installed (`pip install pandas`)
+- [ ] datasets library installed (`pip install datasets`)
+- [ ] Dataset file accessible locally
+
+## Step-by-Step Guide
+
+### Step 1: Install Dependencies
+
+```bash
+pip install pandas datasets numpy
+```
+
+### Step 2: Check Dataset Format
+
+Identify what format your dataset is in:
+
+```python
+from pathlib import Path
+
+file_path = "data/my_dataset.csv"
+
+# Check file extension
+if file_path.endswith('.csv'):
+    print("Format: CSV")
+elif file_path.endswith('.parquet'):
+    print("Format: Parquet")
+elif file_path.endswith('.json'):
+    print("Format: JSON")
+else:
+    print("Unknown format")
+```
+
+### Step 3: Load and Inspect
+
+Load your dataset and check basic properties:
+
+```python
+import pandas as pd
+
+# Load CSV dataset
+df = pd.read_csv("data/my_dataset.csv")
+
+# Check shape and columns
+print(f"Shape: {df.shape}")  # (rows, columns)
+print(f"Columns: {list(df.columns)}")
+print(f"Data types:\\n{df.dtypes}")
+```
+
+### Step 4: Validate Schema
+
+Check that your dataset has expected columns and correct data types:
+
+```python
+# Define expected schema
+expected_columns = {'text', 'label', 'split'}
+actual_columns = set(df.columns)
+
+# Check all required columns exist
+missing = expected_columns - actual_columns
+if missing:
+    print(f"ERROR: Missing columns: {missing}")
+
+# Check for unexpected columns
+extra = actual_columns - expected_columns
+if extra:
+    print(f"WARNING: Extra columns: {extra}")
+
+# Verify data types
+if df['label'].dtype not in ['int64', 'object']:
+    print("WARNING: label column should be integer or string")
+```
+
+### Step 5: Check Data Quality
+
+Identify common data quality issues:
+
+```python
+# Check for missing values
+missing_count = df.isna().sum()
+if missing_count.any():
+    print("Missing values found:")
+    print(missing_count[missing_count > 0])
+
+# Check for duplicates
+duplicates = df.duplicated().sum()
+if duplicates > 0:
+    print(f"WARNING: {duplicates} duplicate rows found")
+
+# Check for empty strings
+for col in df.select_dtypes(include='object').columns:
+    empty = (df[col].str.strip() == '').sum()
+    if empty > 0:
+        print(f"WARNING: Column '{col}' has {empty} empty strings")
+```
+
+### Step 6: Generate Validation Report
+
+Use the provided validation script (see references below):
+
+```bash
+python scripts/validate_dataset.py data/my_dataset.csv
+```
+
+The report includes:
+- Dataset summary (rows, columns, size)
+- Data quality metrics
+- Issues found and recommendations
+- Remediation suggestions
+
+## Common Issues and Solutions
+
+### Issue: Encoding Error Reading CSV
+
+**Problem**: `UnicodeDecodeError` when loading file
+
+**Solution**: Try different character encodings
+```python
+encodings = ['utf-8', 'latin-1', 'iso-8859-1']
+for encoding in encodings:
+    try:
+        df = pd.read_csv("file.csv", encoding=encoding)
+        print(f"Success with {encoding}")
+        break
+    except:
+        continue
+```
+
+### Issue: Memory Error with Large Files
+
+**Problem**: `MemoryError` when loading large CSV
+
+**Solution**: Read in chunks
+```python
+chunks = pd.read_csv("large_file.csv", chunksize=10000)
+for i, chunk in enumerate(chunks):
+    print(f"Processing chunk {i}...")
+    # Process each chunk
+```
+
+### Issue: Inconsistent Column Names
+
+**Problem**: Column names have mixed capitalization or spaces
+
+**Solution**: Standardize column names
+```python
+df.columns = df.columns.str.lower().str.replace(' ', '_')
+print(df.columns)
+```
+
+## Helper Scripts
+
+### scripts/validate_dataset.py
+
+```python
+#!/usr/bin/env python3
+"""Validate Hugging Face datasets."""
+
+import json
+import sys
+import pandas as pd
+from pathlib import Path
+
+def validate_csv(filepath):
+    """Validate a CSV dataset file."""
+    
+    errors = []
+    warnings = []
+    report = {
+        "filepath": filepath,
+        "format": "csv",
+        "errors": errors,
+        "warnings": warnings,
+        "metadata": {}
+    }
+    
+    # Check file exists
+    if not Path(filepath).exists():
+        errors.append(f"File not found: {filepath}")
+        return report
+    
+    try:
+        # Load file
+        df = pd.read_csv(filepath)
+        report["metadata"]["rows"] = len(df)
+        report["metadata"]["columns"] = list(df.columns)
+        report["metadata"]["dtypes"] = {k: str(v) for k, v in df.dtypes.items()}
+        
+        # Check for missing values
+        missing = df.isna().sum()
+        if missing.any():
+            report["metadata"]["missing_values"] = missing.to_dict()
+        
+        # Check for duplicates
+        dup_count = df.duplicated().sum()
+        if dup_count > 0:
+            warnings.append(f"Found {dup_count} duplicate rows")
+        
+        # Check for empty strings
+        for col in df.select_dtypes(include='object').columns:
+            empty = (df[col].str.strip() == '').sum()
+            if empty > 0:
+                warnings.append(f"Column '{col}' has {empty} empty strings")
+        
+    except Exception as e:
+        errors.append(f"Error reading file: {str(e)}")
+    
+    return report
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python validate_dataset.py <filepath>")
+        sys.exit(1)
+    
+    filepath = sys.argv[1]
+    report = validate_csv(filepath)
+    print(json.dumps(report, indent=2))
+    
+    if report["errors"]:
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+
+### scripts/generate_report.py
+
+```python
+#!/usr/bin/env python3
+"""Generate a human-readable validation report."""
+
+import sys
+import pandas as pd
+from pathlib import Path
+
+def generate_report(filepath):
+    """Generate a text report for a dataset."""
+    
+    report = []
+    report.append("=" * 60)
+    report.append("DATASET VALIDATION REPORT")
+    report.append("=" * 60)
+    report.append(f"\nFile: {filepath}\n")
+    
+    if not Path(filepath).exists():
+        report.append(f"ERROR: File not found: {filepath}")
+        return "\n".join(report)
+    
+    try:
+        df = pd.read_csv(filepath)
+    except Exception as e:
+        report.append(f"ERROR: Could not read file: {e}")
+        return "\n".join(report)
+    
+    # Basic stats
+    report.append("BASIC STATISTICS")
+    report.append(f"  Rows: {len(df)}")
+    report.append(f"  Columns: {len(df.columns)}")
+    report.append(f"  Memory: {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
+    
+    # Column info
+    report.append("\nCOLUMN INFORMATION")
+    for col in df.columns:
+        dtype = df[col].dtype
+        non_null = df[col].notna().sum()
+        report.append(f"  {col}: {dtype} ({non_null}/{len(df)} non-null)")
+    
+    # Data quality
+    report.append("\nDATA QUALITY")
+    missing = df.isna().sum().sum()
+    report.append(f"  Missing values: {missing}")
+    duplicates = df.duplicated().sum()
+    report.append(f"  Duplicate rows: {duplicates}")
+    
+    # Recommendations
+    report.append("\nRECOMMENDATIONS")
+    if missing > 0:
+        report.append("  - Handle missing values (drop or impute)")
+    if duplicates > 0:
+        report.append("  - Remove duplicate rows")
+    report.append("  - Document dataset and preprocessing steps")
+    report.append("  - Add LICENSE and README.md files")
+    
+    report.append("\n" + "=" * 60)
+    return "\n".join(report)
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python generate_report.py <filepath>")
+        sys.exit(1)
+    
+    filepath = sys.argv[1]
+    print(generate_report(filepath))
+
+if __name__ == "__main__":
+    main()
+```
+````
+
+## Step 3: Add Documentation
+
+Create references/ directory with examples:
+
+**references/examples.md**
+````markdown
+# Usage Examples
+
+## Validate a CSV file
+```bash
+python scripts/validate_dataset.py data/my_dataset.csv
+```
+
+Output:
+```json
+{
+  "filepath": "data/my_dataset.csv",
+  "format": "csv",
+  "errors": [],
+  "warnings": ["Found 2 duplicate rows"],
+  "metadata": {
+    "rows": 1000,
+    "columns": ["text", "label", "split"],
+    "missing_values": {"text": 0}
+  }
+}
+```
+
+## Validate in Python
+```python
+from pathlib import Path
+import sys
+sys.path.insert(0, "scripts")
+from validate_dataset import validate_csv
+
+report = validate_csv("data/my_dataset.csv")
+print(report)
+```
+````
+
+## Step 4: Create requirements.txt
+
+List your dependencies:
+
+```
+pandas>=1.3.0
+datasets>=2.0.0
+numpy>=1.20.0
+```
+
+## Step 5: Test Your Skill
+
+Before you rely on it in real work, test it thoroughly:
+
+```bash
+# Create test data
+mkdir -p test_data
+cat > test_data/sample.csv << 'EOF'
+text,label,split
+Hello world,0,train
+Great job,1,train
+This is bad,0,test
+EOF
+
+# Test validation script
+python scripts/validate_dataset.py test_data/sample.csv
+
+# Test report generation
+python scripts/generate_report.py test_data/sample.csv
+```
+
+Expected output shows:
+- Number of rows and columns
+- Data types
+- Missing values (if any)
+- Duplicate rows (if any)
+- Quality recommendations
+
+## Step 6: Initialize Git Repository
+
+Set up proper version control:
+
+```bash
+# Create .gitignore
+cat > .gitignore << 'EOF'
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+validation_report.json
+EOF
+
+# Create LICENSE file (MIT)
+cat > LICENSE << 'EOF'
+MIT License
+
+Copyright (c) 2026 Your Name
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, and/or sell copies of the
+Software...
+EOF
+
+# Add all files to git
+git add .
+git commit -m "Initial commit: Dataset validation skill"
+```
+
+## Step 7: Test with Your Agent
+
+For local iteration, symlink the skill into your agent's skills directory so edits take effect immediately. Copying still works, but symlinks make mid-session iteration much easier.
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+```bash
+# Create a test project
+mkdir my_project
+cd my_project
+
+# Symlink the skill into the project's skills directory
+mkdir -p .claude/skills
+ln -s /absolute/path/to/hf-dataset-validation .claude/skills/hf-dataset-validation
+
+# Start Claude Code — it discovers skills automatically
+claude
+
+# At the prompt:
+# "Validate my dataset at test_data/sample.csv"
+```
+
+</hfoption>
+<hfoption id="Codex">
+
+```bash
+# Create a test project
+mkdir my_project
+cd my_project
+
+# Symlink the skill into the repo-scoped skills directory
+mkdir -p .agents/skills
+ln -s /absolute/path/to/hf-dataset-validation .agents/skills/hf-dataset-validation
+
+# Start Codex
+codex
+
+# At the prompt:
+# "Validate my dataset at test_data/sample.csv"
+```
+
+</hfoption>
+<hfoption id="OpenCode">
+
+```bash
+# Create a test project
+mkdir my_project
+cd my_project
+
+# Symlink the skill into the project-local skills directory
+mkdir -p .opencode/skills
+ln -s /absolute/path/to/hf-dataset-validation .opencode/skills/hf-dataset-validation
+
+# Start OpenCode
+opencode
+
+# At the prompt:
+# "Validate my dataset at test_data/sample.csv"
+```
+
+</hfoption>
+</hfoptions>
+
+Your agent should:
+1. Discover the skill in the local skills directory
+2. Match the task to the skill's description
+3. Load the SKILL.md instructions into context
+4. Execute helper scripts as needed
+
+## Step 8: Debug Activation and Tighten the Description
+
+Now test whether the skill fires reliably:
+
+```text
+Prompt 1: "Validate my dataset at test_data/sample.csv before I use it for training."
+Prompt 2: "Can you check whether this CSV is ready to share?"
+```
+
+If Prompt 1 works but Prompt 2 does not, your `description` is still too narrow. Tighten it until both prompts activate the skill.
+
+This is the point where Codex's `$skill-creator` is useful: give it the skill plus a missed prompt and have it rewrite only the triggering description. On Claude Code and OpenCode, do the same revision loop manually by editing the frontmatter, then test again in the same project.
+
+## Next Steps
+
+Congratulations — you've built and tested your first skill! Keep iterating on the description, helper scripts, and examples as you use it in real projects. Ready to move on? Head to the next lesson.

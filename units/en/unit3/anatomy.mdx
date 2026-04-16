@@ -1,0 +1,235 @@
+# Plugin Anatomy
+
+What's inside a plugin depends on whether the platform is **manifest-first** or **code-first**. Claude Code and Codex use manifests plus root-level plugin components. OpenCode plugins are JavaScript/TypeScript modules loaded from local files or npm.
+
+## Plugin Structure
+
+There isn't one universal plugin shape:
+
+1. **Manifest-first plugins** use a `plugin.json` manifest plus root-level directories and config files such as `skills/`, `.mcp.json`, or `.app.json`.
+2. **Code-first plugins** are JS/TS modules that export hooks or custom tools. Skills and MCP configuration stay as separate surfaces.
+
+Let's see how each platform implements that idea.
+
+## Plugin Structure by Platform
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+### Claude Code Plugin Structure
+
+Claude Code plugins are self-contained directories. The manifest lives in `.claude-plugin/plugin.json`, and the plugin's skills, hooks, MCP config, and other components stay at the plugin root.
+
+```
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json             # Plugin manifest
+├── skills/                     # Collection of skills
+│   ├── analyze-text/
+│   │   └── SKILL.md            # Skill definition
+│   ├── extract-keywords/
+│   │   └── SKILL.md
+│   └── check-reading-level/
+│       └── SKILL.md
+├── agents/                     # Custom agents (optional)
+├── .mcp.json                   # MCP server configuration
+├── hooks/                      # Hook configuration (optional)
+│   └── hooks.json
+├── .lsp.json                   # LSP server configuration (optional)
+├── settings.json               # Plugin defaults (optional)
+└── README.md                   # Documentation
+```
+
+**plugin.json** (in `.claude-plugin/` directory) declares the plugin:
+
+```json
+{
+  "name": "text-processor-plugin",
+  "version": "1.0.0",
+  "description": "Text analysis skills powered by the text-processor MCP server",
+  "author": {
+    "name": "Your Name"
+  }
+}
+```
+
+**Key Properties:**
+- `name` — Unique plugin identifier
+- `version` — Semantic version (1.0.0, 1.1.0, etc.)
+- `description` — What the plugin does
+- `author` — Creator information
+
+Only `plugin.json` goes inside `.claude-plugin/`. Skills, agents, hooks, MCP config, and LSP config stay at the plugin root. Skills are namespaced when invoked:
+
+```
+/text-processor-plugin:analyze-text
+```
+
+**MCP servers** are configured in `.mcp.json` at the plugin root, using the same format as project-scoped MCP config from Unit 2. The server can be local or remote:
+
+```json
+{
+  "mcpServers": {
+    "text-processor": {
+      "url": "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+</hfoption>
+<hfoption id="Codex">
+
+### Codex Plugin Structure
+
+Codex plugins are also manifest-first. The manifest points to bundled skills, optional MCP config, optional app integrations, and install-surface metadata.
+
+```
+my-codex-plugin/
+├── .codex-plugin/
+│   └── plugin.json             # Plugin manifest
+├── skills/                     # Workflow skills
+│   ├── analyze-text/
+│   │   └── SKILL.md
+│   └── extract-keywords/
+│       └── SKILL.md
+├── .mcp.json                   # MCP servers config (optional)
+├── .app.json                   # App integrations (optional)
+├── assets/                     # Icons, screenshots, logos (optional)
+└── README.md
+```
+
+**plugin.json** (in `.codex-plugin/` directory):
+
+```json
+{
+  "name": "text-processor-plugin",
+  "version": "1.0.0",
+  "description": "Text analysis skills powered by the text-processor MCP server",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json",
+  "interface": {
+    "displayName": "Text Processor"
+  }
+}
+```
+
+**Key Properties:**
+- `name` — Unique plugin identifier
+- `version` — Semantic version
+- `description` — What the plugin does
+- `skills` — Path to skills directory
+- `mcpServers` — Path to MCP server config (optional)
+- `apps` — Path to app integrations config (optional)
+- `interface` — Install-surface metadata shown in Codex
+
+Only `plugin.json` belongs in `.codex-plugin/`. Keep `skills/`, `.mcp.json`, `.app.json`, and `assets/` at the plugin root.
+
+**MCP servers** (optional, in `.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "text-processor": {
+      "url": "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+**App integrations** (optional, in `.app.json`):
+
+```json
+{
+  "integrations": [
+    {
+      "name": "github",
+      "type": "oauth",
+      "scopes": ["repo", "user:email"]
+    }
+  ]
+}
+```
+
+**Marketplace installation** works via two paths:
+
+1. **Repo marketplace**: `.agents/plugins/marketplace.json` (in a repository)
+2. **Personal marketplace**: `~/.agents/plugins/marketplace.json` (on user's machine)
+
+Each marketplace entry points to a plugin directory with a `./`-prefixed relative `source.path` and install policy metadata. Installed copies are cached under `~/.codex/plugins/cache/$MARKETPLACE/$PLUGIN/$VERSION/`.
+
+> [!TIP]
+> Codex has a built-in `$plugin-creator` skill for scaffolding new plugins. Use it to generate plugin structure quickly.
+
+</hfoption>
+<hfoption id="OpenCode">
+
+### OpenCode Plugin Structure
+
+OpenCode plugins are **code-first**. There is no plugin manifest directory like `.claude-plugin/` or `.codex-plugin/`. A plugin is a JavaScript/TypeScript module loaded from a plugin directory or from npm.
+
+```
+my-opencode-project/
+├── .opencode/
+│   ├── plugins/
+│   │   └── text-processor-plugin.ts # Local plugin module
+│   └── package.json            # Optional plugin dependencies
+├── opencode.json               # npm plugin list and agent config
+└── README.md
+```
+
+**Local plugin module**:
+
+```ts
+export const TextProcessorPlugin = async ({ client }) => {
+  await client.app.log({
+    body: {
+      service: "text-processor-plugin",
+      level: "info",
+      message: "Text Processor plugin initialized"
+    }
+  })
+
+  return {
+    "tool.execute.before": async (input) => {
+      if (input.tool === "read") {
+        await client.app.log({
+          body: {
+            service: "text-processor-plugin",
+            level: "info",
+            message: "Long text reads often pair well with text-analysis tools."
+          }
+        })
+      }
+    }
+  }
+}
+```
+
+**opencode.json** for npm-installed plugins:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@your-org/text-processor-plugin"]
+}
+```
+
+**Key Characteristics:**
+- Local plugins are JS/TS files in `.opencode/plugins/`
+- Optional npm plugins via the `plugin` array in `opencode.json`
+- Plugins export hooks or custom tools in code
+- Skills and MCP servers are configured separately from plugins
+- Distribution via local files or npm packages
+
+</hfoption>
+</hfoptions>
+
+![Side-by-side comparison of Claude Code and Codex plugin directory structures](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit3/plugin-structure-comparison.svg)
+
+## Key Takeaways
+
+Claude Code and Codex both use manifest-first plugin bundles: a `plugin.json` manifest points to root-level components such as `skills/`, `.mcp.json`, and optional integration files. OpenCode uses a different model: plugins are JS/TS modules loaded from `.opencode/plugins/` or npm, and any skills or MCP configuration live beside that plugin system rather than inside it. Despite the different shapes, all three platforms use plugins to make reusable agent behavior easier to share and maintain.
+
+Next, let's build a plugin from scratch.

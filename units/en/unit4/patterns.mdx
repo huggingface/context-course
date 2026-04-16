@@ -1,0 +1,226 @@
+# Subagent Patterns
+
+Subagents aren't random, they follow predictable patterns. Understanding these patterns helps you design multi-agent workflows efficiently.
+
+## Pattern 1: Fan-Out / Fan-In
+
+**What it is:** Spawn multiple subagents in parallel for independent subtasks, then aggregate results.
+
+**When to use:** Independent tasks with no dependencies between them.
+
+**Example:** Evaluate 5 models on the same benchmark.
+
+```
+Parent: "Compare models"
+├─ Subagent 1: Evaluate Model A → Score: 92%
+├─ Subagent 2: Evaluate Model B → Score: 89%
+├─ Subagent 3: Evaluate Model C → Score: 94%
+├─ Subagent 4: Evaluate Model D → Score: 88%
+└─ Subagent 5: Evaluate Model E → Score: 91%
+
+Parent: Aggregate → Ranking report
+```
+
+**Pseudocode:**
+```text
+parent_agent:
+    subagents = []
+    for model in [A, B, C, D, E]:
+        subagent = spawn(
+            task=f"Evaluate {model}",
+            context={model}
+        )
+        subagents.append(subagent)
+    
+    results = wait_all(subagents)
+    report = aggregate(results)
+    return report
+```
+
+**Pros:** Fully parallel, max speed, easy to scale
+
+**Cons:** Total time = slowest subagent
+
+## Pattern 2: Pipeline
+
+**What it is:** Chain subagents where output of one becomes input to the next.
+
+**When to use:** Sequential processing with data flowing through stages.
+
+**Example:** Data processing: extract → clean → analyze → report
+
+```
+Raw Data
+  ↓
+[Subagent 1: Extract]
+  ↓
+Extracted Data
+  ↓
+[Subagent 2: Clean]
+  ↓
+Clean Data
+  ↓
+[Subagent 3: Analyze]
+  ↓
+Results
+  ↓
+[Subagent 4: Report]
+  ↓
+Final Report
+```
+
+**Pseudocode:**
+```text
+parent_agent:
+    data = load_raw_data()
+    
+    extracted = spawn(task="Extract", input=data).wait()
+    cleaned = spawn(task="Clean", input=extracted).wait()
+    analyzed = spawn(task="Analyze", input=cleaned).wait()
+    report = spawn(task="Report", input=analyzed).wait()
+    
+    return report
+```
+
+**Pros:** Clear stages, easy to track progress, failures are local
+
+**Cons:** No parallelism—each stage waits for previous
+
+## Pattern 3: Supervisor (Hierarchical)
+
+**What it is:** Parent agent directs multiple specialized subagents, each with different tools and expertise.
+
+**When to use:** Complex tasks requiring multiple specialist agents.
+
+**Example:** Product launch report needs sales, engineering, and marketing data.
+
+```
+Parent Agent (Orchestrator)
+├─ Sales Subagent (has: CRM tools, revenue metrics)
+├─ Engineering Subagent (has: GitHub API, deployment tools)
+└─ Marketing Subagent (has: analytics, social tools)
+
+Parent aggregates → Launch Report
+```
+
+**Pseudocode:**
+```text
+parent_agent:
+    sales = spawn(
+        task="Get sales metrics",
+        tools=[crm, revenue_db]
+    )
+    engineering = spawn(
+        task="Get feature status",
+        tools=[github, ci_cd]
+    )
+    marketing = spawn(
+        task="Get market sentiment",
+        tools=[analytics, social]
+    )
+    
+    results = wait_all([sales, engineering, marketing])
+    report = combine(results)
+    return report
+```
+
+**Pros:** Specialized agents, clean separation of tools, parallel execution
+
+**Cons:** More complex coordination
+
+## Pattern 4: Swarm (Collaborative)
+
+**What it is:** Multiple subagents work on the same problem, comparing approaches and converging on best solution.
+
+**When to use:** Complex problems where multiple perspectives improve quality.
+
+**Example:** Design review with architect, security, and performance subagents.
+
+```
+Parent: "Design new API"
+├─ Subagent 1 (Architect): Design REST structure
+├─ Subagent 2 (Security): Identify vulnerabilities
+├─ Subagent 3 (Performance): Identify bottlenecks
+
+Parent: Incorporate feedback → Final design
+```
+
+**Pseudocode:**
+```text
+parent_agent:
+    design = "Initial API design..."
+    
+    # Round 1: Independent reviews
+    architect_review = spawn(task=f"Review design as architect", input=design).wait()
+    security_review = spawn(task=f"Review design for security", input=design).wait()
+    perf_review = spawn(task=f"Review design for performance", input=design).wait()
+    
+    # Incorporate feedback
+    improved_design = combine(design, architect_review, security_review, perf_review)
+    
+    return improved_design
+```
+
+**Pros:** Multiple perspectives improve quality, catches blind spots
+
+**Cons:** Can be slow (requires multiple rounds)
+
+## Pattern Comparison
+
+| Pattern | Use Case | Parallelism | Coordination |
+|---------|----------|-------------|--------------|
+| **Fan-Out/Fan-In** | Independent tasks | High | Low |
+| **Pipeline** | Sequential stages | None | Medium |
+| **Supervisor** | Multiple specialists | Medium-High | Medium-High |
+| **Swarm** | Collaborative design | Low-Medium | High |
+
+## When NOT to Use Subagents
+
+We covered the high-level guidance in the unit introduction. Here's how it plays out in practice with code examples.
+
+### 1. Sequential Dependent Work
+```text
+# DON'T do this
+subagent_a = spawn(task="Step 1: Set up environment").wait()
+subagent_b = spawn(task="Step 2: Deploy code", input=subagent_a).wait()
+
+# BETTER: Single agent for sequential work
+single_agent(task="Set up environment, then deploy")
+```
+
+### 2. Same-File Parallel Edits
+```text
+# DON'T do this
+subagent_a = spawn(task="Add feature A to app.py")
+subagent_b = spawn(task="Add feature B to app.py")  # Conflict!
+
+# BETTER: Fan-out on different files
+subagent_a = spawn(task="Write feature A in feature_a.py")
+subagent_b = spawn(task="Write feature B in feature_b.py")
+```
+
+### 3. Small Quick Tasks
+```text
+# DON'T do this for simple tasks
+subagent = spawn(task="Format this JSON")  # Overhead: 1-2s, task: 0.1s
+
+# BETTER: Do it in parent
+formatted = json.dumps(data)
+```
+
+### 4. Too Many Specialist Agents
+```text
+# DON'T do this
+for i in range(20):  # 20 specialist subagents
+    subagent = spawn(task=f"Specialist {i} task")
+
+# BETTER: Group specialists
+senior_architect = spawn(task="Lead architecture design")
+implementation_team = spawn(task="Implement based on design")
+```
+
+## Key Takeaways
+
+The four patterns — fan-out/fan-in for parallel independent tasks, pipeline for sequential stages, supervisor for coordinating multiple specialists, and swarm for collaborative multi-perspective design — cover most multi-agent workflows. Use subagents when you have 10+ files to process or 3+ independent pieces of work. Stick with a single agent for small tasks and high-dependency workflows.
+
+Next, let's see how to actually use subagents in Claude Code and Codex.

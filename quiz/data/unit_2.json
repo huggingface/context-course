@@ -1,0 +1,66 @@
+[
+    {
+        "question": "What is the primary purpose of Model Context Protocol (MCP)?",
+        "answer_a": "To train better language models",
+        "answer_b": "To enable AI agents to connect with external data sources, tools, and environments through a standard protocol",
+        "answer_c": "To replace REST APIs",
+        "answer_d": "To create a new programming language for AI",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What problem does MCP solve that is often called the 'M×N Integration Problem'?",
+        "answer_a": "The difficulty of training M models on N datasets",
+        "answer_b": "The challenge of connecting M AI applications to N external tools without a standard protocol",
+        "answer_c": "The problem of managing M users across N applications",
+        "answer_d": "The complexity of running M servers with N clients",
+        "correct_answer": "B"
+    },
+    {
+        "question": "In MCP architecture, what are the three main roles?",
+        "answer_a": "Frontend, Backend, Database",
+        "answer_b": "Host, Client, Server",
+        "answer_c": "Producer, Consumer, Broker",
+        "answer_d": "Agent, Tool, Environment",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What are the three main capability types that MCP servers can expose?",
+        "answer_a": "Read, Write, Execute",
+        "answer_b": "Tools, Resources, Prompts",
+        "answer_c": "Input, Process, Output",
+        "answer_d": "Query, Mutate, Subscribe",
+        "correct_answer": "B"
+    },
+    {
+        "question": "How does MCP relate to skills in the context engineering stack?",
+        "answer_a": "MCP replaces skills entirely",
+        "answer_b": "Skills provide static context while MCP provides dynamic, real-time context from external systems",
+        "answer_c": "They are the same thing",
+        "answer_d": "Skills are built on top of MCP servers",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What transport mechanisms does MCP support?",
+        "answer_a": "Only HTTP REST",
+        "answer_b": "stdio (local) and HTTP with Server-Sent Events (remote)",
+        "answer_c": "WebSockets only",
+        "answer_d": "gRPC only",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What is the Gradio MCP integration used for?",
+        "answer_a": "Training Gradio models",
+        "answer_b": "Building web UIs that also serve as MCP servers, making tools accessible to both humans and agents",
+        "answer_c": "Converting Gradio apps to REST APIs",
+        "answer_d": "Deploying Gradio to mobile devices",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What Python package is used to build MCP servers?",
+        "answer_a": "flask-mcp",
+        "answer_b": "mcp (the official MCP Python SDK)",
+        "answer_c": "django-agents",
+        "answer_d": "fastapi-tools",
+        "correct_answer": "B"
+    }
+]

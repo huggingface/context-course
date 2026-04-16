@@ -1,0 +1,25 @@
+<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="220" fill="#0d1117"/>
+
+  <!-- Lines from Parent to Workers -->
+  <line x1="200" y1="30" x2="80" y2="100" stroke="#30363d" stroke-width="1"/>
+  <line x1="200" y1="30" x2="200" y2="100" stroke="#30363d" stroke-width="1"/>
+  <line x1="200" y1="30" x2="320" y2="100" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Lines from Workers to Result -->
+  <line x1="80" y1="130" x2="200" y2="190" stroke="#30363d" stroke-width="1"/>
+  <line x1="200" y1="130" x2="200" y2="190" stroke="#30363d" stroke-width="1"/>
+  <line x1="320" y1="130" x2="200" y2="190" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Parent Agent label -->
+  <text x="200" y="25" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Parent Agent</text>
+
+  <!-- Worker labels -->
+  <text x="80" y="125" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">Worker</text>
+  <text x="200" y="125" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">Worker</text>
+  <text x="320" y="125" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">Worker</text>
+
+  <!-- Aggregated label -->
+  <text x="200" y="210" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Aggregated</text>
+</svg>

@@ -1,0 +1,113 @@
+# Quiz: Nano Harness and Agent Internals
+
+Test your understanding of agent loops, tools, and sandboxing.
+
+<Question
+  choices={[
+    {
+      text: "Call model → return result immediately",
+      explain: "That's not an agent loop. A loop requires observation and repetition."
+    },
+    {
+      text: "Call model → parse Python code → execute with tools → observe → repeat until final_answer()",
+      explain: "Correct! That's the core loop: model → code → execute → observe → repeat.",
+      correct: true
+    },
+    {
+      text: "Model returns JSON → parse → store in database → done",
+      explain: "That's a one-shot API call, not an agent loop."
+    },
+    {
+      text: "Keep calling the model until it returns the word 'done'",
+      explain: "The agent needs to execute code, not just call the model repeatedly."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "The model outputs English text like 'The answer is 42'",
+      explain: "Nano Harness is code-first. Model outputs Python code, not prose."
+    },
+    {
+      text: "The model outputs Python code that calls tools; agent executes that code in a sandbox",
+      explain: "Correct! Model → Python code → execution → observation.",
+      correct: true
+    },
+    {
+      text: "The model outputs JSON which the agent parses",
+      explain: "Some models do this, but nano_harness expects Python code."
+    },
+    {
+      text: "The model outputs commands like 'list_dir' and the agent translates them",
+      explain: "The model directly outputs Python function calls."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "The message history grows with every loop iteration (model output + observation)",
+      explain: "Correct! Each step adds assistant response + user observation. History provides memory.",
+      correct: true
+    },
+    {
+      text: "The message history is cleared every step to save tokens",
+      explain: "False. Full history is kept so the model can learn from prior steps."
+    },
+    {
+      text: "The message history is stored in a database for later analysis",
+      explain: "The history is maintained in memory during the loop."
+    },
+    {
+      text: "The message history doesn't matter; only the latest model output matters",
+      explain: "False. History provides crucial context for the model to make good decisions."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "safe_path() allows reading any file on the system",
+      explain: "False. safe_path() confines paths to the workspace directory."
+    },
+    {
+      text: "safe_path() prevents directory traversal by checking that paths stay within WORKSPACE",
+      explain: "Correct! It resolves paths and ensures they're within the workspace.",
+      correct: true
+    },
+    {
+      text: "safe_path() is optional; security isn't really needed",
+      explain: "Safety is critical. Without safe_path(), agents could read /etc/passwd."
+    },
+    {
+      text: "safe_path() encrypts paths for transmission",
+      explain: "No, it just prevents path escape attacks."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "exec_cmd() allows any shell command to run",
+      explain: "False. Only whitelisted commands (ls, cat, pwd, etc.) are allowed."
+    },
+    {
+      text: "exec_cmd() maintains a whitelist of safe commands; anything else is blocked",
+      explain: "Correct! Only safe commands like 'ls' work. 'rm' and 'curl' are blocked.",
+      correct: true
+    },
+    {
+      text: "exec_cmd() has a timeout to prevent hanging commands",
+      explain: "True, but the whitelist is the primary security control."
+    },
+    {
+      text: "exec_cmd() runs commands with admin privileges",
+      explain: "No. Commands run with normal user privileges and are rate-limited."
+    }
+  ]}
+/>

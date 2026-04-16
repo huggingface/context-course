@@ -1,0 +1,113 @@
+# Quiz 2: Building and Distributing Plugins
+
+Test your understanding of plugin development, distribution, and best practices.
+
+<Question
+  choices={[
+    {
+      text: "Claude Code and Codex use the same plugin.json schema",
+      explain: "No. Claude Code's plugin.json (in .claude-plugin/) has a different schema from Codex's (in .codex-plugin/). Codex includes fields like 'skills', 'mcpServers', 'apps', and 'interface'."
+    },
+    {
+      text: "OpenCode also uses plugin.json to load local plugins",
+      explain: "No. OpenCode plugins are JS/TS modules loaded from `.opencode/plugins/` or from package names in `opencode.json`."
+    },
+    {
+      text: "In Claude Code and Codex, plugin.json defines the plugin's identity and tells the agent where to find bundled components",
+      explain: "Correct! On manifest-first platforms, the manifest identifies the plugin and points to bundled components such as skills, MCP config, or app integrations.",
+      correct: true
+    },
+    {
+      text: "The plugin.json should be placed at the root of the plugin directory",
+      explain: "Not quite. It goes inside a platform-specific directory: .claude-plugin/plugin.json for Claude Code, .codex-plugin/plugin.json for Codex."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "A directory with .claude-plugin/ or .codex-plugin/ manifest directory, skills/ folder, optional .mcp.json, and README",
+      explain: "Correct! That's the manifest-first structure used by Claude Code and Codex.",
+      correct: true
+    },
+    {
+      text: "Just a skills/ folder with SKILL.md files — no manifest needed",
+      explain: "That's a skill library, not the documented manifest-first plugin structure used by Claude Code and Codex."
+    },
+    {
+      text: "A single file named manifest.json containing everything",
+      explain: "Plugins are directories, not single files. They have discrete skills, optional MCP servers, docs, etc."
+    },
+    {
+      text: "A root manifest.json with an openapi.json spec defining all endpoints",
+      explain: "This is the legacy ChatGPT plugin format, not the current Codex or Claude Code plugin structure."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Request only the permissions you actually need; document why each is needed; follow the principle of least privilege",
+      explain: "Correct! Minimal, documented permissions build user trust. Both platforms emphasize security-conscious plugin design.",
+      correct: true
+    },
+    {
+      text: "Request all possible permissions upfront to maximize future flexibility",
+      explain: "Bad practice. Users will be wary of plugins asking for too much access."
+    },
+    {
+      text: "Hide permission details in the README so users don't worry about them",
+      explain: "Terrible idea. Transparency builds trust. Be clear about what your plugin accesses."
+    },
+    {
+      text: "Permissions don't matter much; focus only on functionality",
+      explain: "Wrong. Security-conscious users care deeply about what plugins can access. Be respectful."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Test with claude --plugin-dir for Claude Code; create a local marketplace.json entry for Codex",
+      explain: "Correct! Claude Code uses `--plugin-dir` for local development. Codex uses local marketplace entries for unpublished plugins.",
+      correct: true
+    },
+    {
+      text: "You must publish to the marketplace before you can test your plugin",
+      explain: "False. Both platforms support local development. Claude Code has --plugin-dir; Codex has local marketplace entries."
+    },
+    {
+      text: "Run /plugin validate to check your plugin structure",
+      explain: "This isn't a standard command on either platform. Use --plugin-dir (Claude Code) or local marketplace (Codex) to test."
+    },
+    {
+      text: "Testing isn't necessary; just publish and fix issues later",
+      explain: "Always test locally first. Both platforms provide local testing mechanisms before marketplace submission."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Always hardcode API keys in the manifest for convenience",
+      explain: "Never! That's a security disaster. Always use environment variables."
+    },
+    {
+      text: "Use environment variables for secrets, reference them from plugin or MCP config when supported, and document how to set them",
+      explain: "Correct! This is the secure approach. Environment variables keep secrets out of version control and plugin code.",
+      correct: true
+    },
+    {
+      text: "Prompt users for API keys at runtime",
+      explain: "Awkward and not standard. Environment variables are the established pattern."
+    },
+    {
+      text: "Store API keys in a config file that users commit to git",
+      explain: "Terrible idea. This risks exposing secrets to version control."
+    }
+  ]}
+/>

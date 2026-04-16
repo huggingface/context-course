@@ -1,0 +1,13 @@
+[project]
+name = "context-course-quiz"
+version = "0.1.0"
+description = "Quiz question management for The Context Course"
+requires-python = ">=3.10"
+dependencies = [
+    "datasets>=3.0.0",
+    "huggingface-hub>=0.25.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

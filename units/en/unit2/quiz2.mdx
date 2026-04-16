@@ -1,0 +1,240 @@
+# Quiz 2: MCP in Practice
+
+Test your understanding of building, configuring, and deploying MCP systems. Choose the best answer.
+
+## Question 1: FastMCP Server Building
+
+<Question
+  choices={[
+    {
+      text: "Use FastMCP decorators (@mcp.tool()) to define functions as MCP tools",
+      explain: "Correct! FastMCP infers types from function signatures and generates schemas automatically.",
+      correct: true
+    },
+    {
+      text: "Write raw JSON-RPC messages for each tool",
+      explain: "Possible but tedious. FastMCP handles the protocol for you.",
+      correct: false
+    },
+    {
+      text: "Gradio is the only way to build MCP servers",
+      explain: "Gradio is convenient, but FastMCP is more flexible for complex logic.",
+      correct: false
+    },
+    {
+      text: "MCP servers must be written in JavaScript",
+      explain: "MCP is language-agnostic. Python, JavaScript, Go, Rust all work.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 2: Type Hints and Docstrings
+
+<Question
+  choices={[
+    {
+      text: "Type hints and docstrings are essential for MCP tool schemas",
+      explain: "Exactly! Type hints generate schemas, docstrings provide descriptions. Always include both.",
+      correct: true
+    },
+    {
+      text: "Type hints are optional; MCP infers types from usage",
+      explain: "Type hints are essential. Without them, MCP can't generate proper schemas.",
+      correct: false
+    },
+    {
+      text: "Only Gradio MCP requires type hints",
+      explain: "All MCP servers benefit from type hints. Clients need to know parameter types.",
+      correct: false
+    },
+    {
+      text: "Docstrings are just for human readers",
+      explain: "Docstrings are used by MCP to generate tool descriptions and argument docs.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 3: Tools vs. Resources vs. Prompts
+
+<Question
+  choices={[
+    {
+      text: "Tools: actions | Resources: read-only data | Prompts: instructions",
+      explain: "Perfect! Each serves a different purpose in agent workflows.",
+      correct: true
+    },
+    {
+      text: "Tools and Resources are interchangeable",
+      explain: "No. Tools are called by agents; Resources are data agents read.",
+      correct: false
+    },
+    {
+      text: "Resources are for UI only, not for agents",
+      explain: "Resources are designed for agents! They provide context agents can access.",
+      correct: false
+    },
+    {
+      text: "Prompts are the same as Tools",
+      explain: "No. Prompts are instruction templates; Tools are callable functions.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 4: Gradio MCP Integration
+
+<Question
+  choices={[
+    {
+      text: "Use demo.launch(mcp_server=True) to enable MCP automatically",
+      explain: "Correct! One parameter enables both web UI and MCP endpoint.",
+      correct: true
+    },
+    {
+      text: "Gradio and MCP are separate; you need both libraries",
+      explain: "Gradio includes MCP support with gradio[mcp]. No separate library needed.",
+      correct: false
+    },
+    {
+      text: "You need to manually implement the MCP protocol in Gradio",
+      explain: "Gradio handles it automatically. Just write functions with type hints.",
+      correct: false
+    },
+    {
+      text: "Gradio MCP only works with simple functions",
+      explain: "Gradio MCP works with complex functions, multiple parameters, and advanced types.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 5: Configuring Agents to Use MCP Servers
+
+<Question
+  choices={[
+    {
+      text: "Configure servers via CLI commands (like claude mcp add) or config files, depending on the agent",
+      explain: "Correct! Claude Code uses CLI commands; other agents use config files. Remote Streamable HTTP servers can often be added without restarts.",
+      correct: true
+    },
+    {
+      text: "Agents automatically discover all available MCP servers",
+      explain: "No. You must explicitly configure which servers each agent can access.",
+      correct: false
+    },
+    {
+      text: "You need a special GUI tool to configure MCP servers",
+      explain: "Nope. Just edit JSON config files directly.",
+      correct: false
+    },
+    {
+      text: "Each agent needs its own custom MCP SDK integration",
+      explain: "False! MCP is a standard protocol. Agents are built as MCP clients already.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 6: Deploying to Hugging Face Spaces
+
+<Question
+  choices={[
+    {
+      text: "Create a Space, upload app.py with mcp_server=True, add requirements.txt",
+      explain: "Perfect! Spaces auto-builds and exposes the MCP endpoint.",
+      correct: true
+    },
+    {
+      text: "Spaces doesn't support MCP yet",
+      explain: "Spaces fully supports MCP via Gradio. It's the recommended deployment target.",
+      correct: false
+    },
+    {
+      text: "You need to configure network ports and manage server processes",
+      explain: "Spaces handles all of this. Just push your app code.",
+      correct: false
+    },
+    {
+      text: "MCP servers on Spaces only work with private access",
+      explain: "Spaces can be public or private. MCP works with both.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 7: Transport Mechanisms
+
+<Question
+  choices={[
+    {
+      text: "Use stdio for local servers, Streamable HTTP for remote deployment",
+      explain: "Exactly! Stdio is fast for subprocess communication. Streamable HTTP is the current standard for remote MCP connections.",
+      correct: true
+    },
+    {
+      text: "Streamable HTTP is always better because it's 'network-native'",
+      explain: "Streamable HTTP has network overhead. Use stdio locally for speed.",
+      correct: false
+    },
+    {
+      text: "Once deployed, you must switch from stdio to Streamable HTTP",
+      explain: "You choose transport at configuration time. No switching mid-deployment.",
+      correct: false
+    },
+    {
+      text: "Transport is internal to MCP; agents don't see the difference",
+      explain: "True! Agents use the same tool interface regardless of transport.",
+      correct: false
+    }
+  ]}
+/>
+
+## Question 8: MCP Security
+
+<Question
+  choices={[
+    {
+      text: "Use environment variables for secrets; never hardcode them in config",
+      explain: "Excellent! Env vars keep secrets out of version control.",
+      correct: true
+    },
+    {
+      text: "Hardcode API tokens in config if it's 'private'",
+      explain: "Even private configs can be exposed. Always use environment variables.",
+      correct: false
+    },
+    {
+      text: "Use relative paths in server configuration",
+      explain: "Use absolute paths! Relative paths break depending on working directory.",
+      correct: false
+    },
+    {
+      text: "There's no security consideration for MCP configuration",
+      explain: "Configuration files can contain sensitive info. Protect them carefully.",
+      correct: false
+    }
+  ]}
+/>
+
+## Summary
+
+How many did you get right?
+
+- **7-8 correct**: You're ready to build and deploy real MCP systems!
+- **5-6 correct**: Good understanding. Review configuration and deployment sections.
+- **3-4 correct**: Review the building and integration sections.
+- **0-2 correct**: Go back through the unit and review the core concepts.
+
+## Key Takeaways
+
+- **FastMCP** is the simplest way to build servers with decorators
+- **Type hints and docstrings** are essential for MCP tool schemas
+- **Gradio with `mcp_server=True`** creates UI + MCP automatically
+- **Configure servers in agent config files** (or use MCPClient in code)
+- **Use stdio locally, Streamable HTTP for remote deployment**
+- **Always use environment variables** for secrets
+- **Deploy to Hugging Face Spaces** for easy sharing
+
+You've mastered Unit 2! You can now build, deploy, and configure MCP servers for any agent.

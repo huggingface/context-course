@@ -1,0 +1,201 @@
+# MCP Key Concepts and Architecture
+
+MCP is built on three core concepts: **Hosts**, **Clients**, and **Servers**, communicating through three capability types: **Tools**, **Resources**, and **Prompts**. Understanding these is essential for building and deploying MCP systems.
+
+## The Three Roles: Hosts, Clients, and Servers
+
+Every MCP interaction involves three distinct roles:
+
+### Host
+The **host** is the environment where a code agent runs. Examples:
+- Claude Code (CLI tool)
+- Codex (OpenAI's code agent)
+- OpenCode (open source agent)
+- A custom Python script using an AI SDK
+
+The host manages the MCP client connection and presents results to the user. The host doesn't implement MCP itself—it delegates protocol handling to the client.
+
+### Client
+The **client** is the protocol handler inside the host that communicates with MCP servers. It:
+- Discovers available servers and their capabilities
+- Sends requests to servers (call tools, read resources, retrieve prompts)
+- Handles responses and errors
+- Maintains the connection lifecycle
+- Manages authentication if needed
+
+In practice, the client is built into the agent's runtime (like Claude Code's built-in MCP support or Codex's MCP client).
+
+### Server
+The **server** is an external program that exposes capabilities through MCP. It:
+- Defines what tools it provides (with schemas and descriptions)
+- Exposes what resources are available (with URIs and content)
+- Implements prompts (instruction templates)
+- Handles incoming requests from clients
+- Returns results in the MCP protocol format
+
+A server can be:
+- A Python script on your laptop
+- A deployed service on Hugging Face Spaces
+- A containerized application
+- Embedded in your application (like a Gradio app with `mcp_server=True`)
+
+![MCP architecture showing Host, Client, and Server roles](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit2/mcp-architecture.svg)
+
+## The Three Capability Types
+
+MCP servers expose three kinds of capabilities to clients:
+
+### Tools
+Tools are callable functions that agents invoke to perform actions or retrieve data. Each tool has a unique name (like `search_github`), a description of what it does, a JSON Schema defining its input parameters, and the actual function implementation. When an agent reasons that a tool would help with the current task, it calls the tool with appropriate parameters, the server executes it and returns results, and the agent incorporates those results into its reasoning. Tools are model-controlled — the agent decides whether and when to call them. They can modify state (writing files, sending messages), include error handling, and return structured or unstructured results.
+
+### Resources
+Resources are read-only data sources that agents can access for information. Each resource has a URI (like `file:///path/to/code.py`), a human-readable name, a description, and a MIME type. When an agent needs information to reason about a problem, it requests a resource by URI, the server retrieves the content, and the agent uses it as context. Unlike tools, resources are application-controlled — the host decides what to expose. They're always available without being explicitly called, making them ideal for static or semi-static data like project files, documentation, or configuration.
+
+### Prompts
+Prompts are instruction templates that guide agent behavior for specific contexts or domains. Each prompt has a name (like `code_review`), a description of when it applies, optional arguments for dynamic behavior, and the actual template text. When an agent recognizes a situation where a prompt applies, it requests the prompt (optionally with arguments), receives the instantiated text, and uses it to structure its reasoning. Prompts are user-controlled — they're deployed separately and updated independently. They're non-executable text instructions, ideal for standardizing approaches to recurring tasks like code reviews or security audits.
+
+![The three MCP capability types: Tools, Resources, and Prompts](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit2/capability-types.svg)
+
+> [!NOTE]
+> 90% of MCP usage is for tools.
+
+## Communication Protocol: JSON-RPC Over Transports
+
+MCP uses **JSON-RPC 2.0** as its messaging protocol. Every request and response is a JSON-RPC message. The protocol is transport-agnostic—the same JSON-RPC format works over any transport.
+
+A typical client request to call a tool:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "search_github",
+    "arguments": {
+      "query": "code agents"
+    }
+  }
+}
+```
+
+The server responds:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "[GitHub search results...]"
+      }
+    ]
+  }
+}
+```
+
+MCP defines specific methods like `tools/list`, `tools/call`, `resources/list`, `resources/read`, and `prompts/get`.
+
+## Transport Mechanisms
+
+The protocol (JSON-RPC) is separate from the transport (how messages move between client and server). MCP defines two standard transports.
+
+### Stdio Transport
+For **local connections** where the server runs on your machine:
+- Server runs as a subprocess of the host
+- Communication happens via stdin/stdout
+- No network overhead
+- Perfect for development and local tools
+- Most secure (no network exposure)
+
+Configuration:
+```bash
+claude mcp add --transport stdio my-server -- python /path/to/server.py
+```
+
+### Streamable HTTP Transport
+For **remote connections** where the server runs elsewhere:
+- Client makes HTTP POST requests to a single endpoint
+- Server responds with JSON-RPC results or SSE streams
+- Works across the internet and through firewalls
+- Ideal for cloud deployments and shared resources
+- Supports authentication headers and session management
+
+This is the current standard for remote MCP servers (since protocol version 2024-11-05). The older HTTP+SSE transport is deprecated but still supported for backward compatibility.
+
+Configuration:
+```bash
+claude mcp add --transport http remote-server https://your-server.example.com/mcp
+```
+
+| Aspect | Stdio | Streamable HTTP |
+|--------|-------|-----------------|
+| **Location** | Local | Remote |
+| **Network** | None | Internet |
+| **Setup** | Simple | Simple |
+| **Performance** | Very fast | Network latency |
+| **Security** | No exposure | Requires auth |
+| **Use Case** | Development, single user | Production, teams, cloud |
+
+![Comparison of stdio and Streamable HTTP transport mechanisms](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit2/transport-comparison.svg)
+
+## MCP Architecture Diagram
+
+Here's how it all fits together:
+
+```
+┌─────────────────────────────────────────┐
+│         Code Agent (Host)               │
+│    (Claude Code, Codex, OpenCode)       │
+└──────────┬──────────────────────────────┘
+           │
+           │ MCP Client
+           │ JSON-RPC messages
+           │
+    ┌──────┴─────────┬──────────────┬──────────────┐
+    │                │              │              │
+    ▼                ▼              ▼              ▼
+┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐
+│  GitHub    │  │   Slack    │  │  Internal  │  │  Project   │
+│ MCP Server │  │ MCP Server │  │ API Server │  │ MCP Server │
+│            │  │            │  │            │  │            │
+│ Tools:     │  │ Tools:     │  │ Tools:     │  │ Resources: │
+│ -list_prs  │  │ -send_msg  │  │ -query_db  │  │ -code.py   │
+│ -search    │  │ -list_msgs │  │ -update    │  │ -docs.md   │
+│            │  │            │  │            │  │            │
+└────────────┘  └────────────┘  └────────────┘  └────────────┘
+```
+
+The agent's client can communicate with multiple servers simultaneously and compose their capabilities.
+
+## Tools vs. Resources vs. Prompts: A Comparison
+
+| Aspect | Tools | Resources | Prompts |
+|--------|-------|-----------|---------|
+| **Control** | Model-controlled | App-controlled | User-controlled |
+| **Mutability** | Can modify state | Read-only | Static |
+| **Invocation** | Agent decides when | Agent requests by URI | Host provides |
+| **Use Case** | Actions, functions | Data, context | Instructions |
+| **Example** | Call an API | Read a file | Code review template |
+
+## The MCP Lifecycle
+
+When you configure and use MCP servers:
+
+1. **Configuration** — Define servers in your host/client config
+2. **Connection** — Client establishes connection to each server
+3. **Discovery** — Client requests list of available tools, resources, and prompts
+4. **Operation** — Agent calls tools, reads resources, retrieves prompts as needed
+5. **Shutdown** — Client closes connection (usually when host shuts down)
+
+Servers can be:
+- Started on demand (stdio servers)
+- Always running (Streamable HTTP servers)
+- Dynamically added or removed
+- Updated without restarting the host (for Streamable HTTP)
+
+## Key Takeaways
+
+The essential takeaway: hosts run agents, clients request capabilities, and servers provide them. The three capability types — tools (callable functions), resources (read-only data), and prompts (instruction templates) — cover the full range of what agents need. JSON-RPC is the protocol, while transports (stdio for local, Streamable HTTP for remote) determine how messages travel. Together, MCP solves the M×N integration problem with one unified approach.
+
+Next, let's build our first MCP server.

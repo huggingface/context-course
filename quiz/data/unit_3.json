@@ -1,0 +1,42 @@
+[
+    {
+        "question": "What is a plugin in the context of code agents?",
+        "answer_a": "A type of programming language extension",
+        "answer_b": "A bundle of skills, MCP servers, and app integrations packaged for distribution and reuse",
+        "answer_c": "A hardware accelerator for AI workloads",
+        "answer_d": "A browser extension for code editing",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What is the key difference between a plugin and a standalone skill?",
+        "answer_a": "Plugins are always larger files",
+        "answer_b": "Plugins bundle multiple components (skills, MCPs, integrations) into a single distributable package",
+        "answer_c": "Plugins only work offline",
+        "answer_d": "Skills are more powerful than plugins",
+        "correct_answer": "B"
+    },
+    {
+        "question": "In Codex, what three components can a plugin contain?",
+        "answer_a": "Models, datasets, and scripts",
+        "answer_b": "Skills, app integrations, and MCP servers",
+        "answer_c": "HTML, CSS, and JavaScript",
+        "answer_d": "Docker, Kubernetes, and Terraform configs",
+        "correct_answer": "B"
+    },
+    {
+        "question": "How do open source agents typically handle extensibility compared to commercial agents with plugin systems?",
+        "answer_a": "They don't support any extensibility",
+        "answer_b": "Through convention-based approaches like config files, markdown instructions, and community-maintained tool lists",
+        "answer_c": "Through proprietary binary formats",
+        "answer_d": "By requiring a paid subscription",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What is the recommended approach when building a plugin that works across multiple agent platforms?",
+        "answer_a": "Build separate plugins for each platform from scratch",
+        "answer_b": "Start with portable components (SKILL.md, MCP servers) and add platform-specific packaging",
+        "answer_c": "Only target one platform",
+        "answer_d": "Use binary compilation for cross-platform support",
+        "correct_answer": "B"
+    }
+]

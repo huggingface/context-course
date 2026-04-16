@@ -1,0 +1,30 @@
+# Unit 3: Plugins
+
+## What Are Plugins?
+
+Plugins are reusable extensions for code agents. The exact shape depends on the platform: **Claude Code** and **Codex** use installable plugin bundles with manifests plus optional skills, MCP servers, and app integrations, while **OpenCode** uses JavaScript/TypeScript plugin modules loaded from local files or npm packages.
+
+Think of plugins as "pre-built context packs" — curated, tested, and shareable pieces of knowledge that save setup time and ensure consistency across different users and projects.
+
+## The Evolution of Context
+
+The journey to plugins reflects how AI agents have matured:
+
+1. **Prompts** — Raw instructions. Fragile, hard to reuse, inconsistent across team members.
+2. **Skills** — Packaged prompts + tools. More organized, but no dependency management.
+3. **MCP Servers** — Standardized tool interfaces. Composable, but steep learning curve.
+4. **Plugins** — Reusable extensions. In Claude Code and Codex, that usually means a manifest plus bundled components. In OpenCode, it means a code module that hooks into the agent and can add behavior or tools.
+
+## Why Plugins Matter
+
+If you're a **solo developer**, plugins save setup time. Instead of configuring your agent from scratch each project, you install a "Python linter" plugin or "API documentation" plugin and get dozens of hours of expert curation instantly.
+
+If you're in a **team**, plugins enforce consistency. When your entire team uses the same plugins, everyone has the same tools and same knowledge — no more "why doesn't my version work like hers?"
+
+If you're in a **community**, plugins are shareable artifacts. You can publish your expertise to a plugin marketplace and let thousands of developers benefit from your work.
+
+## Key Terminology
+
+Before diving in, let's clarify the key terms. A **skill** is a reusable prompt plus metadata (name, description, inputs). An **MCP server** is a standardized tool provider for file I/O, API calls, or database queries. An **integration** connects to an external service like GitHub, Slack, or Google Drive. A **manifest** is the metadata file used by manifest-first plugin systems like Claude Code and Codex. And a **marketplace** is a catalog where plugins are published and discovered.
+
+Let's start building your plugin knowledge!

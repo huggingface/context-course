@@ -1,0 +1,40 @@
+<svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
+      .title { font-size: 12px; fill: #c9d1d9; }
+      .label { font-size: 11px; fill: #8b949e; }
+      .dim { font-size: 10px; fill: #8b949e; }
+      line { stroke: #30363d; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <rect width="500" height="200" fill="#0d1117"/>
+
+  <!-- Shared trunk -->
+  <text x="30" y="30" class="title">Unit 1  Skills</text>
+  <line x1="20" y1="40" x2="20" y2="55"/>
+  <text x="30" y="55" class="title">Unit 2  MCP</text>
+  <line x1="20" y1="65" x2="20" y2="80"/>
+
+  <!-- Fork point -->
+  <line x1="20" y1="80" x2="80" y2="80"/>
+
+  <!-- Left branch: Fundamentals -->
+  <line x1="80" y1="80" x2="80" y2="110"/>
+  <text x="90" y="100" class="label">Fundamentals Certificate</text>
+  <text x="90" y="115" class="dim">2-3 weeks / Units 1-2 quizzes</text>
+
+  <!-- Right branch: Full -->
+  <line x1="20" y1="80" x2="20" y2="95"/>
+  <text x="30" y="95" class="title">Unit 3  Plugins</text>
+  <line x1="20" y1="105" x2="20" y2="120"/>
+  <text x="30" y="120" class="title">Unit 4  Sub-agents</text>
+  <line x1="20" y1="130" x2="20" y2="145"/>
+  <text x="30" y="145" class="title">Unit 5  Agent Loop</text>
+  <line x1="20" y1="155" x2="20" y2="170"/>
+  <text x="30" y="170" class="title">Capstone Project</text>
+  <line x1="20" y1="180" x2="80" y2="180"/>
+  <line x1="80" y1="180" x2="80" y2="195"/>
+  <text x="90" y="195" class="label">Full Certificate</text>
+</svg>

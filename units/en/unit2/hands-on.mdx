@@ -1,0 +1,390 @@
+# Hands-On: Build and Deploy an MCP Server
+
+In this project, you'll build a complete MCP server that provides text processing tools, test it locally, and deploy it to Hugging Face Spaces.
+
+## Project Overview
+
+You'll create a text processing MCP server that allows code agents to:
+- Analyze text statistics (word count, character count, etc.)
+- Extract key phrases and entities
+- Check spelling and grammar basics
+- Summarize text
+
+This is a real, shareable tool that works with any MCP-compatible agent.
+
+## Part 1: Build the Server Locally
+
+### Step 1: Set Up Your Project
+
+```bash
+mkdir text-processor-mcp
+cd text-processor-mcp
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install mcp
+```
+
+### Step 2: Create the FastMCP Server
+
+Create `server.py`:
+
+```python
+from mcp.server.fastmcp import FastMCP
+import json
+
+mcp = FastMCP("text-processor")
+
+@mcp.tool()
+def analyze_text(text: str) -> str:
+    """Analyze text and return statistics.
+    
+    Args:
+        text: The input text to analyze
+    
+    Returns:
+        JSON string with analysis results
+    """
+    words = text.split()
+    chars = len(text)
+    chars_no_spaces = len(text.replace(" ", ""))
+    sentences = text.count(".") + text.count("!") + text.count("?")
+    
+    avg_word_length = round(chars_no_spaces / len(words), 2) if words else 0
+    avg_sentence_length = round(len(words) / max(sentences, 1), 2)
+    
+    return json.dumps({
+        "total_characters": chars,
+        "characters_without_spaces": chars_no_spaces,
+        "total_words": len(words),
+        "total_sentences": max(sentences, 1),
+        "average_word_length": avg_word_length,
+        "average_sentence_length": avg_sentence_length,
+        "unique_words": len(set(word.lower() for word in words))
+    })
+
+@mcp.tool()
+def extract_keywords(text: str, count: int = 5) -> str:
+    """Extract keywords (most common words) from text.
+    
+    Args:
+        text: The input text
+        count: Number of keywords to return (default 5)
+    
+    Returns:
+        JSON string with keywords and frequencies
+    """
+    # Remove common words
+    stopwords = {
+        "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+        "of", "with", "is", "are", "was", "were", "be", "been", "by", "from"
+    }
+    
+    words = text.lower().split()
+    filtered = [w.strip(".,!?;:") for w in words if w.lower() not in stopwords]
+    
+    from collections import Counter
+    word_freq = Counter(filtered)
+    top_words = word_freq.most_common(count)
+    
+    return json.dumps({
+        "keywords": [{"word": w, "frequency": f} for w, f in top_words]
+    })
+
+@mcp.tool()
+def check_reading_level(text: str) -> str:
+    """Estimate reading difficulty level.
+    
+    Args:
+        text: The input text
+    
+    Returns:
+        JSON string with reading level estimate
+    """
+    sentences = max(text.count(".") + text.count("!") + text.count("?"), 1)
+    words = len(text.split())
+    syllables = text.count("a") + text.count("e") + text.count("i") + text.count("o") + text.count("u")
+    
+    if words == 0:
+        return json.dumps({"error": "No text to analyze"})
+    
+    # Flesch Kincaid Grade
+    grade = (0.39 * (words / sentences)) + (11.8 * (syllables / words)) - 15.59
+    grade = max(0, round(grade, 1))
+    
+    if grade < 6:
+        level = "Elementary School"
+    elif grade < 9:
+        level = "Middle School"
+    elif grade < 13:
+        level = "High School"
+    else:
+        level = "College/Academic"
+    
+    return json.dumps({
+        "grade_level": grade,
+        "reading_level": level
+    })
+
+@mcp.tool()
+def reverse_text(text: str) -> str:
+    """Reverse a string.
+    
+    Args:
+        text: The input text
+    
+    Returns:
+        The reversed text
+    """
+    return text[::-1]
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Step 3: Test the Server Locally
+
+Start the server:
+```bash
+python server.py
+```
+
+The server listens on stdin/stdout. Test it by listing tools:
+
+```bash
+pip install mcp-cli
+mcp-cli list-tools stdio python server.py
+```
+
+This should show all four tools.
+
+## Part 2: Create a Gradio Web UI + MCP Server
+
+Create `app.py` to add a web interface:
+
+```python
+import gradio as gr
+import json
+
+def analyze_text(text: str) -> str:
+    """Analyze text and return statistics.
+    
+    Args:
+        text: The input text to analyze
+    
+    Returns:
+        JSON string with analysis results
+    """
+    words = text.split()
+    chars = len(text)
+    chars_no_spaces = len(text.replace(" ", ""))
+    sentences = text.count(".") + text.count("!") + text.count("?")
+    
+    avg_word_length = round(chars_no_spaces / len(words), 2) if words else 0
+    avg_sentence_length = round(len(words) / max(sentences, 1), 2)
+    
+    return json.dumps({
+        "total_characters": chars,
+        "characters_without_spaces": chars_no_spaces,
+        "total_words": len(words),
+        "total_sentences": max(sentences, 1),
+        "average_word_length": avg_word_length,
+        "average_sentence_length": avg_sentence_length
+    }, indent=2)
+
+def extract_keywords(text: str, count: int = 5) -> str:
+    """Extract keywords (most common words) from text.
+    
+    Args:
+        text: The input text
+        count: Number of keywords to return (default 5)
+    
+    Returns:
+        JSON string with keywords and frequencies
+    """
+    stopwords = {
+        "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+        "of", "with", "is", "are", "was", "were", "be", "been", "by", "from"
+    }
+    
+    words = text.lower().split()
+    filtered = [w.strip(".,!?;:") for w in words if w.lower() not in stopwords]
+    
+    from collections import Counter
+    word_freq = Counter(filtered)
+    top_words = word_freq.most_common(count)
+    
+    return json.dumps({
+        "keywords": [{"word": w, "frequency": f} for w, f in top_words]
+    }, indent=2)
+
+def check_reading_level(text: str) -> str:
+    """Estimate reading difficulty level.
+    
+    Args:
+        text: The input text
+    
+    Returns:
+        JSON string with reading level estimate
+    """
+    sentences = max(text.count(".") + text.count("!") + text.count("?"), 1)
+    words = len(text.split())
+    vowels = "aeiou"
+    syllables = sum(1 for c in text.lower() if c in vowels)
+    
+    if words == 0:
+        return json.dumps({"error": "No text to analyze"})
+    
+    grade = max(0, (0.39 * (words / sentences)) + (11.8 * (syllables / words)) - 15.59)
+    
+    if grade < 6:
+        level = "Elementary School"
+    elif grade < 9:
+        level = "Middle School"
+    elif grade < 13:
+        level = "High School"
+    else:
+        level = "College/Academic"
+    
+    return json.dumps({
+        "grade_level": round(grade, 1),
+        "reading_level": level
+    }, indent=2)
+
+# Create web UI
+with gr.Blocks(title="Text Processor") as demo:
+    gr.Markdown("# Text Processing Tools")
+    gr.Markdown("Analyze text statistics, extract keywords, and check reading difficulty.")
+    
+    with gr.Tab("Analyze Text"):
+        text_input1 = gr.Textbox(
+            label="Enter text",
+            lines=8,
+            placeholder="Paste your text here..."
+        )
+        analysis_output = gr.Textbox(label="Analysis Results", lines=8)
+        gr.Button("Analyze", size="lg").click(analyze_text, text_input1, analysis_output)
+    
+    with gr.Tab("Extract Keywords"):
+        text_input2 = gr.Textbox(label="Enter text", lines=8)
+        count_input = gr.Slider(1, 20, value=5, step=1, label="Number of keywords")
+        keywords_output = gr.Textbox(label="Keywords", lines=8)
+        gr.Button("Extract", size="lg").click(
+            extract_keywords,
+            [text_input2, count_input],
+            keywords_output
+        )
+    
+    with gr.Tab("Reading Level"):
+        text_input3 = gr.Textbox(label="Enter text", lines=8)
+        level_output = gr.Textbox(label="Reading Level Analysis", lines=5)
+        gr.Button("Check Level", size="lg").click(check_reading_level, text_input3, level_output)
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+Test it:
+```bash
+pip install gradio
+python app.py
+```
+
+Visit `http://localhost:7860` to use the web UI. The MCP endpoint is automatically available at `http://localhost:7860/gradio_api/mcp/`.
+
+## Part 3: Deploy to Hugging Face Spaces
+
+### Step 1: Create a New Space
+
+1. Go to [huggingface.co/new-space](https://huggingface.co/new-space)
+2. Name it (e.g., `text-processor-mcp`)
+3. Select "Gradio" SDK
+4. Choose "Public"
+5. Create
+
+### Step 2: Upload Your Files
+
+Create these files in your Space:
+
+**app.py** — Use the Gradio version from Part 2
+
+**requirements.txt:**
+```
+gradio>=4.0.0
+```
+
+The Space will automatically build and deploy.
+
+### Step 3: Configure Your Agent
+
+Once deployed, add your Space's MCP endpoint to your agent:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+claude mcp add --transport http --scope user text-processor https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```toml
+# In ~/.codex/config.toml
+[mcp_servers.text-processor]
+url = "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```json
+{
+  "mcp": {
+    "text-processor": {
+      "type": "remote",
+      "url": "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+</hfoption>
+
+</hfoptions>
+
+### Step 4: Test with Your Agent
+
+Restart your agent. Now you can ask it:
+
+- "Analyze the readability of this text: [text]"
+- "What are the keywords in this article?"
+- "What's the reading level of this passage?"
+
+Your agent will use the MCP server to process text in real-time.
+
+## Debugging
+
+If the server doesn't work:
+
+1. **Check Space logs** — Click "Logs" in the Space UI
+2. **Test the web UI** — Confirm the Gradio app works at `https://your-space.hf.space`
+3. **Verify MCP endpoint** — Test `https://your-space.hf.space/gradio_api/mcp/` in your browser
+4. **Check function signatures** — Ensure all functions have type hints and docstrings
+5. **Test locally first** — Debug on your machine before deploying
+
+## Challenge Extensions
+
+Try these improvements:
+
+1. **Add sentiment analysis** — Detect positive/negative tone
+2. **Add language detection** — Identify the language of text
+3. **Add text summarization** — Create short summaries
+4. **Add spell checking** — Identify misspelled words
+5. **Add readability tips** — Suggest improvements for clarity
+
+## Key Takeaways
+
+You've successfully built an MCP server with FastMCP, created a Gradio UI that also exposes MCP tools, deployed it to Hugging Face Spaces, configured a code agent to use your server, and tested the complete system. This same pattern works for any capability — API integrations, data processing, analysis tools, and more. You now have the full workflow for building and deploying MCP servers.

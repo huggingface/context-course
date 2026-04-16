@@ -1,0 +1,113 @@
+# Quiz 1: Plugin Fundamentals
+
+Test your understanding of plugins, their anatomy, and how they differ across platforms.
+
+<Question
+  choices={[
+    {
+      text: "A plugin is a single reusable workflow, like calculating ROI",
+      explain: "That's a skill, not a plugin. A plugin is the larger extension surface around reusable behavior."
+    },
+    {
+      text: "A plugin is a collection of tools that provides standardized access to external APIs",
+      explain: "That's an MCP server. Plugins are a broader extension surface than MCP alone."
+    },
+    {
+      text: "A plugin is a reusable extension surface; Claude Code and Codex use plugin bundles, while OpenCode plugins are code modules loaded from files or npm",
+      explain: "Correct! The exact shape depends on the platform. Claude Code and Codex are manifest-first, while OpenCode plugins are code-first.",
+      correct: true
+    },
+    {
+      text: "A plugin is a text file that describes how to use an agent tool",
+      explain: "That sounds like documentation, not a plugin. Plugins are actual packages with executable components."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "For Claude Code and Codex, plugin.json tells the agent the plugin's identity and where to find bundled components",
+      explain: "Correct! On manifest-first platforms, plugin.json identifies the plugin and points to skills, MCP config, or app integrations. OpenCode does not use this manifest model.",
+      correct: true
+    },
+    {
+      text: "plugin.json is just documentation describing what's in the plugin",
+      explain: "It's more than documentation — it's structured metadata that agents parse to discover and load plugin components."
+    },
+    {
+      text: "plugin.json is a list of all the API endpoints the plugin can access",
+      explain: "No, that would be part of an MCP server definition or app integration config, not the plugin manifest."
+    },
+    {
+      text: "plugin.json is automatically generated and doesn't need to be written manually",
+      explain: "You write the manifest to define your plugin's identity. Some tools (like Codex's $plugin-creator) can scaffold it for you, but the file still matters."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Claude Code uses .claude-plugin/plugin.json; Codex uses .codex-plugin/plugin.json; both place skills/ at the plugin root",
+      explain: "Correct! Both platforms use a similar pattern (manifest in a hidden directory, skills at root) but with platform-specific directory names.",
+      correct: true
+    },
+    {
+      text: "All platforms use the exact same manifest.json format at the plugin root",
+      explain: "False. Claude Code uses .claude-plugin/plugin.json, Codex uses .codex-plugin/plugin.json. The schemas also differ."
+    },
+    {
+      text: "Only Codex supports plugin marketplaces",
+      explain: "False. Both Claude Code and Codex support marketplace distribution. Claude Code uses the Anthropic marketplace; Codex uses .agents/plugins/marketplace.json."
+    },
+    {
+      text: "Claude Code and Codex plugins are fully interchangeable",
+      explain: "Not directly. While both can bundle skills and MCP servers, the manifest schemas and installation mechanisms differ."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "In Claude Code and Codex, a plugin can only contain skills OR MCP servers, not both",
+      explain: "False. Manifest-first plugins can combine skills, MCP servers, and other components."
+    },
+    {
+      text: "In Claude Code and Codex, skills are human-readable workflows; MCP servers provide programmatic tool access",
+      explain: "Correct! Skills describe how to accomplish tasks; MCP servers provide standardized tool interfaces for agents to call.",
+      correct: true
+    },
+    {
+      text: "Skills and MCP servers do the same thing; you only need one",
+      explain: "False. Skills describe *how* to do something; MCP servers provide *what* you can do — they're complementary."
+    },
+    {
+      text: "Only Claude Code plugins use skills; Codex plugins only use MCP servers",
+      explain: "False. Both platforms support skills. Codex also supports MCP servers and app integrations."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "The plugin manifest directory is always named .claude-plugin/ regardless of platform",
+      explain: "False. Claude Code uses .claude-plugin/, Codex uses .codex-plugin/. Each platform has its own directory name."
+    },
+    {
+      text: "Codex plugins can reference MCP servers and app integrations via paths in plugin.json",
+      explain: "Correct! Codex plugin.json uses fields like 'mcpServers': './.mcp.json' and 'apps': './.app.json' to reference bundled configuration files.",
+      correct: true
+    },
+    {
+      text: "OpenCode uses a formal plugin manifest like Claude Code and Codex",
+      explain: "False. OpenCode has native plugins, but they are JS/TS modules loaded from `.opencode/plugins/` or npm packages listed in `opencode.json`, not manifest directories like `.claude-plugin/` or `.codex-plugin/`."
+    },
+    {
+      text: "All plugins must have an MCP server to be useful",
+      explain: "False. A plugin can contain just skills, or just configuration — MCP servers are optional."
+    }
+  ]}
+/>

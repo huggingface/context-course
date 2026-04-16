@@ -1,0 +1,42 @@
+[
+    {
+        "question": "What is a subagent?",
+        "answer_a": "A smaller version of a language model",
+        "answer_b": "A spawned child agent process that handles a specific subtask and returns results to the parent",
+        "answer_c": "A backup agent that takes over when the primary fails",
+        "answer_d": "A user interface component for agent interaction",
+        "correct_answer": "B"
+    },
+    {
+        "question": "Which subagent pattern involves a parent agent distributing tasks to multiple child agents that run in parallel?",
+        "answer_a": "Pipeline pattern",
+        "answer_b": "Fan-out / fan-in pattern",
+        "answer_c": "Singleton pattern",
+        "answer_d": "Observer pattern",
+        "correct_answer": "B"
+    },
+    {
+        "question": "In Claude Code, what does the 'worktree' isolation mode provide for subagents?",
+        "answer_a": "A separate language model instance",
+        "answer_b": "An isolated copy of the git repository so the subagent's changes don't affect the main branch",
+        "answer_c": "A virtual machine for each subagent",
+        "answer_d": "Network isolation from the internet",
+        "correct_answer": "B"
+    },
+    {
+        "question": "When should you prefer subagents over a single-agent approach?",
+        "answer_a": "Always — subagents are strictly better",
+        "answer_b": "When the task involves independent subtasks that benefit from parallel execution or isolated contexts",
+        "answer_c": "Only when the task is very simple",
+        "answer_d": "Never — single agents are always more efficient",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What is the 'supervisor' pattern in multi-agent systems?",
+        "answer_a": "A human reviewing all agent outputs",
+        "answer_b": "A parent agent that orchestrates child agents, reviews their work, and makes decisions about next steps",
+        "answer_c": "An automated testing framework",
+        "answer_d": "A logging system for agent actions",
+        "correct_answer": "B"
+    }
+]

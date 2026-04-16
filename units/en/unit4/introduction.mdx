@@ -1,0 +1,100 @@
+# Unit 4: Subagents
+
+Subagents are isolated agent instances spawned by a parent agent to handle subtasks in parallel. Each has its own **context window, execution limits, and tool access**, returning results to the parent for aggregation.
+
+```
+Parent Agent (Main Task)
+    │
+    ├─→ Subagent 1 (Subtask A) — Separate context, separate tools
+    ├─→ Subagent 2 (Subtask B) — Separate context, separate tools
+    └─→ Subagent 3 (Subtask C) — Separate context, separate tools
+    
+    Wait for all → Aggregate results → Final answer
+```
+
+## Why Single-Agent Workflows Hit Limits
+
+Single-agent workflows break down in predictable ways. Large tasks overflow context windows. Sequential execution means tasks run one-by-one instead of in parallel. A single agent trying to be expert in everything dilutes its focus across mixed domains. Multiple tasks compete for the same thought process, creating interference. And one failure can crash the entire workflow because there's no fault isolation. Subagents fix all of these.
+
+## The 5 Use Cases for Subagents
+
+There are 5 clear signals that subagents are the right approach:
+
+### 1. Research-Heavy Tasks
+When you need to read 10+ files or documents:
+```
+Parent: "Summarize our architecture"
+├─ Subagent A: Read and summarize backend docs (50 files)
+├─ Subagent B: Read and summarize frontend docs (40 files)
+└─ Subagent C: Read and summarize database docs (30 files)
+Parent: Combine summaries into architecture overview
+```
+
+### 2. Multiple Independent Tasks
+When you have 3+ pieces of work that don't depend on each other:
+```
+Parent: "Prepare launch report"
+├─ Subagent A: Gather sales metrics (2 hours of API calls)
+├─ Subagent B: Compile feature list from GitHub (1 hour)
+└─ Subagent C: Collect user feedback from surveys (1 hour)
+Parent: Aggregate into one report
+```
+
+A single agent would take 4 hours. Subagents: ~2 hours (parallel execution).
+
+### 3. Fresh Perspective Verification
+When you need unbiased review or independent verification:
+```
+Parent: "Implement payment system"
+├─ Subagent A: Implement feature
+└─ Subagent B (read-only): Review implementation for bugs
+```
+
+The verification subagent has no memory of implementation choices, so it spots gaps.
+
+### 4. Pre-Commit Verification
+When you want independent validation before merging:
+```
+Parent: "Propose code changes"
+├─ Subagent A: Write code
+└─ Subagent B (read-only): Security review before commit
+```
+
+Prevents bad code from reaching the repository.
+
+### 5. Pipeline Workflows
+When tasks have clear sequential stages:
+```
+Parent orchestrates:
+├─ Design Stage
+│  └─ Subagent: Design API schema
+├─ Implementation Stage
+│  └─ Subagent: Write code (using design from stage 1)
+└─ Testing Stage
+   └─ Subagent: Test code (using code from stage 2)
+```
+
+Clear separation of concerns, easy to track progress.
+
+## The Strong Signal: "10+ Files"
+
+If you find yourself saying:
+- "I need to read 10+ files to understand this"
+- "I'm doing 3+ independent pieces of work"
+- "I want a second opinion on this"
+
+**→ That's when subagents shine.**
+
+## Subagent Benefits
+
+Subagents enable parallel execution across multiple tasks simultaneously, give each task its own context window to prevent overflow, allow specialized tool access per agent, isolate failures so one crash doesn't take down the whole workflow, scale without slowing the parent, and decompose complexity naturally into manageable pieces.
+
+## When NOT to Use Subagents
+
+Avoid subagents for sequential dependent work where task B needs output from task A, same-file parallel edits that risk git conflicts, small quick tasks where spawn overhead exceeds the task itself, and workflows requiring more than five specialist agents where coordination becomes chaotic.
+
+## What You'll Learn
+
+In this unit, you'll understand subagent patterns (fan-out/fan-in, pipeline, supervisor, swarm), learn to identify when subagents are the right tool using the five signals from the Claude blog, build multi-agent workflows in Claude Code with conversational invocation, custom agents, hooks, and background execution, and complete a hands-on research-implement-review pipeline.
+
+Let's dive in.

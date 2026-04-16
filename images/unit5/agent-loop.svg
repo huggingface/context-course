@@ -1,0 +1,43 @@
+<svg viewBox="0 0 450 350" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="450" height="350" fill="#0d1117"/>
+
+  <!-- Vertical flow -->
+  <line x1="225" y1="40" x2="225" y2="80" stroke="#30363d" stroke-width="1"/>
+  <polygon points="225,85 220,75 230,75" fill="#30363d"/>
+
+  <line x1="225" y1="110" x2="225" y2="150" stroke="#30363d" stroke-width="1"/>
+  <polygon points="225,155 220,145 230,145" fill="#30363d"/>
+
+  <line x1="225" y1="180" x2="225" y2="220" stroke="#30363d" stroke-width="1"/>
+  <polygon points="225,225 220,215 230,215" fill="#30363d"/>
+
+  <line x1="225" y1="250" x2="225" y2="290" stroke="#30363d" stroke-width="1"/>
+  <polygon points="225,295 220,285 230,285" fill="#30363d"/>
+
+  <!-- Horizontal line to check box -->
+  <line x1="225" y1="320" x2="300" y2="320" stroke="#30363d" stroke-width="1"/>
+  <polygon points="305,320 295,315 295,325" fill="#30363d"/>
+
+  <!-- Loop back arrow (right side, curving back up) -->
+  <path d="M 225 320 L 375 320 L 375 100 L 230 100" stroke="#30363d" stroke-width="1" fill="none"/>
+  <polygon points="225,100 235,98 230,108" fill="#30363d"/>
+
+  <!-- Labels -->
+  <text x="225" y="70" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Initialize</text>
+
+  <text x="225" y="140" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Call LLM</text>
+
+  <text x="225" y="210" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Parse Output</text>
+
+  <text x="225" y="280" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Execute Code</text>
+
+  <text x="225" y="315" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">done?</text>
+
+  <!-- Decision labels -->
+  <text x="320" y="315" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="11" fill="#8b949e">yes</text>
+  <text x="385" y="210" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="11" fill="#8b949e">no</text>
+
+  <!-- Return label -->
+  <text x="330" y="335" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9">Return</text>
+</svg>

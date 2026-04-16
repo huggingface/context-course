@@ -1,0 +1,44 @@
+<svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
+      .title { font-size: 14px; fill: #c9d1d9; font-weight: bold; }
+      .label { font-size: 12px; fill: #c9d1d9; }
+      .line { stroke: #30363d; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <rect width="400" height="280" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="20" y="30" class="title">Course Map</text>
+
+  <!-- Unit 0 -->
+  <text x="40" y="60" class="label">Unit 0</text>
+  <text x="120" y="60" class="label">Onboarding</text>
+  <line x1="50" y1="70" x2="50" y2="90" class="line"/>
+
+  <!-- Unit 1 -->
+  <text x="40" y="100" class="label">Unit 1</text>
+  <text x="120" y="100" class="label">Agent Skills</text>
+  <line x1="50" y1="110" x2="50" y2="130" class="line"/>
+
+  <!-- Unit 2 -->
+  <text x="40" y="140" class="label">Unit 2</text>
+  <text x="120" y="140" class="label">Model Context Protocol</text>
+  <line x1="50" y1="150" x2="50" y2="170" class="line"/>
+
+  <!-- Unit 3 -->
+  <text x="40" y="180" class="label">Unit 3</text>
+  <text x="120" y="180" class="label">Plugins</text>
+  <line x1="50" y1="190" x2="50" y2="210" class="line"/>
+
+  <!-- Unit 4 -->
+  <text x="40" y="220" class="label">Unit 4</text>
+  <text x="120" y="220" class="label">Sub-agents</text>
+  <line x1="50" y1="230" x2="50" y2="250" class="line"/>
+
+  <!-- Unit 5 -->
+  <text x="40" y="260" class="label">Unit 5</text>
+  <text x="120" y="260" class="label">Agent Loop + Tooling</text>
+</svg>

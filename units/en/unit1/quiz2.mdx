@@ -1,0 +1,180 @@
+# Quiz 2: Building and Using Skills
+
+Test your understanding of how to build, test, and use skills following the Agent Skills Specification. Answer all 5 questions.
+
+## Question 1: Skill Directory Structure
+
+You're building a dataset validation skill. What should your directory structure look like according to the Agent Skills Specification?
+
+<Question
+choices={[
+  {
+    text: "Just a single SKILL.md file in your project root",
+    explain: "While technically possible, this doesn't follow the specification. The spec defines a structured layout with optional scripts/, references/, and assets/ directories for organization and clarity.",
+    correct: false
+  },
+  {
+    text: "SKILL.md in root, scripts/ for helper code, references/ for documentation, assets/ for templates",
+    explain: "Correct! This follows the Agent Skills Specification exactly. SKILL.md is required at the root; scripts/, references/, and assets/ are optional but recommended for organization.",
+    correct: true
+  },
+  {
+    text: "Everything in a scripts/ folder with SKILL.md inside it",
+    explain: "No, SKILL.md must be at the root so agents can discover it immediately. Helper scripts go in scripts/ but the main file is at the root.",
+    correct: false
+  },
+  {
+    text: "Organize folders by agent type (claude/, codex/, opencode/)",
+    explain: "No, the specification is agent-agnostic. Skills use a single format that works across all supporting agents. No agent-specific organization is needed.",
+    correct: false
+  }
+]}
+/>
+
+## Question 2: Required Frontmatter Fields
+
+What are the only required frontmatter fields in a SKILL.md file according to the Agent Skills Specification?
+
+<Question
+choices={[
+  {
+    text: "name, description, version, and license",
+    explain: "While useful, version and license are optional. Only two fields are required: name and description. These ensure agents can discover and understand the skill.",
+    correct: false
+  },
+  {
+    text: "name and description",
+    explain: "Correct! The specification requires exactly these two fields. Name identifies the skill; description explains what it does and when to use it. All other fields are optional.",
+    correct: true
+  },
+  {
+    text: "All metadata fields (name, version, author, etc.)",
+    explain: "No, many metadata fields are optional. Only name and description are required by the specification.",
+    correct: false
+  },
+  {
+    text: "At least 5 fields including metadata and compatibility",
+    explain: "No, the spec is minimal. Only name and description are required. Other fields like license, compatibility, and metadata are optional.",
+    correct: false
+  }
+]}
+/>
+
+## Question 3: Validating Your Skill Locally
+
+After building your skill locally, what's the best next step to validate it?
+
+<Question
+choices={[
+  {
+    text: "Symlink it into your agent's skill directory, start the agent, and test with realistic prompts",
+    explain: "Correct! The first thing that matters is whether the agent can discover and activate the skill in a real workflow. Local install plus realistic prompts catches trigger and usability problems early.",
+    correct: true
+  },
+  {
+    text: "Wait until the skill is shared more broadly before you test it with an agent",
+    explain: "No. Validate the skill locally first so you can fix activation issues, missing files, and weak instructions before anyone else depends on it.",
+    correct: false
+  },
+  {
+    text: "Run only the helper scripts and skip agent testing",
+    explain: "Helper scripts matter, but they are not enough. A skill can have correct scripts and still fail because the description doesn't trigger or the instructions are unclear.",
+    correct: false
+  },
+  {
+    text: "Read the SKILL.md manually and assume the agent will behave the same way",
+    explain: "No. Manual review helps, but the real test is whether the agent discovers and uses the skill correctly inside a live session.",
+    correct: false
+  }
+]}
+/>
+
+## Question 4: Helper Scripts vs. Instructions
+
+How should you divide content between SKILL.md instructions and helper scripts?
+
+<Question
+choices={[
+  {
+    text: "Instructions contain all executable code; scripts are just for reference examples",
+    explain: "No, it's the opposite. Instructions teach the strategy and steps; scripts contain actual, executable code agents run.",
+    correct: false
+  },
+  {
+    text: "Instructions explain what to do and why; scripts contain runnable code agents can actually execute",
+    explain: "Exactly right! Instructions provide strategy and guidance; scripts provide implementation. This separation makes skills teach and executable.",
+    correct: true
+  },
+  {
+    text: "Everything goes in scripts; instructions are summaries of script functions",
+    explain: "No, instructions are critical for teaching. Without clear instructions, users don't understand when, why, or how to use the scripts.",
+    correct: false
+  },
+  {
+    text: "It depends on the skill; the specification doesn't define this",
+    explain: "The specification and best practices do define this: instructions teach, scripts implement. This pattern is standard across skills.",
+    correct: false
+  }
+]}
+/>
+
+## Question 5: Activation Debugging
+
+When a skill doesn't activate reliably, what should you do first?
+
+<Question
+choices={[
+  {
+    text: "Add more helper scripts immediately, even if the trigger description is vague",
+    explain: "No. If the agent isn't activating the skill, the first problem is usually the triggering description or the examples, not missing helper code.",
+    correct: false
+  },
+  {
+    text: "Tighten the description and retest with both obvious and vague prompts",
+    explain: "Correct! Reliable activation comes from a clear description plus realistic prompt testing. Fix the trigger before adding more complexity.",
+    correct: true
+  },
+  {
+    text: "Rename the skill folder without changing the description",
+    explain: "No. Folder names matter for organization, but activation usually depends on the description and examples the agent matches against.",
+    correct: false
+  },
+  {
+    text: "Turn the skill back into a long one-off prompt for every conversation",
+    explain: "No. That throws away the reuse and progressive disclosure benefits skills are meant to provide.",
+    correct: false
+  }
+]}
+/>
+
+---
+
+## Scoring
+
+Count your correct answers:
+- **5/5**: Excellent! You understand skill development and the Agent Skills Specification. You're ready to build skills.
+- **4/5**: Good understanding. Review the question you missed before moving forward.
+- **3/5 or less**: Review the building and usage lessons before proceeding.
+
+## Summary
+
+You've completed Quiz 2! You now understand:
+- How to organize skills following the Agent Skills Specification
+- Which frontmatter fields are required vs. optional
+- How to validate a skill locally with a real agent
+- How to divide content between instructions and executable scripts
+- How to debug activation when a skill doesn't fire
+
+These are the core skills for building and maintaining quality agent skills.
+
+## Next Steps
+
+You've completed Unit 1: Agent Skills! You can now:
+- Build skills following the Agent Skills Specification
+- Use skills with Claude Code, Codex, and other agents
+- Validate skills in a real project
+- Write clear instructions and helper scripts
+
+Next, we move to **Unit 2: Model Context Protocol (MCP)**, where you'll learn how to integrate external tools and APIs with your code agents.
+
+Ready to dive into MCPs?

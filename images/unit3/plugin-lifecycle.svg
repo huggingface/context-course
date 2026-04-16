@@ -1,0 +1,53 @@
+<svg viewBox="0 0 700 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .label { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; font-size: 12px; fill: #c9d1d9; }
+      .line { stroke: #30363d; stroke-width: 1; fill: none; }
+      .arrow { fill: #30363d; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="80" fill="#0d1117"/>
+
+  <!-- Horizontal line -->
+  <line x1="50" y1="40" x2="650" y2="40" class="line"/>
+
+  <!-- Create -->
+  <text x="20" y="65" class="label">Create</text>
+
+  <!-- Arrow 1 -->
+  <polygon points="85,40 92,37 92,43" class="arrow"/>
+  <line x1="85" y1="40" x2="92" y2="40" class="line"/>
+
+  <!-- Develop -->
+  <text x="105" y="65" class="label">Develop</text>
+
+  <!-- Arrow 2 -->
+  <polygon points="165,40 172,37 172,43" class="arrow"/>
+  <line x1="165" y1="40" x2="172" y2="40" class="line"/>
+
+  <!-- Test -->
+  <text x="190" y="65" class="label">Test</text>
+
+  <!-- Arrow 3 -->
+  <polygon points="230,40 237,37 237,43" class="arrow"/>
+  <line x1="230" y1="40" x2="237" y2="40" class="line"/>
+
+  <!-- Distribute -->
+  <text x="255" y="65" class="label">Distribute</text>
+
+  <!-- Arrow 4 -->
+  <polygon points="345,40 352,37 352,43" class="arrow"/>
+  <line x1="345" y1="40" x2="352" y2="40" class="line"/>
+
+  <!-- Install -->
+  <text x="370" y="65" class="label">Install</text>
+
+  <!-- Arrow 5 -->
+  <polygon points="425,40 432,37 432,43" class="arrow"/>
+  <line x1="425" y1="40" x2="432" y2="40" class="line"/>
+
+  <!-- Use -->
+  <text x="450" y="65" class="label">Use</text>
+</svg>

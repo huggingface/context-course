@@ -1,0 +1,113 @@
+# Quiz 1: Subagent Concepts
+
+Test your understanding of subagent patterns, architectures, and when to use them.
+
+<Question
+  choices={[
+    {
+      text: "A subagent is a different agent platform (like switching from Claude Code to Codex)",
+      explain: "No. A subagent is a child process spawned by a parent agent within the same platform."
+    },
+    {
+      text: "A subagent is a skill that runs in the background while the main agent works on something else",
+      explain: "Not quite. Subagents are full agents, not just skills. Skills are reusable workflows."
+    },
+    {
+      text: "A subagent is a child agent process spawned by a parent agent to handle a subtask in isolation, then report results back",
+      explain: "Correct! Subagents are independent processes that solve specific subtasks and communicate results to the parent.",
+      correct: true
+    },
+    {
+      text: "A subagent is a way to run the same agent twice for redundancy",
+      explain: "No. Subagents are for dividing work, not duplicating it."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Fan-out/fan-in spawns multiple subagents, each handling a sequential stage; each stage waits for the previous to finish",
+      explain: "That's a pipeline pattern, not fan-out/fan-in. Fan-out/fan-in runs all subagents in parallel."
+    },
+    {
+      text: "Fan-out/fan-in spawns multiple independent subagents in parallel, waits for all to finish, then combines results",
+      explain: "Correct! All work happens simultaneously. Perfect for independent tasks.",
+      correct: true
+    },
+    {
+      text: "Fan-out/fan-in requires a supervisor agent to coordinate the subagents",
+      explain: "Not necessarily. The parent agent can manage it with wait_all() or similar."
+    },
+    {
+      text: "Fan-out/fan-in is the only pattern you should ever use",
+      explain: "No. Different patterns suit different task structures. Pipeline and supervisor are also valuable."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Pipeline pattern runs all subagents in parallel to maximize speed",
+      explain: "No, that's fan-out/fan-in. Pipeline runs stages sequentially: output of stage 1 → input of stage 2."
+    },
+    {
+      text: "Pipeline pattern chains subagents sequentially, where each stage's output becomes the next stage's input",
+      explain: "Correct! Pipelines are for sequential workflows like design → code → test.",
+      correct: true
+    },
+    {
+      text: "Pipeline pattern requires 10+ subagents to be effective",
+      explain: "No. Pipelines work with any number of stages, often 3-5 is ideal."
+    },
+    {
+      text: "Pipeline and fan-out/fan-in are the same thing",
+      explain: "False. Fan-out/fan-in is parallel. Pipeline is sequential."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Use subagents when you have 10+ files to read or 3+ independent pieces of work",
+      explain: "Correct! The blog post identifies these as the strong signals for subagent use.",
+      correct: true
+    },
+    {
+      text: "Always use subagents if your task takes more than 1 minute",
+      explain: "False. Time doesn't matter. Subagent overhead kills small tasks."
+    },
+    {
+      text: "Use subagents only for parallel work; never for sequential tasks",
+      explain: "False. Pipeline pattern uses subagents for sequential work."
+    },
+    {
+      text: "Use subagents for every task; they always make things faster",
+      explain: "No. Subagent spawn overhead makes them slower for small tasks."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Supervisor pattern spawns all subagents in parallel to maximize speed",
+      explain: "That's fan-out/fan-in, not supervisor. Supervisor uses specialized agents with different tools."
+    },
+    {
+      text: "Supervisor pattern has a parent agent directing multiple specialist subagents, each with different tools and expertise",
+      explain: "Correct! Supervisor is for when you need multiple specialized agents working on the same problem.",
+      correct: true
+    },
+    {
+      text: "Supervisor pattern requires more than 10 subagents to be effective",
+      explain: "No. Usually 2-5 specialist subagents is ideal with supervisor pattern."
+    },
+    {
+      text: "Supervisor pattern means all subagents have identical tools",
+      explain: "False. Supervisor specifically gives each subagent specialized tools for its domain."
+    }
+  ]}
+/>

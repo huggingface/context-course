@@ -1,0 +1,33 @@
+<svg viewBox="0 0 650 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="650" height="200" fill="#0d1117"/>
+
+  <!-- Vertical divider -->
+  <line x1="325" y1="20" x2="325" y2="180" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Left column header -->
+  <text x="40" y="30" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9">Claude Code</text>
+  
+  <!-- Left column separator line -->
+  <line x1="40" y1="38" x2="300" y2="38" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Left column content -->
+  <text x="40" y="65" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">Task tool / Agent tool</text>
+  <text x="40" y="90" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">Custom agents in</text>
+  <text x="55" y="110" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">.claude/agents/</text>
+  <text x="40" y="135" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">YAML frontmatter</text>
+  <text x="40" y="160" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">Parallel via tool calls</text>
+
+  <!-- Right column header -->
+  <text x="350" y="30" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9">Codex</text>
+  
+  <!-- Right column separator line -->
+  <line x1="350" y1="38" x2="610" y2="38" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Right column content -->
+  <text x="350" y="65" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">Natural language spawning</text>
+  <text x="350" y="90" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">TOML agents in</text>
+  <text x="365" y="110" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">.codex/agents/</text>
+  <text x="350" y="135" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">TOML config</text>
+  <text x="350" y="160" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#8b949e">max_threads / max_depth</text>
+</svg>

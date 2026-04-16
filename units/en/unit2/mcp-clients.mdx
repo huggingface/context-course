@@ -1,0 +1,384 @@
+# Configuring Agents as MCP Clients
+
+Code agents are MCP clients that discover and use servers automatically. Your job is configuring which servers each agent can access. Let's see how to do that for Claude Code, Codex, and OpenCode.
+
+## How Code Agents Act as MCP Clients
+
+When you configure an MCP server for an agent, the agent gains access to that server's tools and resources immediately. The agent's built-in MCP client discovers what tools and resources the server provides, integrates them into the agent's available capabilities, routes requests to the appropriate server when needed, and handles errors gracefully. From the agent's perspective, tools from MCP servers are just as available as built-in functions.
+
+## Adding an MCP Server
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+Use the `claude mcp add` command. Options must come before the server name:
+
+**Stdio (local) server:**
+```bash
+claude mcp add --transport stdio <name> -- <command> [args]
+```
+
+**HTTP (remote) server:**
+```bash
+claude mcp add --transport http <name> <url>
+```
+
+**Examples:**
+```bash
+# Local Python server
+claude mcp add --transport stdio calculator -- python /path/to/server.py
+
+# Remote HTTP server
+claude mcp add --transport http my-api https://api.example.com/mcp
+
+# With scope and env vars
+claude mcp add --transport stdio --scope user --env API_KEY=xxx github -- npx -y @modelcontextprotocol/server-github
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+Use the `codex mcp add` command or edit `config.toml` directly:
+
+**CLI:**
+```bash
+codex mcp add <name> --env VAR=VALUE -- <command> [args]
+```
+
+**config.toml** (at `~/.codex/config.toml` or `.codex/config.toml`):
+
+```toml
+# Stdio server
+[mcp_servers.calculator]
+command = "python"
+args = ["/path/to/server.py"]
+
+# HTTP server
+[mcp_servers.my-api]
+url = "https://api.example.com/mcp"
+
+# With env vars
+[mcp_servers.github]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+
+[mcp_servers.github.env]
+GITHUB_TOKEN = "ghp_xxxxx"
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+Edit `opencode.json` in your project root:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "calculator": {
+      "type": "local",
+      "command": ["python", "/path/to/server.py"]
+    },
+    "my-api": {
+      "type": "remote",
+      "url": "https://api.example.com/mcp"
+    },
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "environment": {
+        "GITHUB_TOKEN": "ghp_xxxxx"
+      }
+    }
+  }
+}
+```
+
+</hfoption>
+
+</hfoptions>
+
+## Managing Servers
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+# List all configured servers
+claude mcp list
+
+# Get details for a specific server
+claude mcp get <name>
+
+# Remove a server
+claude mcp remove <name>
+
+# Check status in-session
+/mcp
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```bash
+# View active servers in-session
+/mcp
+```
+
+You can also edit `~/.codex/config.toml` directly. Set `enabled = false` to temporarily disable a server without removing it:
+
+```toml
+[mcp_servers.my-api]
+url = "https://api.example.com/mcp"
+enabled = false
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```bash
+# List all servers and auth status
+opencode mcp list
+
+# Debug connection issues
+opencode mcp debug <name>
+
+# Authenticate with a server
+opencode mcp auth <name>
+
+# Remove stored credentials
+opencode mcp logout <name>
+```
+
+Set `"enabled": false` in `opencode.json` to disable a server without removing it.
+
+</hfoption>
+
+</hfoptions>
+
+## Configuration Scopes
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+Claude Code supports three scopes, controlled with the `--scope` flag:
+
+- **`local`** (default) — Current project only, private to you (stored in `~/.claude.json`)
+- **`project`** — Shared with team via version control (stored in `.mcp.json` at project root)
+- **`user`** — Available across all your projects (stored in `~/.claude.json`)
+
+```bash
+# Add at user scope (available everywhere)
+claude mcp add --transport http --scope user my-api https://api.example.com/mcp
+
+# Add at project scope (shared with team)
+claude mcp add --transport http --scope project my-api https://api.example.com/mcp
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+Codex supports two scopes:
+
+- **Global** — `~/.codex/config.toml` (applies to all projects)
+- **Project** — `.codex/config.toml` (project-scoped, only in trusted projects)
+
+The CLI and IDE extension share this configuration.
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+OpenCode supports two scopes:
+
+- **Project** — `opencode.json` in the project root
+- **Organization** — Default servers from `.well-known/opencode` endpoint, which users can opt into
+
+Local config values override remote organization defaults.
+
+</hfoption>
+
+</hfoptions>
+
+## Transport Types
+
+All three agents support two primary transports:
+
+- **Stdio** — Local subprocess communication via stdin/stdout. Best for development servers and tools that need direct system access.
+- **Streamable HTTP** — Remote connections over HTTP. The current standard for cloud-deployed servers. Works across the internet and through firewalls.
+
+SSE (Server-Sent Events) is a legacy transport that is deprecated but still supported for backward compatibility.
+
+## The Hugging Face MCP Ecosystem
+
+Hugging Face provides official MCP servers for Hub integration. Configure them in any MCP-compatible agent:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+claude mcp add --transport http --scope user hf-mcp "https://huggingface.co/mcp?login"
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```toml
+# In ~/.codex/config.toml
+[mcp_servers.hf-mcp]
+url = "https://huggingface.co/mcp?login"
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```json
+{
+  "mcp": {
+    "hf-mcp": {
+      "type": "remote",
+      "url": "https://huggingface.co/mcp?login"
+    }
+  }
+}
+```
+
+</hfoption>
+
+</hfoptions>
+
+The HF MCP server gives agents access to searching for models and datasets, reading repository files, querying model cards, and browsing Hub content.
+
+> [!TIP]
+> Visit huggingface.co/settings/mcp to see official MCP servers and configuration examples for your agent.
+
+## Configuring Remote MCP Servers
+
+For servers deployed to Hugging Face Spaces or other cloud platforms, use Streamable HTTP:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+claude mcp add --transport http --scope user sentiment-analyzer https://username-sentiment.hf.space/mcp
+
+claude mcp add --transport http --scope user code-reviewer https://username-reviewer.hf.space/mcp
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```toml
+# In ~/.codex/config.toml
+[mcp_servers.sentiment-analyzer]
+url = "https://username-sentiment.hf.space/mcp"
+
+[mcp_servers.code-reviewer]
+url = "https://username-reviewer.hf.space/mcp"
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```json
+{
+  "mcp": {
+    "sentiment-analyzer": {
+      "type": "remote",
+      "url": "https://username-sentiment.hf.space/mcp"
+    },
+    "code-reviewer": {
+      "type": "remote",
+      "url": "https://username-reviewer.hf.space/mcp"
+    }
+  }
+}
+```
+
+</hfoption>
+
+</hfoptions>
+
+Remote servers via Streamable HTTP don't require restarting your agent, work across the internet and firewalls, can be updated independently, and support optional authentication via headers.
+
+## Debugging MCP Configurations
+
+If a server isn't working, check these things:
+
+**1. List configured servers:**
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+```bash
+claude mcp list
+claude mcp get <server-name>
+```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+Check `~/.codex/config.toml` or run `/mcp` in-session.
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```bash
+opencode mcp list
+opencode mcp debug <server-name>
+```
+
+</hfoption>
+
+</hfoptions>
+
+**2. Test the server manually:**
+
+```bash
+python /path/to/server.py
+```
+
+If the server crashes, you'll see the error immediately.
+
+**3. Check environment variables:**
+
+```bash
+echo $GITHUB_TOKEN
+```
+
+If empty, the server won't have required secrets.
+
+**4. Check remote server URLs:**
+
+```bash
+curl "https://your-space.hf.space/mcp"
+```
+
+Should return a valid response if the server is running.
+
+## Configuration Best Practices
+
+Use environment variables for API keys and secrets, absolute paths for local server scripts, and one server per capability area (keep GitHub and Slack servers separate). Test servers locally first before deploying to the cloud. Use descriptive server names that indicate what each server provides, document your configuration, and keep configs in version control — without secrets.
+
+## Key Takeaways
+
+Code agents act as MCP clients that discover and use servers automatically. Claude Code uses `claude mcp add`, Codex uses `codex mcp add` or `config.toml`, and OpenCode uses `opencode.json` — but all follow the same pattern of naming a server, specifying a transport, and providing a command or URL. Use stdio transport for local servers and Streamable HTTP for remote ones. Environment variables protect secrets. When debugging, list servers and test connections systematically.
+
+Next, let's see how Gradio makes it easy to build MCP servers with a web UI.

@@ -1,0 +1,141 @@
+# Welcome to The Context Course
+
+Welcome to **The Context Course** — the essential guide to mastering context engineering for AI code agents.
+
+## The Key Skill for Code Agents
+
+Whether you're using Claude Code, Codex, or OpenCode, the same fundamental truth applies: **your agent is only as good as the context you give it**.
+
+Code agents are great, but they're only as good as the context you give them. This is sometimes called **context engineering**: the art and science of structuring knowledge so that agents can access exactly what they need, when they need it.
+
+This course teaches you how to refine your code agents' context so they can do their best work. You'll learn to build portable skills, integrate specialized tools through MCPs (Model Context Protocol), create custom plugins, spawn sub-agents for complex tasks, and optimize execution for maximum efficiency. 
+
+These are the techniques that separate code agent blunders from success.
+
+## What You'll Learn
+
+This course is structured into 6 core units:
+
+| Unit | Topic | What You'll Learn |
+|------|-------|-------------------|
+| **Unit 0** | Onboarding | Course overview, tool setup, prerequisites |
+| **Unit 1** | Agent Skills | What skills are, how to build and share them, how agents load them |
+| **Unit 2** | Model Context Protocol | MCPs explained, connecting tools and APIs to agents |
+| **Unit 3** | Plugins | Building plugins, designing agent workflows |
+| **Unit 4** | Sub-agents | Spawning specialized agents, multi-agent patterns |
+| **Unit 5** | Bonus: Nano Harness | Advanced optimization, recursive context patterns |
+
+![Course overview showing the 6 units and how they connect](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit0/course-map.svg)
+
+## Prerequisites
+
+Before starting, you should be comfortable with Python basics (variables, functions, loops, and file I/O), able to navigate directories and run scripts from the command line, and have a Hugging Face account ([huggingface.co](https://huggingface.co)). You'll also need at least one code agent installed and configured — see the setup section below.
+
+## Tool Setup
+
+This course works with multiple code agents. Choose at least one to follow along:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+Claude Code is Anthropic's official code agent, accessible via the web, desktop app, or CLI.
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+**Getting started**: Visit [claude.ai/code](https://claude.ai/code) to use Claude Code on the web, or install the CLI above and run `claude` in any project directory. You'll be prompted to sign in on first use.
+
+</hfoption>
+
+<hfoption id="Codex">
+
+Codex is OpenAI's code agent with multi-agent capabilities.
+
+```bash
+npm install -g @openai/codex
+```
+
+**Getting started**: Run `codex` and select **Sign in with ChatGPT** to authenticate with your Plus, Pro, or Enterprise plan.
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+OpenCode is an open source code agent from [opencode.ai](https://opencode.ai):
+
+```bash
+npx opencode-ai
+```
+
+**Getting started**: Run `opencode` in any project directory. OpenCode supports multiple LLM providers — configure your preferred provider on first launch.
+
+</hfoption>
+
+</hfoptions>
+
+## How to Navigate This Course
+
+### Recommended Pace
+
+We recommend one unit per week, roughly 2–3 hours each, with hands-on practice throughout. Context engineering is not a quick skill — it requires practice and iteration. Rushing through units won't serve you well.
+
+### Learning Format
+
+Each unit combines conceptual lessons (the "why" and "how") with practical code examples you can run immediately, a hands-on project where you build something real, and a quiz to test your understanding.
+
+### Customizing Your Path
+
+While we recommend following units in order, you can customize based on your needs:
+- **Just want skills?** Start with Unit 1, revisit MCPs when needed
+- **Building a plugin for your team?** Start with Unit 3
+- **Multi-agent systems?** Begin with Unit 4, return to Unit 1-2 as reference
+- **Following along with open source?** All lessons include OpenCode examples alongside Claude Code and Codex
+
+## Certifications
+
+This course offers two levels of certification:
+
+### Context Fundamentals Certificate
+
+Demonstrates you understand core context engineering concepts. Pass the Unit 1–2 quizzes with 70% or higher to earn this certificate in 2–3 weeks. It's shareable and displayed on your Hugging Face profile.
+
+### Context Engineering Certificate
+
+Demonstrates mastery of context engineering across all domains. Pass all Unit 1–5 quizzes (70% or higher) and complete the capstone project to earn this certificate in 5–8 weeks. It's displayed on your Hugging Face profile with a project showcase.
+
+Both certificates verify your ability to build and maintain agent skills, connect external tools through MCPs, design multi-agent systems, and optimize context for maximum agent performance.
+
+![Certification paths: Fundamentals after Units 1-2, Full Certificate after Units 1-5 plus capstone](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit0/certification-paths.svg)
+
+## Course Structure
+
+Each unit follows a consistent format: an introduction explaining what you'll learn and why it matters, conceptual deep dives into key topics, step-by-step practical guides, a hands-on project where you build something real, and a quiz to check your understanding.
+
+We provide starter templates so you can skip boilerplate and focus on learning, copy-paste-ready code examples, interactive quizzes with immediate feedback, and a community of 1000+ learners on Discord.
+
+## Meet Your Instructors
+
+**Ben Burtenshaw** — ML Engineer, Hugging Face
+
+Ben focuses on LLM applications with emphasis on post-training and agentic approaches. He leads initiatives around agent best practices and context engineering at Hugging Face.
+
+## Connect with the Community
+
+Learning is better together. Join the conversation:
+
+- **Discord**: [discord.gg/huggingface](https://discord.gg/huggingface)
+- **Share your work**: Tag #ContextCourse on social media
+- **Report issues**: GitHub Issues for course content bugs
+
+## Next Steps
+
+Ready to get started?
+
+1. **Complete setup** using the tool setup section above
+2. **Verify prerequisites** are ready
+3. **Move to Unit 1** to learn about agent skills
+
+Welcome to the course. Let's unlock the true power of code agents together.
+

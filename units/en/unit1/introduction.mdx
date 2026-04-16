@@ -1,0 +1,69 @@
+# Unit 1: Agent Skills
+
+Welcome to Unit 1, where you'll learn about **agent skills**. They are the foundational building block of agent context.
+
+## Why Context Engineering Matters
+
+Code agents are powerful, but they're also limited. Without the right context, even the most advanced agent will struggle.
+
+Consider this scenario: You ask Claude Code to "publish a dataset to Hugging Face." Without context about your authentication credentials, your dataset's schema, or Hugging Face's specific requirements, the agent might make incorrect assumptions about required fields, get stuck on authentication, miss important validation steps, or waste your time asking clarifying questions.
+
+Now consider the same task with proper context. When the agent has clear authentication instructions, your specific token, the exact API format, common pitfalls and documentation links; it completes the task faster, more reliably, and with fewer errors.
+
+>[!TIP]
+> Code agents are only as good as the context you give them.
+>
+> This is context engineering: structuring information so agents can work as expected.
+
+This single principle underpins everything you'll learn in this course. It explains why some prompts work brilliantly while others fail mysteriously, why the same agent behaves differently across projects, and why the best agent builders obsess over documentation and examples. It's also why communities build collections of shared contexts and enterprise teams invest heavily in context management.
+
+## What Are Agent Skills?
+
+A **skill** is a self-contained package of knowledge that makes an agent expert at a specific task. Skills are portable across projects and agents, reusable once installed, structured in a standard format agents can parse, and extensible through links to scripts and APIs.
+
+Think of a skill as an instruction or onboarding document for an agent. Just as you might give a colleague a step-by-step guide to publishing a dataset, you can give an agent a skill to publish a dataset.
+
+## From Prompts to Portable Knowledge
+
+You might be wondering how skills differ from simply writing a longer prompt. We'll explore that comparison in depth in the next lesson. The short answer: skills are structured, reusable, and discoverable, so they live beyond a single conversation and can be opened and closed on demand.
+
+## What You'll Learn in Unit 1
+
+By the end of this unit, you'll understand what skills are and why they matter, the Agent Skills Specification (the open standard for skill structure), the SKILL.md format, how to use skills with agents, how to build your first skill from scratch, and how to debug them when they don't work.
+
+## The Agent Skills Specification
+
+There's a formal standard for how skills are structured, called the **Agent Skills Specification**, maintained at [agentskills.io](https://agentskills.io).
+
+>[!TIP]
+> The Agent Skills Specification defines a portable format for packaging agent knowledge, originally created by Anthropic and now adopted by 30+ code agents worldwide.
+
+This spec ensures:
+- Skills work across different agents and platforms
+- Agents can automatically discover and load relevant skills
+- Communities can share and improve skills together
+- Tools and platforms can be built to support skill workflows
+
+## Why Skills Are a Game-Changer
+
+Without skills, context engineering looks like long repetitive prompts in every conversation, scattered documentation across wikis, and team members independently rebuilding the same context. With skills, context is defined once and reused everywhere. Skills are easy to update, composable across domains, and loaded automatically by agents on demand.
+
+![How agents discover and load skills through progressive disclosure](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit1/skill-discovery-flow.svg)
+
+## The Road Ahead
+
+This unit has a practical focus. You'll learn the anatomy of a skill, understand how different agents load them, install skills from local and shared locations, use them with your code agent, build your first skill, and debug when things don't work. Each lesson includes code examples and hands-on exercises.
+
+## Prerequisites for Unit 1
+
+Before diving in, make sure you have:
+- A code agent set up (Claude Code, Codex, or open source)
+- Python installed for running helper scripts
+- A Hugging Face account
+- Familiarity with the command line
+
+If you're not set up yet, go back to Unit 0 and complete the tool setup section.
+
+## Key Takeaways
+
+The core idea to carry forward: skills are portable, structured context that make agents better at specific tasks. They work across agents and projects, follow the Agent Skills Specification for compatibility, and sit at the heart of context engineering. With that foundation in mind, let's look at how skills work in detail.

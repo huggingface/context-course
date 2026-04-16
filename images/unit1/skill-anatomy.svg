@@ -1,0 +1,36 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
+      .title { font-size: 12px; fill: #8b949e; }
+      .code { font-size: 11px; fill: #c9d1d9; }
+      .border { stroke: #30363d; stroke-width: 1; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="400" height="300" fill="#0d1117"/>
+
+  <!-- Main border box -->
+  <rect x="30" y="20" width="340" height="260" class="border"/>
+
+  <!-- Title line -->
+  <text x="40" y="35" class="title">SKILL.md</text>
+  <line x1="100" y1="30" x2="360" y2="30" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Frontmatter section -->
+  <text x="40" y="55" class="code">---</text>
+  <text x="40" y="72" class="code">name: my-skill</text>
+  <text x="40" y="89" class="code">version: 1.0.0</text>
+  <text x="40" y="106" class="code">---</text>
+
+  <!-- Instructions section -->
+  <text x="40" y="130" class="code"># Instructions</text>
+  <text x="40" y="147" class="code">Task description...</text>
+
+  <!-- Tools section -->
+  <text x="40" y="171" class="code">## Tools</text>
+  <text x="40" y="188" class="code">allowed-tools: "Bash(*)"</text>
+
+  <!-- Bottom border line -->
+  <line x1="30" y1="270" x2="370" y2="270" stroke="#30363d" stroke-width="1"/>
+</svg>

@@ -1,0 +1,82 @@
+[
+    {
+        "question": "What is an agent skill?",
+        "answer_a": "A programming language for AI agents",
+        "answer_b": "A portable, reusable set of instructions that makes a code agent expert at a specific task",
+        "answer_c": "A type of neural network architecture",
+        "answer_d": "A graphical user interface for controlling agents",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What is the primary file format used to define agent skills?",
+        "answer_a": "skills.json",
+        "answer_b": "agent.yaml",
+        "answer_c": "SKILL.md",
+        "answer_d": "config.toml",
+        "correct_answer": "C"
+    },
+    {
+        "question": "What is the key difference between a skill and a simple prompt?",
+        "answer_a": "Skills are always shorter than prompts",
+        "answer_b": "Skills bundle instructions with helper scripts, references, and structured metadata for reuse",
+        "answer_c": "Skills only work with Claude Code",
+        "answer_d": "Skills replace the need for a language model",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What does 'progressive disclosure' mean in the context of agent skills?",
+        "answer_a": "Skills get progressively harder over time",
+        "answer_b": "Agents load skill details incrementally — reading descriptions first, then full instructions only when needed",
+        "answer_c": "Users must complete training before accessing skills",
+        "answer_d": "Skills reveal their source code gradually",
+        "correct_answer": "B"
+    },
+    {
+        "question": "Which of the following is NOT a typical component of an agent skill?",
+        "answer_a": "A description field that triggers activation",
+        "answer_b": "Helper scripts for common operations",
+        "answer_c": "A trained neural network checkpoint",
+        "answer_d": "Step-by-step instructions for the agent to follow",
+        "correct_answer": "C"
+    },
+    {
+        "question": "How do agent skills relate to context engineering?",
+        "answer_a": "They are unrelated concepts",
+        "answer_b": "Skills replace the need for context engineering",
+        "answer_c": "Skills are a form of static context that provide domain-specific knowledge to agents",
+        "answer_d": "Context engineering is only needed when skills fail",
+        "correct_answer": "C"
+    },
+    {
+        "question": "What is the Agent Skills Specification?",
+        "answer_a": "A hardware requirement for running agents",
+        "answer_b": "An open standard at agentskills.io that defines a portable format for agent skills across tools",
+        "answer_c": "A proprietary Anthropic format",
+        "answer_d": "A testing framework for AI models",
+        "correct_answer": "B"
+    },
+    {
+        "question": "In Claude Code, where can skills be scoped?",
+        "answer_a": "Only at the system level",
+        "answer_b": "Personal, project, and plugin scopes",
+        "answer_c": "Only in cloud environments",
+        "answer_d": "Only in the AGENTS.md file",
+        "correct_answer": "B"
+    },
+    {
+        "question": "What is the recommended way to share skills with the community?",
+        "answer_a": "Email them to colleagues",
+        "answer_b": "Publish as a repository on the Hugging Face Hub",
+        "answer_c": "Post them on social media",
+        "answer_d": "Include them in your .gitignore",
+        "correct_answer": "B"
+    },
+    {
+        "question": "Why do skill descriptions matter for activation?",
+        "answer_a": "They don't — agents read every skill fully every time",
+        "answer_b": "They serve as the trigger text that agents match against to decide which skills to load",
+        "answer_c": "They are displayed to the end user",
+        "answer_d": "They are only used for documentation",
+        "correct_answer": "B"
+    }
+]
