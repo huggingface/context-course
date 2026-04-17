@@ -1,10 +1,8 @@
 # Introduction to Model Context Protocol
 
-Model Context Protocol (MCP) is an open standard that enables AI applications to safely interact with external data sources and tools. Think of it as a universal adapter that sits between your AI agent and the rest of your software ecosystem.
+Model Context Protocol (MCP) is an open standard for letting AI applications interact with external data and tools. It sits between your agent and everything else: files, databases, APIs, services.
 
-In Unit 1, you learned about Skills: static, pre-written context that lives in your application or project. Skills work great for fixed knowledge, but they have a hard limitation: they can't adapt to new information or take real-time actions.
-
-MCP solves this by enabling **dynamic context**: your AI agent can now call functions, read files, query databases, and interact with APIs—all through a standardized protocol.
+Unit 1 covered skills which are static, pre-written context that lives alongside your project. Skills are great for fixed knowledge, but they can't fetch new information or take live actions. MCP fills that gap by giving an agent **dynamic context**: it can call functions, read files, query databases, and interact with APIs through a single protocol.
 
 ## The M×N Problem
 
@@ -41,6 +39,4 @@ You'll often use both: Skills provide the knowledge, MCP provides the tools and 
 
 ## What You'll Build
 
-In this unit, you'll understand MCP architecture (hosts, clients, servers, and the three capability types), build MCP servers with FastMCP and Gradio that expose tools, resources, and prompts, configure agents as MCP clients, deploy servers to Hugging Face Spaces for production use, and build a complete project from scratch. By the end, you'll be able to extend any MCP-compatible agent with custom tools and data sources.
-
-Let's get started.
+This unit covers MCP architecture (hosts, clients, servers, and the three capability types), building servers with FastMCP and Gradio, configuring agents as MCP clients, deploying to Hugging Face Spaces, and a hands-on project tying it together.

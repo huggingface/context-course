@@ -21,7 +21,7 @@ mkdir text-processor-mcp
 cd text-processor-mcp
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install mcp
+pip install "mcp[cli]"
 ```
 
 ### Step 2: Create the FastMCP Server
@@ -148,14 +148,13 @@ Start the server:
 python server.py
 ```
 
-The server listens on stdin/stdout. Test it by listing tools:
+The server listens on stdin/stdout. Open it in the MCP Inspector to list and call tools:
 
 ```bash
-pip install mcp-cli
-mcp-cli list-tools stdio python server.py
+mcp dev server.py
 ```
 
-This should show all four tools.
+This launches the inspector in your browser connected to your server, where you can see all four tools and try them.
 
 ## Part 2: Create a Gradio Web UI + MCP Server
 
@@ -387,4 +386,4 @@ Try these improvements:
 
 ## Key Takeaways
 
-You've successfully built an MCP server with FastMCP, created a Gradio UI that also exposes MCP tools, deployed it to Hugging Face Spaces, configured a code agent to use your server, and tested the complete system. This same pattern works for any capability — API integrations, data processing, analysis tools, and more. You now have the full workflow for building and deploying MCP servers.
+You've built an MCP server with FastMCP, wrapped the same functions in a Gradio UI that doubles as an MCP server, deployed it to Hugging Face Spaces, and pointed an agent at it. The same pattern scales to API integrations, data processing, and custom analysis tools.

@@ -1,6 +1,6 @@
 # MCP Key Concepts and Architecture
 
-MCP is built on three core concepts: **Hosts**, **Clients**, and **Servers**, communicating through three capability types: **Tools**, **Resources**, and **Prompts**. Understanding these is essential for building and deploying MCP systems.
+MCP has three roles — **hosts**, **clients**, and **servers** — that exchange three kinds of capability: **tools**, **resources**, and **prompts**.
 
 ## The Three Roles: Hosts, Clients, and Servers
 
@@ -121,7 +121,7 @@ For **remote connections** where the server runs elsewhere:
 - Ideal for cloud deployments and shared resources
 - Supports authentication headers and session management
 
-This is the current standard for remote MCP servers (since protocol version 2024-11-05). The older HTTP+SSE transport is deprecated but still supported for backward compatibility.
+Streamable HTTP is the current standard for remote MCP servers, introduced in protocol revision 2025-03-26 and carried forward in subsequent revisions. The older HTTP+SSE transport from 2024-11-05 is deprecated but still supported for backward compatibility.
 
 Configuration:
 ```bash
@@ -172,7 +172,7 @@ The agent's client can communicate with multiple servers simultaneously and comp
 
 | Aspect | Tools | Resources | Prompts |
 |--------|-------|-----------|---------|
-| **Control** | Model-controlled | App-controlled | User-controlled |
+| **Control** | Model-controlled | Application-controlled | User-controlled |
 | **Mutability** | Can modify state | Read-only | Static |
 | **Invocation** | Agent decides when | Agent requests by URI | Host provides |
 | **Use Case** | Actions, functions | Data, context | Instructions |
@@ -196,6 +196,6 @@ Servers can be:
 
 ## Key Takeaways
 
-The essential takeaway: hosts run agents, clients request capabilities, and servers provide them. The three capability types — tools (callable functions), resources (read-only data), and prompts (instruction templates) — cover the full range of what agents need. JSON-RPC is the protocol, while transports (stdio for local, Streamable HTTP for remote) determine how messages travel. Together, MCP solves the M×N integration problem with one unified approach.
+Hosts run agents, clients request capabilities, and servers provide them. Tools, resources, and prompts cover the range of what agents need. JSON-RPC carries the messages; stdio handles local transport and Streamable HTTP handles remote. Together they solve the M×N integration problem with a single protocol.
 
-Next, let's build our first MCP server.
+Next, we'll build our first MCP server.

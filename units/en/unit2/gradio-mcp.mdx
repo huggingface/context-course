@@ -1,6 +1,6 @@
 # Gradio MCP Integration: Web UIs + MCP Servers
 
-Gradio makes it incredibly easy to create MCP servers that also have a beautiful web interface. With one line of code, you get both a user-friendly UI and an MCP server that agents can use.
+Gradio can turn the same functions into both a web UI and an MCP server. Pass `mcp_server=True` to `launch()` and your Gradio app exposes each function as a tool agents can call.
 
 ## What Is Gradio MCP Integration?
 
@@ -214,31 +214,22 @@ if __name__ == "__main__":
     demo.launch(mcp_server=True)
 ```
 
-### Authentication for Secured MCP Servers
+### Authentication
 
-Protect your MCP endpoint with authentication:
+Gradio's `auth` argument on `launch()` gates the **web UI** with HTTP basic auth. It does **not** protect the `/gradio_api/mcp/` MCP endpoint — by design, agents can reach it without logging in.
 
 ```python
 import gradio as gr
 
 def authenticate(username: str, password: str) -> bool:
-    """Custom authentication logic."""
     return username == "admin" and password == "secret"
 
-with gr.Blocks(auth=authenticate) as demo:
-    gr.Markdown("# Protected MCP Server")
-    
-    def secret_operation() -> str:
-        """Secret operation (authenticated access only)."""
-        return "This is secret data"
-    
-    gr.Button("Get Secret").click(secret_operation, outputs="text")
-
+# `auth` protects the web UI only; MCP remains open.
 if __name__ == "__main__":
-    demo.launch(mcp_server=True)
+    demo.launch(mcp_server=True, auth=authenticate)
 ```
 
-Only authenticated clients can access the MCP endpoint.
+For production, authenticate the MCP endpoint outside Gradio: put the app behind a reverse proxy that enforces auth on `/gradio_api/mcp/`, deploy it as a private Hugging Face Space, or use an MCP gateway that implements the [MCP Authorization spec](https://modelcontextprotocol.io/specification/basic/authorization).
 
 ## Deploying to Hugging Face Spaces
 
@@ -480,6 +471,6 @@ def analyze(data: str) -> str:
 
 ## Key Takeaways
 
-Adding `mcp_server=True` to your Gradio launch gives you both a web UI and an MCP server automatically. Type hints and docstrings are essential — Gradio uses them to generate MCP tool schemas. Deploy to Hugging Face Spaces for free, public MCP servers where each function becomes a tool agents can call. Use `@gr.api()` for MCP-only functions and `@gr.mcp.resource()` for read-only data. Keep tools fast and handle errors gracefully to ensure reliable agent interactions.
+`mcp_server=True` gives you a web UI and an MCP server from the same Gradio app. Gradio relies on type hints and docstrings to build the tool schemas, so keep both tight. Spaces is a quick way to host MCP servers publicly; `@gr.api()` hides tools from the UI, and `@gr.mcp.resource()` exposes read-only data.
 
-Next, let's build a complete hands-on project from start to finish.
+Next we'll put these pieces together in a hands-on project.

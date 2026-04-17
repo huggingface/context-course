@@ -1,16 +1,16 @@
 # Building MCP Servers with Python
 
-Now that you understand MCP architecture, let's build real MCP servers. We'll cover the FastMCP SDK for lightweight servers and Gradio integration for servers with web UIs.
+With the architecture in hand, this lesson builds real servers — first with the FastMCP SDK for lightweight servers, then with Gradio for servers that come with a web UI.
 
 ## Setting Up FastMCP
 
 FastMCP is the easiest way to build MCP servers. Install it with:
 
 ```bash
-pip install mcp
+pip install "mcp[cli]"
 ```
 
-The `mcp` package includes the FastMCP SDK.
+The `mcp` package includes the FastMCP SDK; the `[cli]` extra adds the `mcp` command used for testing further down.
 
 ## Creating Your First Server with FastMCP
 
@@ -337,20 +337,9 @@ if __name__ == "__main__":
 
 ### Authentication in Gradio MCP
 
-Protect MCP endpoints with authentication:
+Gradio's built-in `auth` argument on `launch()` protects the web UI with basic auth, but it does **not** protect the `/gradio_api/mcp/` endpoint. Treat an `mcp_server=True` app as publicly reachable on the network it's bound to.
 
-```python
-import gradio as gr
-
-with gr.Blocks(auth=("admin", "secret")) as demo:
-    # Your components and tools here
-    pass
-
-if __name__ == "__main__":
-    demo.launch(mcp_server=True)
-```
-
-Only authenticated clients can access MCP endpoints. For real apps, prefer a callable that checks credentials against your auth system.
+For production deployments, put the app behind a reverse proxy that enforces authentication on the MCP path, deploy it as a private Hugging Face Space, or implement authentication at the transport layer (for example, with an OAuth-aware MCP gateway). See the [Gradio security notes](https://www.gradio.app/guides/sharing-your-app#authentication) for UI auth and the [MCP Authorization spec](https://modelcontextprotocol.io/specification/basic/authorization) for transport-level options.
 
 ## Error Handling in FastMCP
 
@@ -409,25 +398,34 @@ Best practices:
 
 ## Testing Your Server Locally
 
-### Test with Python
+### Run the server directly
 
 ```bash
 python calculator_server.py
 ```
 
-This starts the server. Send JSON-RPC messages via stdin.
+This starts the server on stdio. You can send JSON-RPC messages on stdin, but it's usually easier to use one of the inspectors below.
 
-### Test with MCP CLI
+### MCP Inspector (recommended)
+
+The official inspector is a web UI that connects to any MCP server and lets you call tools, read resources, and fetch prompts.
+
+Using the `mcp` CLI from `mcp[cli]`:
 
 ```bash
-pip install mcp-cli
-mcp-cli list-tools stdio python calculator_server.py
+mcp dev calculator_server.py
 ```
 
-This lists all available tools.
+Or run the inspector directly with npx:
+
+```bash
+npx @modelcontextprotocol/inspector python calculator_server.py
+```
+
+Both open the inspector in your browser and connect it to the server over stdio.
 
 ## Key Takeaways
 
-FastMCP simplifies server building with Python decorators and type hints — your docstrings become tool descriptions and your type annotations become JSON schemas. Tools are callable functions, resources provide read-only data with URIs, and prompts serve as instruction templates. The Gradio integration gives you both a web UI and an MCP server automatically. Always include clear docstrings, handle errors gracefully, and test locally before deploying.
+FastMCP turns docstrings into tool descriptions and type hints into JSON schemas. Tools are callable functions, resources expose read-only data through URIs, and prompts serve as instruction templates. Gradio adds a web UI to the same functions when you pass `mcp_server=True`. Write clear docstrings, return error messages instead of raising, and test locally before deploying.
 
-Next, let's configure agents to use these servers.
+Next we'll point our agents at these servers.

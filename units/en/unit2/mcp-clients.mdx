@@ -1,10 +1,10 @@
 # Configuring Agents as MCP Clients
 
-Code agents are MCP clients that discover and use servers automatically. Your job is configuring which servers each agent can access. Let's see how to do that for Claude Code, Codex, and OpenCode.
+Claude Code, Codex, and OpenCode are all MCP clients. Your job is to tell each one which servers to connect to and how.
 
 ## How Code Agents Act as MCP Clients
 
-When you configure an MCP server for an agent, the agent gains access to that server's tools and resources immediately. The agent's built-in MCP client discovers what tools and resources the server provides, integrates them into the agent's available capabilities, routes requests to the appropriate server when needed, and handles errors gracefully. From the agent's perspective, tools from MCP servers are just as available as built-in functions.
+Once an MCP server is configured, the agent connects to it, discovers which tools and resources it exposes, and treats them like built-in capabilities. The agent's MCP client handles discovery, request routing, and errors behind the scenes.
 
 ## Adding an MCP Server
 
@@ -379,6 +379,6 @@ Use environment variables for API keys and secrets, absolute paths for local ser
 
 ## Key Takeaways
 
-Code agents act as MCP clients that discover and use servers automatically. Claude Code uses `claude mcp add`, Codex uses `codex mcp add` or `config.toml`, and OpenCode uses `opencode.json` — but all follow the same pattern of naming a server, specifying a transport, and providing a command or URL. Use stdio transport for local servers and Streamable HTTP for remote ones. Environment variables protect secrets. When debugging, list servers and test connections systematically.
+Claude Code uses `claude mcp add`, Codex uses `codex mcp add` or `config.toml`, and OpenCode uses `opencode.json`. The pattern is the same: name a server, pick a transport, and point it at a command (stdio) or URL (Streamable HTTP). Keep secrets in environment variables and test servers locally before debugging client config.
 
-Next, let's see how Gradio makes it easy to build MCP servers with a web UI.
+Next we'll look at Gradio's MCP integration in depth.
