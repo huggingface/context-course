@@ -1,16 +1,12 @@
 # Welcome to The Context Course
 
-Welcome to **The Context Course** — the essential guide to mastering context engineering for AI code agents.
+This course is about **context engineering** for AI code agents: structuring knowledge so an agent can find what it needs, when it needs it.
 
 ## The Key Skill for Code Agents
 
-Whether you're using Claude Code, Codex, or OpenCode, the same fundamental truth applies: **your agent is only as good as the context you give it**.
+Claude Code, Codex, and OpenCode all share the same constraint: an agent is only as good as the context it has. Good context means fewer wrong turns, cleaner diffs, and less rework.
 
-Code agents are great, but they're only as good as the context you give them. This is sometimes called **context engineering**: the art and science of structuring knowledge so that agents can access exactly what they need, when they need it.
-
-This course teaches you how to refine your code agents' context so they can do their best work. You'll learn to build portable skills, integrate specialized tools through MCPs (Model Context Protocol), create custom plugins, spawn sub-agents for complex tasks, and optimize execution for maximum efficiency. 
-
-These are the techniques that separate code agent blunders from success.
+Across six units you'll build portable skills, wire up tools through the Model Context Protocol (MCP), package those pieces into plugins, coordinate sub-agents for larger tasks, and study how a minimal agent loop actually works under the hood.
 
 ## What You'll Learn
 
@@ -57,7 +53,7 @@ Codex is OpenAI's code agent with multi-agent capabilities.
 npm install -g @openai/codex
 ```
 
-**Getting started**: Run `codex` and select **Sign in with ChatGPT** to authenticate with your Plus, Pro, or Enterprise plan.
+**Getting started**: Run `codex` and select **Sign in with ChatGPT** to authenticate with a paid ChatGPT plan (Plus, Pro, Business, Edu, or Enterprise), or use an OpenAI API key.
 
 </hfoption>
 
@@ -66,7 +62,13 @@ npm install -g @openai/codex
 OpenCode is an open source code agent from [opencode.ai](https://opencode.ai):
 
 ```bash
-npx opencode-ai
+curl -fsSL https://opencode.ai/install | bash
+```
+
+Or via npm:
+
+```bash
+npm install -g opencode-ai
 ```
 
 **Getting started**: Run `opencode` in any project directory. OpenCode supports multiple LLM providers — configure your preferred provider on first launch.
@@ -79,11 +81,11 @@ npx opencode-ai
 
 ### Recommended Pace
 
-We recommend one unit per week, roughly 2–3 hours each, with hands-on practice throughout. Context engineering is not a quick skill — it requires practice and iteration. Rushing through units won't serve you well.
+Plan on one unit per week, roughly 2–3 hours each. Context engineering is a practice-heavy skill, so build the examples rather than skimming them.
 
 ### Learning Format
 
-Each unit combines conceptual lessons (the "why" and "how") with practical code examples you can run immediately, a hands-on project where you build something real, and a quiz to test your understanding.
+Each unit mixes conceptual material with runnable code, a hands-on project, and a short quiz.
 
 ### Customizing Your Path
 
@@ -111,9 +113,7 @@ Both certificates verify your ability to build and maintain agent skills, connec
 
 ## Course Structure
 
-Each unit follows a consistent format: an introduction explaining what you'll learn and why it matters, conceptual deep dives into key topics, step-by-step practical guides, a hands-on project where you build something real, and a quiz to check your understanding.
-
-We provide starter templates so you can skip boilerplate and focus on learning, copy-paste-ready code examples, interactive quizzes with immediate feedback, and a community of 1000+ learners on Discord.
+Every unit follows the same shape: an introduction, conceptual material, practical walkthroughs, a hands-on project, and a quiz. Starter templates and copy-pasteable code are provided throughout so you spend time on the ideas rather than on boilerplate.
 
 ## Meet Your Instructors
 
@@ -131,11 +131,5 @@ Learning is better together. Join the conversation:
 
 ## Next Steps
 
-Ready to get started?
-
-1. **Complete setup** using the tool setup section above
-2. **Verify prerequisites** are ready
-3. **Move to Unit 1** to learn about agent skills
-
-Welcome to the course. Let's unlock the true power of code agents together.
+Install at least one of the agents above, check the prerequisites, then head to Unit 1 to start with agent skills.
 

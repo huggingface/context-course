@@ -1,20 +1,6 @@
 # The SKILL.md Format
 
-In this lesson, we'll examine the anatomy of a skill file based on the Agent Skills Specification and learn to write effective skills using the SKILL.md format.
-
-## Understanding SKILL.md
-
-Every agent skill follows a standard format called SKILL.md, which is a structured document that agents can parse, understand, and use automatically.
-
-A SKILL.md file contains:
-
-1. **Frontmatter**: Metadata about the skill (YAML format)
-2. **Instructions**: Detailed how-to content for completing tasks
-3. **Scripts**: Helper code in separate files (optional)
-4. **References**: Links to documentation and examples (optional)
-5. **Assets**: Templates and resources (optional)
-
-Let's examine each section in detail.
+The Agent Skills Specification describes skills as a `SKILL.md` file with YAML frontmatter and Markdown instructions, optionally accompanied by `scripts/`, `references/`, and `assets/` directories. This lesson walks through each piece and how to write them well.
 
 ![Anatomy of a SKILL.md file showing frontmatter, instructions, and tool sections](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit1/skill-anatomy.svg)
 
@@ -484,4 +470,4 @@ hf auth login
 
 ## Next Steps
 
-Now that you understand the SKILL.md format, let's look at how different agents load and use skills, then build your first skill from scratch and test it in a real project.
+Next, we'll look at how different agents load skills, then build one from scratch.

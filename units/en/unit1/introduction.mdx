@@ -1,31 +1,29 @@
 # Unit 1: Agent Skills
 
-Welcome to Unit 1, where you'll learn about **agent skills**. They are the foundational building block of agent context.
+**Agent skills** are the foundational building block of agent context. This unit covers what they are, how they're structured, and how to install and write them.
 
 ## Why Context Engineering Matters
 
-Code agents are powerful, but they're also limited. Without the right context, even the most advanced agent will struggle.
+Ask Claude Code to "publish a dataset to Hugging Face" with no extra context, and the agent has to guess at authentication, schema, and required fields. It may get stuck, ask clarifying questions, or fill in plausible but wrong values.
 
-Consider this scenario: You ask Claude Code to "publish a dataset to Hugging Face." Without context about your authentication credentials, your dataset's schema, or Hugging Face's specific requirements, the agent might make incorrect assumptions about required fields, get stuck on authentication, miss important validation steps, or waste your time asking clarifying questions.
-
-Now consider the same task with proper context. When the agent has clear authentication instructions, your specific token, the exact API format, common pitfalls and documentation links; it completes the task faster, more reliably, and with fewer errors.
+Give the same agent authentication instructions, the dataset schema, the API format, and pointers to common pitfalls, and the task finishes faster and more reliably.
 
 >[!TIP]
 > Code agents are only as good as the context you give them.
 >
-> This is context engineering: structuring information so agents can work as expected.
+> Context engineering is the practice of structuring that context so the agent can find and use it.
 
-This single principle underpins everything you'll learn in this course. It explains why some prompts work brilliantly while others fail mysteriously, why the same agent behaves differently across projects, and why the best agent builders obsess over documentation and examples. It's also why communities build collections of shared contexts and enterprise teams invest heavily in context management.
+This principle runs through the rest of the course. It's the same reason communities publish shared contexts and teams invest in keeping their documentation close to the agent.
 
 ## What Are Agent Skills?
 
-A **skill** is a self-contained package of knowledge that makes an agent expert at a specific task. Skills are portable across projects and agents, reusable once installed, structured in a standard format agents can parse, and extensible through links to scripts and APIs.
+A **skill** is a self-contained package of knowledge that makes an agent good at one specific task. Skills are portable across projects and agents, reusable once installed, structured in a format agents can parse, and extensible through links to scripts and APIs.
 
-Think of a skill as an instruction or onboarding document for an agent. Just as you might give a colleague a step-by-step guide to publishing a dataset, you can give an agent a skill to publish a dataset.
+A skill is essentially an onboarding document for an agent: the same kind of step-by-step guide you'd give a new colleague, but written so the agent can load it on demand.
 
 ## From Prompts to Portable Knowledge
 
-You might be wondering how skills differ from simply writing a longer prompt. We'll explore that comparison in depth in the next lesson. The short answer: skills are structured, reusable, and discoverable, so they live beyond a single conversation and can be opened and closed on demand.
+Skills differ from long prompts in one key way: they are structured, reusable, and discoverable. They live beyond a single conversation and can be loaded only when relevant. The next lesson goes deeper on this.
 
 ## What You'll Learn in Unit 1
 
@@ -44,15 +42,11 @@ This spec ensures:
 - Communities can share and improve skills together
 - Tools and platforms can be built to support skill workflows
 
-## Why Skills Are a Game-Changer
+## Why Skills Matter
 
-Without skills, context engineering looks like long repetitive prompts in every conversation, scattered documentation across wikis, and team members independently rebuilding the same context. With skills, context is defined once and reused everywhere. Skills are easy to update, composable across domains, and loaded automatically by agents on demand.
+Without skills, context engineering looks like long repetitive prompts in every conversation, scattered wiki pages, and team members rebuilding the same context independently. With skills, context is defined once, updated in one place, composable across domains, and loaded by the agent on demand.
 
 ![How agents discover and load skills through progressive disclosure](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit1/skill-discovery-flow.svg)
-
-## The Road Ahead
-
-This unit has a practical focus. You'll learn the anatomy of a skill, understand how different agents load them, install skills from local and shared locations, use them with your code agent, build your first skill, and debug when things don't work. Each lesson includes code examples and hands-on exercises.
 
 ## Prerequisites for Unit 1
 
@@ -66,4 +60,4 @@ If you're not set up yet, go back to Unit 0 and complete the tool setup section.
 
 ## Key Takeaways
 
-The core idea to carry forward: skills are portable, structured context that make agents better at specific tasks. They work across agents and projects, follow the Agent Skills Specification for compatibility, and sit at the heart of context engineering. With that foundation in mind, let's look at how skills work in detail.
+Skills are portable, structured context that make agents better at specific tasks. They follow the Agent Skills Specification for cross-agent compatibility, and they sit at the heart of context engineering.
