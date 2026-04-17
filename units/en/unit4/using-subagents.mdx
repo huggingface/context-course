@@ -1,6 +1,6 @@
 # Using Subagents
 
-Now let's use subagents in practice. The approach differs between Claude Code and Codex, but the concepts are the same.
+The approach differs between Claude Code and Codex, but the core idea is the same: a parent agent delegates a scoped task to a child, often in parallel.
 
 ![Fan-out fan-in pattern where a parent agent spawns parallel subagents](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit4/fan-out-fan-in.svg)
 
@@ -163,27 +163,11 @@ Researching 10 files...  [Press Ctrl+B]
 
 Check running tasks:
 
-```bash
+```text
 /tasks
 ```
 
-Output:
-```
-Active Tasks:
-  1. researcher-agent (45% complete)
-     Task: Explore auth system
-     Running for: 2m 34s
-     
-  2. security-reviewer (60% complete)
-     Task: Review code changes
-     Running for: 1m 12s
-```
-
-Wait for a specific task:
-
-```bash
-/tasks wait 1
-```
+The `/tasks` view lists active background tasks and lets you bring a selected task back to the foreground.
 
 ### Subagent Results
 
@@ -274,19 +258,16 @@ job_max_runtime_seconds = 3600
 
 ### Managing Subagents
 
-Switch between active threads and inspect work:
+Use the `/agent` command to list active subagent threads and switch between them. Once attached to a thread, steer it in natural language:
+
+```text
+/agent
+```
 
 ```
-/agent         # List all active subagent threads
-/agent 2       # Switch to subagent 2
-```
-
-Steer subagents in natural language:
-
-```
-Tell subagent 2 to also check security.
-Stop subagent 1.
-Close subagent 3 and report findings.
+Tell this agent to also check security.
+Stop the current agent.
+Close this agent and report findings.
 ```
 
 ### Custom Agent Types
@@ -509,6 +490,6 @@ Use `/agent` to monitor progress or steer either agent during execution.
 
 ## Key Takeaways
 
-In Claude Code, use conversational invocation, custom agents in `.claude/agents/`, CLAUDE.md policies, and background execution with Ctrl+B. In Codex, use natural language subagent requests with three built-in agent types (default, worker, explorer), custom TOML agents, the `/agent` command, and CSV batch processing. Both platforms benefit from subagents when you have 10+ files, 3+ independent tasks, or need fresh perspectives. For parallel file edits, use git worktrees to avoid conflicts.
+In Claude Code, use conversational invocation, custom agents in `.claude/agents/`, CLAUDE.md policies, and background execution with Ctrl+B. In Codex, request subagents in natural language with three built-in types (default, worker, explorer), define custom TOML agents, monitor with `/agent`, and use CSV batch jobs for parallel work. Both platforms benefit from subagents when you have many files, several independent tasks, or need a fresh perspective. For parallel file edits, isolate work with git worktrees.
 
-Next, let's build a hands-on multi-agent workflow.
+Next, a hands-on multi-agent workflow.

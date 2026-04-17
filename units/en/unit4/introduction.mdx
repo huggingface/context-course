@@ -1,6 +1,6 @@
 # Unit 4: Subagents
 
-Subagents are isolated agent instances spawned by a parent agent to handle subtasks in parallel. Each has its own **context window, execution limits, and tool access**, returning results to the parent for aggregation.
+Subagents are isolated agent instances spawned by a parent agent to handle subtasks, often in parallel. Each has its own context window, execution limits, and tool access, and reports back to the parent.
 
 ```
 Parent Agent (Main Task)
@@ -14,7 +14,7 @@ Parent Agent (Main Task)
 
 ## Why Single-Agent Workflows Hit Limits
 
-Single-agent workflows break down in predictable ways. Large tasks overflow context windows. Sequential execution means tasks run one-by-one instead of in parallel. A single agent trying to be expert in everything dilutes its focus across mixed domains. Multiple tasks compete for the same thought process, creating interference. And one failure can crash the entire workflow because there's no fault isolation. Subagents fix all of these.
+A single agent runs into the same handful of problems every time. Large tasks overflow its context window. Work runs sequentially even when it could be parallel. An agent expected to be expert in everything dilutes its focus. Unrelated tasks interfere with each other in the same reasoning chain. And a single failure takes down the whole workflow, because there's no isolation. Subagents address all of these.
 
 ## The 5 Use Cases for Subagents
 
@@ -95,6 +95,4 @@ Avoid subagents for sequential dependent work where task B needs output from tas
 
 ## What You'll Learn
 
-In this unit, you'll understand subagent patterns (fan-out/fan-in, pipeline, supervisor, swarm), learn to identify when subagents are the right tool using the five signals from the Claude blog, build multi-agent workflows in Claude Code with conversational invocation, custom agents, hooks, and background execution, and complete a hands-on research-implement-review pipeline.
-
-Let's dive in.
+This unit covers subagent patterns (fan-out/fan-in, pipeline, supervisor, swarm), the signals that tell you a task wants subagents, how to invoke them in Claude Code and Codex, and a hands-on research–implement–review pipeline.

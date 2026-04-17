@@ -1,6 +1,6 @@
 # Subagent Patterns
 
-Subagents aren't random, they follow predictable patterns. Understanding these patterns helps you design multi-agent workflows efficiently.
+Multi-agent workflows tend to fall into a handful of shapes. Four of them cover almost everything you'll build.
 
 ## Pattern 1: Fan-Out / Fan-In
 
@@ -221,6 +221,6 @@ implementation_team = spawn(task="Implement based on design")
 
 ## Key Takeaways
 
-The four patterns — fan-out/fan-in for parallel independent tasks, pipeline for sequential stages, supervisor for coordinating multiple specialists, and swarm for collaborative multi-perspective design — cover most multi-agent workflows. Use subagents when you have 10+ files to process or 3+ independent pieces of work. Stick with a single agent for small tasks and high-dependency workflows.
+Fan-out/fan-in parallelises independent work, pipeline chains stages, supervisor coordinates specialists, and swarm cross-reviews a single artefact. Reach for subagents when you have many files or several independent tasks; stick with a single agent for small jobs and tightly coupled workflows.
 
-Next, let's see how to actually use subagents in Claude Code and Codex.
+Next, how to actually invoke subagents in Claude Code and Codex.

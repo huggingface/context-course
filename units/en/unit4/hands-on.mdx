@@ -1,15 +1,6 @@
 # Hands-On: Multi-Agent Workflow
 
-Let's build a real multi-agent workflow using the **research → implement → verify** pipeline.
-
-## Project: Code Quality Pipeline
-
-We'll create a system that:
-1. **Researches** your codebase architecture (using subagent)
-2. **Implements** a new feature based on the research (using subagent)
-3. **Verifies** the implementation for security and performance (using subagents)
-
-This demonstrates the pipeline pattern with clear separation of concerns.
+This project builds a **research → implement → verify** pipeline. A researcher subagent maps the existing code, an implementer writes the change, and two read-only reviewers (security and performance) sign off in parallel before the change is merged.
 
 ## Project Setup
 
@@ -462,6 +453,6 @@ This project demonstrates clear stage separation (research, implement, verify), 
 
 ## Key Takeaways
 
-Use the researcher agent for exploring and documenting, the implementer for writing code, and the security-reviewer and performance-reviewer in parallel for validation. Define custom agents in `.claude/agents/*.md` or `.codex/agents/*.toml`, keep the workflow in `CLAUDE.md` or `AGENTS.md`, and treat hooks or runtime settings as supporting automation rather than a subagent orchestration language.
+A researcher agent explores and documents, an implementer writes code, and security and performance reviewers sign off in parallel. Define the specialists in `.claude/agents/*.md` or `.codex/agents/*.toml`, and keep the workflow in `CLAUDE.md` or `AGENTS.md`. Hooks and runtime settings are for automation around the workflow, not for driving subagent orchestration.
 
-Next, test your knowledge with the unit 4 quizzes.
+Next, the unit 4 quizzes.
