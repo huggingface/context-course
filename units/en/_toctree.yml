@@ -1,83 +1,83 @@
 - title: "0. Welcome to the Context Course"
   sections:
   - local: unit0/introduction
-    title: Welcome to the Context Course
+    title: Welcome to The Context Course
 
 - title: "1. Skills: Portable Knowledge for Code Agents"
   sections:
   - local: unit1/introduction
-    title: Introduction to Agent Skills
+    title: "Unit 1: Agent Skills"
   - local: unit1/what-are-skills
     title: What Are Agent Skills?
   - local: unit1/skill-format
     title: The SKILL.md Format
   - local: unit1/quiz1
-    title: Quiz 1 - Skills Fundamentals
+    title: "Quiz 1: Understanding Skills and the Specification"
   - local: unit1/using-skills
     title: Using Skills with Code Agents
   - local: unit1/building-skills
     title: Building Your First Skill
   - local: unit1/quiz2
-    title: Quiz 2 - Building and Sharing Skills
+    title: "Quiz 2: Building and Using Skills"
 
 - title: "2. MCP: The Model Context Protocol"
   sections:
   - local: unit2/introduction
     title: Introduction to Model Context Protocol
   - local: unit2/key-concepts
-    title: Key Concepts and Architecture
+    title: MCP Key Concepts and Architecture
   - local: unit2/building-servers
-    title: Building MCP Servers
+    title: Building MCP Servers with Python
   - local: unit2/quiz1
-    title: Quiz 1 - MCP Fundamentals
+    title: "Quiz 1: MCP Fundamentals"
   - local: unit2/mcp-clients
-    title: MCP Clients and Configuration
+    title: Configuring Agents as MCP Clients
   - local: unit2/gradio-mcp
-    title: Gradio MCP Integration
+    title: "Gradio MCP Integration: Web UIs + MCP Servers"
   - local: unit2/hands-on
-    title: "Hands-on: Build an MCP Server"
+    title: "Hands-On: Build and Deploy an MCP Server"
   - local: unit2/quiz2
-    title: Quiz 2 - MCP in Practice
+    title: "Quiz 2: MCP in Practice"
 
 - title: "3. Plugins: Bundling Tools for Distribution"
   sections:
   - local: unit3/introduction
-    title: Introduction to Plugins
+    title: "Unit 3: Plugins"
   - local: unit3/anatomy
-    title: Anatomy of a Plugin
+    title: Plugin Anatomy
   - local: unit3/building-plugins
     title: Building Your Own Plugin
   - local: unit3/quiz1
-    title: Quiz 1 - Plugin Fundamentals
+    title: "Quiz 1: Plugin Fundamentals"
   - local: unit3/using-plugins
-    title: Using Plugins Across Agents
+    title: Using Plugins
   - local: unit3/quiz2
-    title: Quiz 2 - Building Plugins
+    title: "Quiz 2: Building and Distributing Plugins"
 
 - title: "4. Subagents: Orchestrating Multi-Agent Workflows"
   sections:
   - local: unit4/introduction
-    title: Introduction to Subagents
+    title: "Unit 4: Subagents"
   - local: unit4/patterns
-    title: Subagent Patterns and Architectures
+    title: Subagent Patterns
   - local: unit4/using-subagents
-    title: Using Subagents Across Agents
+    title: Using Subagents
   - local: unit4/quiz1
-    title: Quiz 1 - Subagent Concepts
+    title: "Quiz 1: Subagent Concepts"
   - local: unit4/hands-on
-    title: "Hands-on: Multi-Agent Workflow"
+    title: "Hands-On: Multi-Agent Workflow"
   - local: unit4/quiz2
-    title: Quiz 2 - Multi-Agent Workflows
+    title: "Quiz 2: Multi-Agent Workflows"
 
 - title: "5. Bonus: Nano Harness — Build Your Own Agent"
   sections:
   - local: unit5/introduction
     title: Introduction to Nano Harness
   - local: unit5/agent-loop
-    title: The Agent Loop
+    title: The Agentic Loop Deep Dive
   - local: unit5/tools-and-sandboxing
-    title: Tools and Sandboxing
+    title: Tools and Sandboxing in Detail
   - local: unit5/hands-on
-    title: "Hands-on: Extend the Nano Harness"
+    title: "Hands-On: Extending Nano Harness"
   - local: unit5/quiz1
-    title: Quiz - Nano Harness
+    title: "Quiz: Nano Harness and Agent Internals"
