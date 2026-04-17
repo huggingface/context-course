@@ -1,6 +1,6 @@
 # The Context Course
 
-If you like the course, **don't hesitate to ⭐ star this repository**. This helps us to make the course more visible.
+If you like the course, don't hesitate to ⭐ star this repository. This helps us to make the course more visible.
 
 The Context Course teaches you **context engineering for code agents** — the skill of giving agents the right knowledge, tools, and structure to do their best work. Whether you're using Claude Code, Codex, or open source agents, this course will help you get dramatically more out of them.
 
