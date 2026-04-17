@@ -1,14 +1,17 @@
 # Introduction to Nano Harness
 
-Commercial agent frameworks like Claude Code are powerful but opaque. You rely on their implementation details, trust their security model, and hope they're doing the right thing under the hood.
+Mainstream agent frameworks (Codex, Claude Code, OpenCode) hide the loop that makes them work, which is great for production use, but not for learning.
 
-What if you built your own agent? Not a toy—a real, functional agent that handles the core agentic loop in about 220 lines of Python?
+Nano Harness is a ~220-line Python agent built for reading, not production. It shows the system prompt, the step loop, tool execution, message history, error handling, and sandboxing in one file.
 
-That's nano_harness: a minimal agent framework designed for learning. It demonstrates all the essential concepts: system prompts, the agentic loop, tool execution, message history, error recovery, and sandboxing.
+> [!WARNING]
+> nano_harness is a learning tool and not intended for production use. It's just a fun way to understand how agents work under the hood. Do not use it for real work!
 
-## Why Build Your Own Agent?
+## Why start from scratch?
 
-Building your own agent teaches you exactly how agents work — you see every decision about when to retry, how to parse output, and how to handle errors, with no black boxes. It gives you control to customize the agentic loop, implement custom security policies, and swap models freely (GPT, Claude, local LLMs via HF router). It provides transparency so you can debug by reading code rather than guessing, and audit for security and compliance. And it supports research — you can test ideas without waiting for commercial updates, run experiments with different parameters, and understand agent behavior from first principles.
+First, learning from scratch is a great way to understand how anything works under the hood.
+
+Reading a minimal harness makes the design choices legible: when to retry, how to parse output, how to handle errors, and where the security boundary sits. This unit uses `zai-org/GLM-5.1` via Hugging Face Inference Providers as the single model, so the only moving parts are the loop and the tools.
 
 ## What is Nano Harness?
 
@@ -53,20 +56,13 @@ Four tools available:
 - Output size limited to prevent context overflow
 - Timeouts prevent hanging
 
-### Multi-Model Support
-Uses OpenAI-compatible API, defaults to Hugging Face router:
+### Model via Hugging Face Inference Providers
+
+The harness defaults to the Hugging Face router, which exposes an OpenAI-compatible `/v1` surface backed by Inference Providers:
 
 ```bash
-# Use any HF model
-export NANO_MODEL="zai-org/GLM-5"
-
-# Or GPT
-export OPENAI_BASE_URL="https://api.openai.com/v1"
-export NANO_MODEL="gpt-4"
-
-# Or local Ollama
-export OPENAI_BASE_URL="http://localhost:11434/v1"
-export NANO_MODEL="llama2"
+export NANO_MODEL="zai-org/GLM-5.1"
+export HF_TOKEN="hf_..."
 ```
 
 ## The Agentic Loop
@@ -83,17 +79,10 @@ Nano Harness implements the core loop:
 7. Done when: final_answer() called or max steps reached
 ```
 
-Each step is explicit and understandable.
-
 ## What You'll Learn
 
-In this unit, you'll step through the agent loop code to understand each part, learn how tools are designed and sandboxed for safe execution, extend the harness with new tools like web_fetch and HF Hub search, and run the agent with different LLMs to see how behavior varies across models.
+This unit walks through the agent loop code piece by piece, explains how the tools are designed and sandboxed, extends the harness with `web_fetch` and HF Hub search, and runs it against `zai-org/GLM-5.1` through Hugging Face Inference Providers.
 
 ## Prerequisites
 
-- Basic Python
-- Familiarity with HTTP APIs
-- Understanding of safety and sandboxing concepts
-- Either HF token (for HF router) or OpenAI API key
-
-Let's dive into the internals.
+Basic Python, familiarity with HTTP APIs and sandboxing, and an HF token with access to Inference Providers.

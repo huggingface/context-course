@@ -1,6 +1,6 @@
 # Hands-On: Extending Nano Harness
 
-Let's extend nano_harness with two new tools and run it with different models.
+This section adds two tools — `web_fetch` and `hf_search` — and runs the harness against several models.
 
 ## Extension 1: Add web_fetch Tool
 
@@ -24,10 +24,7 @@ def web_fetch(url, max_bytes=10000):
         return f"Error: {type(e).__name__}: {str(e)}"
 ```
 
-**Security:**
-- Size limit prevents loading huge files
-- Timeout prevents hanging
-- Error handling graceful
+A byte cap prevents loading huge responses, the `timeout` stops the request from hanging, and errors are returned as strings so the agent can react.
 
 **In system prompt:**
 ```python
@@ -85,10 +82,7 @@ def hf_search(query, resource_type="models", limit=5):
         return f"Error: {type(e).__name__}: {str(e)}"
 ```
 
-**Security:**
-- API key handled safely (via env var)
-- Limits API calls (prevent abuse)
-- Graceful error handling
+The API key stays in the environment, results are capped by `limit`, and errors are caught and returned.
 
 **In system prompt:**
 ```python
@@ -109,9 +103,7 @@ final_answer(results)
 
 ## Full Extended Example
 
-Create `nano_harness_extended.py` with all tools:
-
-This version also uses the **Responses API** on purpose so the same loop works against the Hugging Face router and a direct OpenAI endpoint without changing the control flow.
+Create `nano_harness_extended.py` with all tools. This version uses the Responses API so the same loop works against the Hugging Face router and a direct OpenAI endpoint without changing the control flow.
 
 ```python
 #!/usr/bin/env python3
@@ -126,7 +118,7 @@ from openai import OpenAI
 
 # Configuration
 TASK = "Search for bert models on Hugging Face and summarize top 3."
-MODEL = os.getenv("NANO_MODEL", "zai-org/GLM-5")
+MODEL = os.getenv("NANO_MODEL", "zai-org/GLM-5.1")
 BASE_URL = os.getenv("OPENAI_BASE_URL", "https://router.huggingface.co/v1")
 API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY", "")
 WORKSPACE = str(Path.cwd())
@@ -288,53 +280,17 @@ if __name__ == "__main__":
     main()
 ```
 
-## Running with Different Models
+## Running the Harness
 
-Test with multiple models via HF router:
+Run it against `zai-org/GLM-5.1` on Hugging Face Inference Providers:
 
 ```bash
-# GLM-5
-export NANO_MODEL="zai-org/GLM-5"
-python nano_harness_extended.py
-
-# Llama 2 70B
-export NANO_MODEL="meta-llama/Llama-2-70b-chat-hf"
-python nano_harness_extended.py
-
-# Mistral
-export NANO_MODEL="mistralai/Mistral-7B-Instruct-v0.1"
-python nano_harness_extended.py
-
-# GPT-4 (if using OpenAI)
-export OPENAI_BASE_URL="https://api.openai.com/v1"
-export OPENAI_API_KEY="sk_..."
-export NANO_MODEL="gpt-4"
+export HF_TOKEN="hf_..."
+export NANO_MODEL="zai-org/GLM-5.1"
 python nano_harness_extended.py
 ```
 
-## Observations
-
-When you run with different models, you'll notice:
-
-### GLM-5 (Fast, Creative)
-- Quickly finds multiple approaches
-- May overshoot on steps
-- Creative but sometimes verbose
-
-### Llama 2 70B (Balanced)
-- Methodical step-by-step
-- Good error recovery
-- Slower but reliable
-
-### Mistral (Fast, Direct)
-- Direct problem-solving
-- Minimal steps
-- Sometimes skips explanations
-
-### GPT-4 (Most Capable)
-- Understands context best
-- Efficient paths
-- Better error recovery
+Inference Providers route the request to a backing provider automatically. If you want to try a different HF model, set `NANO_MODEL` to any text-generation repo that's enabled on Inference Providers — the loop and tool set stay the same.
 
 ## Exercise: Extend Further
 
@@ -342,6 +298,7 @@ Add these tools yourself:
 
 ### 1. git_log Tool
 ```python
+# Add "git" to ALLOW_COMMANDS first, then:
 def git_log(limit=10):
     """Get recent git commits."""
     return exec_cmd(["git", "log", "--oneline", f"-{limit}"])
@@ -370,12 +327,10 @@ def compute_stats(numbers):
     }
 ```
 
-Add these to nano_harness and see how agent behavior changes!
+Add these to the harness and watch how the agent's traces change.
 
 ## Key Takeaways
 
-Tools are how agents interact with the world — through file I/O, web access, and APIs. Every tool needs security measures: size limits, timeouts, and graceful error handling. Different models have different strengths, so try multiple. Error messages guide agent behavior, so make them informative. And the transparency of this harness is what enables learning — you see exactly what the agent does at every step.
+Tools connect the agent to the world. Every tool needs size limits, timeouts, and informative error strings so the agent can adapt. The same loop runs unchanged against any model on Hugging Face Inference Providers.
 
-This hands-on project completes your understanding of agent internals.
-
-Next, test your knowledge with the unit 5 quiz!
+Next, the unit 5 quiz.

@@ -1,6 +1,6 @@
 # Tools and Sandboxing in Detail
 
-Nano Harness demonstrates complete tool design and execution sandboxing. Let's understand the security model.
+Tools are the agent's hands. Nano Harness enforces its security model at the tool boundary: path confinement, command allowlists, output limits, and write-off-by-default.
 
 ![Layered sandbox security model showing workspace isolation and path validation](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit5/tool-sandbox.svg)
 
@@ -17,10 +17,7 @@ def list_dir(path="."):
     return sorted(x.name + ("/" if x.is_dir() else "") for x in p.iterdir())
 ```
 
-**Security:**
-- `safe_path()` prevents directory traversal (e.g., `../../etc/passwd`)
-- Returns only filenames, not full paths
-- Directories marked with "/" suffix
+`safe_path()` blocks directory traversal (e.g., `../../etc/passwd`), the return values are filenames only — not absolute paths — and directories are suffixed with `/`.
 
 **Examples:**
 ```python
@@ -40,12 +37,7 @@ def read_file(path, max_chars=4000):
     return clip(content, min(max_chars, MAX_CHARS))  # MAX_CHARS=8000
 ```
 
-**Security:**
-- Path confinement via `safe_path()`
-- **Size limit**: requested limit is capped by MAX_CHARS
-- `errors="replace"` handles binary files gracefully
-
-**Key insight:** Even if the agent requests `read_file(path, max_chars=999999)`, the framework enforces `min(999999, 8000) = 8000`.
+Paths go through `safe_path()`, the requested character count is capped at `MAX_CHARS`, and `errors="replace"` keeps binary files from crashing the read. Even if the agent asks for `max_chars=999999`, `min(999999, 8000)` wins.
 
 **Examples:**
 ```python
@@ -71,10 +63,7 @@ def write_file(path, content):
     return f"Wrote {len(content)} bytes to {p}"
 ```
 
-**Security:**
-- **Disabled by default** — Agent can't write unless explicitly enabled
-- Path confinement
-- Auto-creates parent directories
+Writing is off by default — the agent must have `ALLOW_WRITE=True` to touch disk. Paths are confined, and parent directories are created on demand.
 
 **Usage:**
 ```python
@@ -106,12 +95,7 @@ def exec_cmd(args):
         return "Error: Command timed out"
 ```
 
-**Security:**
-- **Command whitelist** — Only safe commands allowed
-  - `ls`, `cat`, `pwd`, `echo` — Safe
-  - `rm`, `mv`, `curl`, `wget` — Blocked
-- **Timeout protection** — Commands can't hang forever
-- **Output limit** — Prevents context overflow
+Only commands in the allowlist run — `ls`, `cat`, `pwd`, `echo`, `head`, `tail`, `wc`, `rg`. Anything that mutates state or reaches the network (`rm`, `mv`, `curl`, `wget`) is rejected. A subprocess timeout stops hangs, and the output is clipped to `MAX_CHARS`.
 
 **Examples:**
 ```python
@@ -124,7 +108,7 @@ exec_cmd(["curl", "evil.com"])  # ✗ BLOCKED (curl not whitelisted)
 
 ## Path Confinement: safe_path()
 
-The most critical security function:
+Everything that takes a path flows through this one function:
 
 ```python
 WORKSPACE = Path.cwd()  # e.g., /home/user/project
@@ -222,17 +206,7 @@ Step 3: Agent tries to escape workspace
 
 ## Commercial Agents vs. Nano Harness
 
-| Aspect | Nano Harness | Claude Code | Codex |
-|--------|--------------|------------|-------|
-| **Path Confinement** | Manual via `safe_path()` | Automatic | Automatic |
-| **Command Whitelist** | Manual list | Configured scopes | Sandboxed environment |
-| **Output Limits** | Manual `MAX_CHARS` | Automatic | Automatic |
-| **Timeout** | Manual `TIMEOUT_S` | Automatic | Automatic |
-| **Disabled by Default** | `ALLOW_WRITE=False` | Scopes request approval | Permissions dialog |
-| **Error Recovery** | Agent sees errors | Agent sees errors | Agent sees errors |
-| **Transparency** | Full control | Less visible | Less visible |
-
-Nano Harness puts **you in control** but requires manual implementation. Commercial agents handle this automatically.
+Commercial agents handle the same concerns behind the scenes. Claude Code and Codex both enforce path confinement, permission prompts, timeouts, and output limits automatically; the cost is that the rules are less visible. Nano Harness keeps everything explicit so you can read and modify the policy, at the cost of having to implement it yourself.
 
 ## Designing Custom Tools
 
@@ -283,6 +257,6 @@ def bad_tool_4(command):
 
 ## Key Takeaways
 
-Tools are the agent's hands — limit what they can reach. Path confinement via `safe_path()` prevents escaping the workspace, output limits prevent context overflow, and a command whitelist ensures only safe operations are allowed. Errors serve as observations that help the agent learn and adapt. Write permission is disabled by default, requiring explicit opt-in. This full transparency is what makes nano_harness a learning tool — you see exactly what's happening at every step.
+Limit what tools can reach. `safe_path()` keeps file access inside the workspace, command allowlists gate subprocess calls, output is clipped to stop context blowups, and writing is off until you turn it on. Errors become observations so the agent can adapt instead of crashing.
 
-Next, let's extend nano_harness with new tools and models.
+Next, extending nano_harness with new tools and models.

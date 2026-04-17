@@ -1,6 +1,6 @@
 # The Agentic Loop Deep Dive
 
-The core of nano_harness is a simple loop that runs about 50 times max. Let's understand every part.
+The core of nano_harness is a loop that runs at most fifty times: call the LLM, parse its code, execute it, observe results, repeat.
 
 ![The agentic loop: Initialize, Call LLM, Parse, Execute, Check completion](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit5/agent-loop.svg)
 
@@ -67,7 +67,7 @@ The core of nano_harness is a simple loop that runs about 50 times max. Let's un
 
 ```python
 TASK = "Inspect the workspace and provide a summary."
-MODEL = os.getenv("NANO_MODEL", "zai-org/GLM-5")
+MODEL = os.getenv("NANO_MODEL", "zai-org/GLM-5.1")
 BASE_URL = os.getenv("OPENAI_BASE_URL", "https://router.huggingface.co/v1")
 API_KEY = os.getenv("HF_TOKEN", "")
 WORKSPACE = str(Path.cwd())
@@ -78,12 +78,7 @@ MAX_CHARS = 8000
 ALLOW_COMMANDS = ["ls", "cat", "pwd", "echo", "head", "tail", "wc", "rg"]
 ```
 
-These constants control:
-- `MODEL` — Which LLM to use (via HF router or OpenAI)
-- `MAX_STEPS` — Safety limit (50 steps max)
-- `TEMPERATURE` — LLM creativity (0.2 = deterministic)
-- `ALLOW_COMMANDS` — Whitelist of shell commands allowed
-- `MAX_CHARS` — Output size limit (prevents context overflow)
+`MODEL` is the HF model ID routed through Inference Providers, `MAX_STEPS` caps iterations at 50, `TEMPERATURE=0.2` keeps output deterministic, `ALLOW_COMMANDS` is the shell allowlist, and `MAX_CHARS` bounds tool output to prevent context overflow.
 
 ### System Prompt
 
@@ -108,11 +103,7 @@ Constraints:
 """
 ```
 
-This system prompt is **critical**. It tells the model:
-1. Output only Python code
-2. These are your tools
-3. Call `final_answer()` to exit
-4. Here are your constraints
+The system prompt tells the model to output only Python code, lists the available tools, shows how to signal completion with `final_answer()`, and states the path, command, and size constraints.
 
 ### Tool Definitions
 
@@ -152,11 +143,11 @@ def final_answer(value):
     return value
 ```
 
-Each tool includes **safety checks**: path confinement, command whitelisting, output limits.
+Each tool enforces safety at the boundary: path confinement, command allowlisting, output size limits.
 
 ### The Main Loop
 
-This lesson intentionally uses the **Responses API**. The OpenAI SDK accepts message-style `input` payloads and returns `response.output_text`, and the Hugging Face router exposes the same `/v1` surface, so the loop stays the same whether you're calling the HF router or OpenAI directly.
+The harness uses the Responses API. The OpenAI SDK accepts message-style `input` payloads and returns `response.output_text`, and the Hugging Face router exposes the same `/v1` surface via Inference Providers, so a single model ID (`zai-org/GLM-5.1`) drives the whole unit.
 
 ```python
 def main():
@@ -209,27 +200,7 @@ def main():
         print(f"✗ Max steps ({MAX_STEPS}) reached without final_answer()")
 ```
 
-**Key points:**
-
-1. **Message History** — Accumulated in `messages` list
-   - System message (static)
-   - User task (static)
-   - Alternating assistant responses and observations
-
-2. **LLM Call** — Standard OpenAI API
-   - `model` — Configurable via env var
-   - `max_tokens=4096` — Prevent infinite responses
-   - `temperature=0.2` — Low = deterministic, high = creative
-
-3. **Code Execution** — Safe sandbox
-   - Extract Python code from model output
-   - `exec()` with restricted globals (only tools available)
-   - Catch exceptions and report as observation
-
-4. **Observation Appending** — Closes the loop
-   - Execution result added to message history
-   - Next iteration sees the result
-   - Model refines approach based on feedback
+Four things matter in this loop. The message history accumulates system prompt, user task, and alternating assistant/observation turns. The LLM call uses a configurable model and a low temperature (0.2) for deterministic behavior. Code execution runs through `exec()` with a restricted globals dict that only exposes the tool functions, and exceptions are caught and reported. Observations are appended to history so the next iteration sees the result and can adapt.
 
 ## Error Recovery
 
@@ -251,12 +222,7 @@ except Exception as e:
 messages.append({"role": "user", "content": result})
 ```
 
-The agent sees the error and can adapt. Examples:
-
-- **File not found** → Try listing directory first
-- **Command not allowed** → Use a whitelisted alternative (ls instead of find)
-- **Timeout** → Break work into smaller commands
-- **Permission denied** → Request smaller file read
+The agent reads the error as an observation and adjusts: list the directory after a missing file, swap a blocked command for a whitelisted one, break long-running work into smaller steps.
 
 ## Step Limit Safety
 
@@ -270,12 +236,7 @@ if not DONE:
     print("Max steps reached without final_answer()")
 ```
 
-The step limit prevents infinite loops. After 50 steps, the agent stops regardless.
-
-Typical task completion:
-- Simple (1-3 steps): "List files" → done
-- Medium (5-10 steps): "Explore codebase" → read 3 files → analyze → done
-- Complex (15-30 steps): "Debug issue" → read logs → find error → understand context → propose fix → done
+The step limit guarantees termination. Simple tasks like "list files" finish in one to three steps; exploring a codebase typically takes five to ten; debugging something non-trivial can run fifteen to thirty.
 
 ## Message History
 
@@ -292,20 +253,7 @@ messages = [
 ]
 ```
 
-Each entry is a **turn in the conversation**:
-1. System prompt (static)
-2. User task (static)
-3. Agent output (code)
-4. Observation (execution result)
-5. Agent output (refined code)
-6. Observation (refined result)
-... repeat ...
-
-The LLM sees **all prior context**, so it can:
-- Refer to previous findings
-- Avoid repeating failed approaches
-- Build on prior discoveries
-- Make informed decisions
+Every entry is a turn: system prompt, user task, then alternating agent code and observations. The LLM sees the whole history on each call, so it can refer back to earlier findings, avoid approaches that already failed, and build on what it learned.
 
 > [!NOTE]
 > **This is a simplification.** The nano harness treats memory as a flat conversation history — every prior turn stays in context until the window fills up. Production agent systems use much richer memory architectures: short-term scratchpads for working state, episodic memory for recalling past sessions, semantic memory for persistent knowledge, retrieval-augmented approaches that fetch relevant memories on demand, and compaction strategies that summarize older context to free up space. If you want to go deeper, look into the research on agent memory systems (e.g., MemoryAgentBench, A-MEM) and context compression (e.g., ACON). The nano harness is a teaching tool — it shows the minimal viable loop, not the full picture.
@@ -329,16 +277,10 @@ The agent learns to read strategically to stay within limits.
 
 ## Design Decisions
 
-1. **Code-first** — Python is precise; JSON or text can be ambiguous
-2. **No prose** — Forces clarity; output is executable
-3. **Path confinement** — `safe_path()` prevents directory traversal attacks
-4. **Command whitelist** — Only safe commands allowed; prevents rm, curl, etc.
-5. **Step limit** — Prevents infinite loops
-6. **Output limits** — Prevents context overflow
-7. **Exception reporting** — Agent adapts based on errors
+Python is precise where JSON or free-form text is ambiguous, so the agent outputs code. `safe_path()` resolves and validates every path against the workspace root to prevent directory traversal. Only an explicit allowlist of shell commands can run. A hard step limit and per-call output limit bound both runtime and context growth. And because exceptions are turned back into observations, the agent adapts instead of crashing.
 
 ## Key Takeaways
 
-The loop is simple: call the LLM, parse its code output, execute it, observe the results, and repeat. The system prompt is critical — it tells the agent what tools are available, what constraints to respect, and how to signal completion. Tools are sandboxed with path confinement, command whitelists, and size limits. Error recovery works naturally because the agent sees errors as observations and adapts. And full message history serves as memory, letting the agent refer to previous findings and avoid repeating failed approaches.
+Call the LLM, parse its code, execute it with tools, observe, repeat. The system prompt defines tools, constraints, and the termination signal. Sandboxing happens at the tool boundary through path confinement, command allowlists, and size limits. Errors become observations and the full message history serves as memory.
 
-Next, let's look at tools and how to design them safely.
+Next, tools and sandboxing in more detail.
