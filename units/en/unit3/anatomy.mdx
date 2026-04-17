@@ -160,7 +160,7 @@ Only `plugin.json` belongs in `.codex-plugin/`. Keep `skills/`, `.mcp.json`, `.a
 Each marketplace entry points to a plugin directory with a `./`-prefixed relative `source.path` and install policy metadata. Installed copies are cached under `~/.codex/plugins/cache/$MARKETPLACE/$PLUGIN/$VERSION/`.
 
 > [!TIP]
-> Codex has a built-in `$plugin-creator` skill for scaffolding new plugins. Use it to generate plugin structure quickly.
+> Codex ships with a `$skill-creator` skill for scaffolding and iterating on skills inside a plugin. Invoke it with `$skill-creator` during a Codex session.
 
 </hfoption>
 <hfoption id="OpenCode">
@@ -182,13 +182,15 @@ my-opencode-project/
 **Local plugin module**:
 
 ```ts
-export const TextProcessorPlugin = async ({ client }) => {
+import type { Plugin } from "@opencode-ai/plugin"
+
+export const TextProcessorPlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   await client.app.log({
     body: {
       service: "text-processor-plugin",
       level: "info",
-      message: "Text Processor plugin initialized"
-    }
+      message: "Text Processor plugin initialized",
+    },
   })
 
   return {
@@ -198,14 +200,16 @@ export const TextProcessorPlugin = async ({ client }) => {
           body: {
             service: "text-processor-plugin",
             level: "info",
-            message: "Long text reads often pair well with text-analysis tools."
-          }
+            message: "Long text reads often pair well with text-analysis tools.",
+          },
         })
       }
-    }
+    },
   }
 }
 ```
+
+The plugin factory receives `{ project, client, $, directory, worktree }` — use `client` to talk back to the OpenCode runtime, `$` for shell commands, and `directory`/`worktree` for filesystem context.
 
 **opencode.json** for npm-installed plugins:
 
@@ -230,6 +234,6 @@ export const TextProcessorPlugin = async ({ client }) => {
 
 ## Key Takeaways
 
-Claude Code and Codex both use manifest-first plugin bundles: a `plugin.json` manifest points to root-level components such as `skills/`, `.mcp.json`, and optional integration files. OpenCode uses a different model: plugins are JS/TS modules loaded from `.opencode/plugins/` or npm, and any skills or MCP configuration live beside that plugin system rather than inside it. Despite the different shapes, all three platforms use plugins to make reusable agent behavior easier to share and maintain.
+Claude Code and Codex use manifest-first plugin bundles: a `plugin.json` manifest alongside root-level components like `skills/`, `.mcp.json`, and integration files. OpenCode uses a code-first model: plugins are JS/TS modules loaded from `.opencode/plugins/` or npm, with skills and MCP configuration handled separately.
 
-Next, let's build a plugin from scratch.
+Next we'll build a plugin from scratch.

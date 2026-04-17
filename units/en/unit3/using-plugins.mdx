@@ -9,31 +9,43 @@ Now that you've built a plugin, let's learn how to install and use them, both yo
 
 ### Installing Plugins in Claude Code
 
-Claude Code's documented install surface is the `/plugin` browser. Use `claude --plugin-dir` when you're developing a local plugin.
+Claude Code installs plugins through marketplaces and the in-session `/plugin` command.
 
-#### From the Plugin Browser
+#### From a marketplace
 
-Open the plugin browser inside Claude Code:
-
-```
-/plugin
-```
-
-Browse the **Discover** tab, install the plugin, then start a new session or use it in the current one.
-
-#### From a Local Directory
-
-For local development, use the CLI flag:
-
-```bash
-claude --plugin-dir ./text-processor-plugin
+```text
+/plugin marketplace add <owner>/<repo>
+/plugin install <plugin-name>@<marketplace-name>
 ```
 
-Claude Code:
-1. Reads `.claude-plugin/plugin.json`
-2. Loads skills from `skills/` directory
-3. Starts MCP servers from `.mcp.json` config
-4. Makes any bundled plugin components available under the plugin namespace
+`/plugin` opens the plugin browser, where you can enable, disable, and uninstall plugins interactively.
+
+#### From a local directory
+
+For local development, point `/plugin` at a `marketplace.json` file that references your plugin directory:
+
+```json
+{
+  "name": "local-example-plugins",
+  "owner": { "name": "you" },
+  "plugins": [
+    {
+      "name": "text-processor-plugin",
+      "source": "./text-processor-plugin",
+      "description": "Text analysis skills"
+    }
+  ]
+}
+```
+
+Then inside Claude Code:
+
+```text
+/plugin marketplace add /absolute/path/to/marketplace.json
+/plugin install text-processor-plugin@local-example-plugins
+```
+
+Claude Code reads `.claude-plugin/plugin.json`, loads skills from `skills/`, and starts MCP servers from `.mcp.json`.
 
 ### Using Plugin Skills
 
@@ -51,13 +63,7 @@ Or invoke with namespace:
 
 ### Managing Installed Plugins
 
-Use `/plugin` to review installed plugins, enable or disable them, and uninstall them. For local development, reload edited plugin files with:
-
-```
-/reload-plugins
-```
-
-If you're using `--plugin-dir`, stop passing that flag when you no longer want the local plugin loaded.
+Use `/plugin` to review installed plugins, enable or disable them, and uninstall them. After editing a local plugin, disable and re-enable it from `/plugin` to reload it.
 
 ### Configuring Plugins
 
@@ -318,11 +324,7 @@ Ensure skills directory exists:
 ls -la ./my-plugin/skills/
 ```
 
-Reload plugins:
-
-```
-/reload-plugins
-```
+Re-enable the plugin from `/plugin` to reload it.
 
 </hfoption>
 <hfoption id="Codex">
@@ -375,11 +377,7 @@ Verify `.mcp.json` has valid JSON with `mcpServers` key:
 cat ./.mcp.json
 ```
 
-Reload plugins after editing:
-
-```
-/reload-plugins
-```
+Re-enable the plugin from `/plugin` after editing the config.
 
 </hfoption>
 <hfoption id="Codex">
@@ -405,6 +403,6 @@ Check that `opencode.json` is valid JSON and MCP server commands point to existi
 
 ## Key Takeaways
 
-For Claude Code, use `/plugin` for discovery and management, `claude --plugin-dir ./my-plugin` for local development, and `/reload-plugins` after edits. For Codex, use `/plugins` plus repo or personal marketplace files, with `.mcp.json` at the plugin root and a restart after local marketplace changes. For OpenCode, native plugins are JS/TS modules in `.opencode/plugins/` or npm packages in the `plugin` array, while skills and MCP servers stay separate from the plugin surface.
+In Claude Code, use `/plugin marketplace add` and `/plugin install`, with `/plugin` as the browser. In Codex, use `/plugins` plus repo or personal marketplace files, and restart after changes. In OpenCode, native plugins are JS/TS modules in `.opencode/plugins/` or npm packages listed in `opencode.json`; skills and MCP servers remain separate extension points.
 
-Next, test your knowledge with a final quiz on plugin distribution and best practices.
+Next up: a quiz on plugin distribution and best practices.

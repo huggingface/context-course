@@ -1,8 +1,6 @@
 # Building Your Own Plugin
 
-In Unit 2, you built a text-processor MCP server and deployed it to Hugging Face Spaces. Now let's turn that work into a **plugin**. For Claude Code and Codex, that means packaging the server reference with skills and plugin metadata. For OpenCode, it means writing a native plugin module and keeping MCP configuration beside it.
-
-This is how plugins work in practice: manifest-first platforms wrap existing tools with skills and config, while code-first platforms expose behavior through plugin code.
+Unit 2 produced a text-processor MCP server. In this lesson we package it as a **plugin**. For Claude Code and Codex that means a manifest plus bundled skills and MCP config; for OpenCode it means a plugin module written in TypeScript, with MCP configuration handled separately.
 
 ![Plugin development lifecycle from creation through distribution and use](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit3/plugin-lifecycle.svg)
 
@@ -230,13 +228,15 @@ mkdir -p .opencode/plugins
 Create `.opencode/plugins/text-processor-plugin.ts`:
 
 ```ts
-export const TextProcessorPlugin = async ({ client }) => {
+import type { Plugin } from "@opencode-ai/plugin"
+
+export const TextProcessorPlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   await client.app.log({
     body: {
       service: "text-processor-plugin",
       level: "info",
-      message: "Text Processor plugin initialized"
-    }
+      message: "Text Processor plugin initialized",
+    },
   })
 
   return {
@@ -246,11 +246,11 @@ export const TextProcessorPlugin = async ({ client }) => {
           body: {
             service: "text-processor-plugin",
             level: "info",
-            message: "Consider a text-analysis workflow after loading long documents."
-          }
+            message: "Consider a text-analysis workflow after loading long documents.",
+          },
         })
       }
-    }
+    },
   }
 }
 ```
@@ -322,26 +322,37 @@ The plugin can use your local server or the deployed Spaces version:
 <hfoptions id="tool">
 <hfoption id="Claude Code">
 
-```bash
-claude --plugin-dir ./text-processor-plugin
+To test a local plugin, expose it through a local marketplace file. Create `marketplace.json` next to your plugin directory:
+
+```json
+{
+  "name": "local-example-plugins",
+  "owner": { "name": "you" },
+  "plugins": [
+    {
+      "name": "text-processor-plugin",
+      "source": "./text-processor-plugin",
+      "description": "Text analysis skills"
+    }
+  ]
+}
 ```
 
-Once loaded, test each skill:
+Then inside Claude Code:
 
+```text
+/plugin marketplace add /absolute/path/to/marketplace.json
+/plugin install text-processor-plugin@local-example-plugins
 ```
+
+Once installed, test the skills conversationally:
+
+```text
 Analyze the reading level of this text: "The mitochondria is the powerhouse of the cell.
 It provides energy through oxidative phosphorylation."
 ```
 
-```
-What are the keywords in the README of this project?
-```
-
-Reload after changes:
-
-```
-/reload-plugins
-```
+After editing plugin files, use `/plugin` to disable and re-enable the plugin so Claude Code picks up changes.
 
 </hfoption>
 <hfoption id="Codex">
@@ -455,6 +466,6 @@ When building plugins, write skill descriptions that explain *when* to use a too
 
 ## Key Takeaways
 
-Claude Code and Codex use manifest-first plugins: `plugin.json` points to bundled `skills/` and optional `.mcp.json` or `.app.json` files. OpenCode plugins are different: they are JS/TS modules loaded from `.opencode/plugins/` or npm, and any skills or MCP servers live beside that system instead of inside it. You built the server in Unit 2; here you turned that work into reusable plugin behavior using the install surface each platform actually documents.
+Claude Code and Codex plugins are manifests that bundle skills and optional MCP or app config. OpenCode plugins are JS/TS modules; skills and MCP servers live beside them. In both worlds the MCP server from Unit 2 stays where it is — the plugin just references or complements it.
 
-Next, test your knowledge with a quiz, then learn how to install and use plugins across agents.
+Next, a quiz, then installing and using published plugins.

@@ -4,7 +4,7 @@
 
 Plugins are reusable extensions for code agents. The exact shape depends on the platform: **Claude Code** and **Codex** use installable plugin bundles with manifests plus optional skills, MCP servers, and app integrations, while **OpenCode** uses JavaScript/TypeScript plugin modules loaded from local files or npm packages.
 
-Think of plugins as "pre-built context packs" — curated, tested, and shareable pieces of knowledge that save setup time and ensure consistency across different users and projects.
+Plugins are pre-built context packs: curated, tested, and shareable bundles of knowledge and tools that save setup time and keep teams consistent.
 
 ## The Evolution of Context
 
@@ -17,14 +17,8 @@ The journey to plugins reflects how AI agents have matured:
 
 ## Why Plugins Matter
 
-If you're a **solo developer**, plugins save setup time. Instead of configuring your agent from scratch each project, you install a "Python linter" plugin or "API documentation" plugin and get dozens of hours of expert curation instantly.
-
-If you're in a **team**, plugins enforce consistency. When your entire team uses the same plugins, everyone has the same tools and same knowledge — no more "why doesn't my version work like hers?"
-
-If you're in a **community**, plugins are shareable artifacts. You can publish your expertise to a plugin marketplace and let thousands of developers benefit from your work.
+For a solo developer, a plugin skips setup: install a Python-linting plugin or an API-docs plugin and you inherit someone else's curation. For a team, plugins are the unit of consistency — everyone gets the same tools and instructions. For a community, they're a shareable artifact you can publish to a marketplace.
 
 ## Key Terminology
 
-Before diving in, let's clarify the key terms. A **skill** is a reusable prompt plus metadata (name, description, inputs). An **MCP server** is a standardized tool provider for file I/O, API calls, or database queries. An **integration** connects to an external service like GitHub, Slack, or Google Drive. A **manifest** is the metadata file used by manifest-first plugin systems like Claude Code and Codex. And a **marketplace** is a catalog where plugins are published and discovered.
-
-Let's start building your plugin knowledge!
+A **skill** is a reusable prompt plus metadata. An **MCP server** is a standardized tool provider for file I/O, API calls, or database queries. An **integration** connects to an external service like GitHub, Slack, or Google Drive. A **manifest** is the metadata file used by manifest-first plugin systems like Claude Code and Codex. A **marketplace** is a catalog where plugins are published and discovered.
