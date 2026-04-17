@@ -1,7 +1,5 @@
 # The Context Course
 
-![Context Course](https://huggingface.co/datasets/context-course/images/resolve/main/unit0/banner.png)
-
 If you like the course, **don't hesitate to ⭐ star this repository**. This helps us to **make the course more visible**.
 
 ## Content
