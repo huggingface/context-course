@@ -331,9 +331,9 @@ class UnitSnippetTests(unittest.TestCase):
         self.assertIn('auth=("admin", "secret")', block.code)
         self.assertNotIn("gr.Header", block.code)
 
-    def test_unit5_main_loop_documents_responses_api(self):
+    def test_unit6_main_loop_documents_responses_api(self):
         block = block_after(
-            UNITS_DIR / "unit5" / "agent-loop.mdx",
+            UNITS_DIR / "unit6" / "agent-loop.mdx",
             "### The Main Loop",
             "python",
         )
@@ -342,14 +342,14 @@ class UnitSnippetTests(unittest.TestCase):
         self.assertIn('result = "Executed successfully"', block.code)
         self.assertNotIn("client.messages.create(", block.code)
 
-    def test_unit5_extended_harness_runs_against_openai_compatible_client(self):
+    def test_unit6_extended_harness_runs_against_openai_compatible_client(self):
         FakeOpenAI.instances.clear()
 
         openai_module = types.ModuleType("openai")
         openai_module.OpenAI = FakeOpenAI
 
         block = block_after(
-            UNITS_DIR / "unit5" / "hands-on.mdx",
+            UNITS_DIR / "unit6" / "hands-on.mdx",
             "Create `nano_harness_extended.py` with all tools:",
             "python",
         )

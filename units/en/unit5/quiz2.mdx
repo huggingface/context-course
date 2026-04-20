@@ -1,0 +1,117 @@
+# Quiz 2: Hooks in Practice
+
+Test your ability to wire hooks into real workflows.
+
+<Question
+  choices={[
+    {
+      text: "The Gradio app and the FastAPI receiver must run as two separate processes on two separate ports",
+      explain: "They can, but the hands-on example uses `gr.mount_gradio_app(api, ui)` to run them in one process. Simpler, cheaper, and easier to deploy on Spaces."
+    },
+    {
+      text: "Mounting Gradio on a FastAPI app with `gr.mount_gradio_app` lets one server serve both the `/event` endpoint and the Gradio UI",
+      explain: "Correct! The FastAPI route `/event` is defined before Gradio is mounted at `/`, so POSTs hit the receiver and everything else lands on the UI.",
+      correct: true
+    },
+    {
+      text: "You can only receive hook events from Claude Code — Codex and OpenCode cannot post JSON",
+      explain: "False. All three platforms can POST JSON to an HTTP endpoint: Claude Code uses `type: \"http\"`, Codex pipes the stdin payload to `curl`, and OpenCode plugins call `fetch()`."
+    },
+    {
+      text: "Hook events should be written to a file rather than served over HTTP",
+      explain: "File-based logging works, but it's harder to visualize live. HTTP + a polling dashboard gives real-time feedback with minimal code."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "The dashboard polls with `gr.Timer(1.0)` because browsers can't receive server-pushed events from Python",
+      explain: "Browsers can receive SSE or websockets, but polling a shared in-memory `deque` is the simplest pattern for this kind of dashboard."
+    },
+    {
+      text: "Polling with `gr.Timer` re-runs the refresh function every N seconds, which re-reads the shared `events` buffer and re-renders the table and chart",
+      explain: "Correct! Timer is the idiomatic Gradio primitive for periodic refresh.",
+      correct: true
+    },
+    {
+      text: "The `gr.Timer` must be nested inside `gr.Row` or it won't fire",
+      explain: "False. Timers are invisible components; they can live anywhere in the Blocks context."
+    },
+    {
+      text: "The timer is mandatory — Gradio dashboards can't update any other way",
+      explain: "False. You could also emit events via `gr.State` + server-side streaming. Timer is just the simplest fit for this use case."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "To block a dangerous Bash command in Claude Code, the hook returns HTTP 500",
+      explain: "False. HTTP 500 is treated as a non-blocking error. To block, respond 200 with `hookSpecificOutput.permissionDecision = \"deny\"`, or use a command hook that exits 2 with a stderr reason."
+    },
+    {
+      text: "A command hook that exits 2 and prints a reason on stderr is the documented way to block a tool call in Claude Code and Codex",
+      explain: "Correct! Both platforms use the same convention: exit 2 + stderr means block, and the stderr message surfaces to the agent.",
+      correct: true
+    },
+    {
+      text: "In OpenCode, you block a tool by editing the user's prompt",
+      explain: "False. In OpenCode you block by throwing an Error inside `tool.execute.before`."
+    },
+    {
+      text: "Guardrails should live in the model's system prompt rather than in hooks",
+      explain: "Prompt-based guardrails are useful but unreliable — the model can forget them. Hooks enforce them deterministically."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "Piping `curl --max-time 2` inside a Codex command hook is pointless; the agent never waits for hooks",
+      explain: "False. Command hooks run synchronously with the tool call. If the dashboard is slow and you don't set a timeout, the agent stalls. `--max-time` is a real protection."
+    },
+    {
+      text: "Shell command hooks can become a shell-injection risk if you interpolate JSON payloads into the command string — piping via `jq -c` and `curl --data-binary @-` is safer",
+      explain: "Correct! Shape the payload with `jq` and push it via stdin rather than splicing strings into the command line.",
+      correct: true
+    },
+    {
+      text: "There's no need to worry about hook payloads containing secrets, since the agent's sandbox already redacts them",
+      explain: "False. Hook payloads include `tool_input` verbatim — including commands and prompts that may contain secrets. Redact in the dashboard normalizer."
+    },
+    {
+      text: "You must commit `.claude/settings.local.json` to share hooks with teammates",
+      explain: "False. `.claude/settings.json` is the committed file; `.claude/settings.local.json` is gitignored and for personal overrides."
+    }
+  ]}
+/>
+
+<Question
+  choices={[
+    {
+      text: "The same dashboard works for Claude Code, Codex, and OpenCode because the server normalizes three different payload shapes into one consistent record",
+      explain: "Correct! The `_normalize` function maps each platform's field names onto `{platform, event, tool, args}` so the UI doesn't need platform-specific branches.",
+      correct: true
+    },
+    {
+      text: "The dashboard only works for one platform at a time; you must redeploy it when switching agents",
+      explain: "False. The normalizer accepts any of the three platforms simultaneously — they just arrive with different `X-Platform` values."
+    },
+    {
+      text: "OpenCode events are incompatible with the same receiver because OpenCode plugins can't make HTTP calls",
+      explain: "False. OpenCode plugins can and do call `fetch()` directly from the TS/JS runtime."
+    },
+    {
+      text: "You have to run a separate dashboard per platform, then merge the logs afterwards",
+      explain: "False. A single receiver handles all three because they can all POST JSON to the same URL."
+    }
+  ]}
+/>
+
+## What's Next
+
+You now have five end-to-end surfaces for shaping how a code agent works: skills, MCP servers, plugins, subagents, and hooks. The bonus unit goes one level deeper and builds an agent from scratch, so you understand what's happening inside the runtime every one of those surfaces plugs into.
