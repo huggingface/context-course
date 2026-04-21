@@ -1,0 +1,242 @@
+# Hook Events and the Agent Lifecycle
+
+Before wiring anything up, it helps to know which events actually fire and when. The vocabulary is slightly different on each platform, but the lifecycle they describe is shared.
+
+## The Shared Lifecycle
+
+At the abstract level, every agent session moves through the same phases:
+
+```
+┌─────────────────────────────────────────────┐
+│ Session starts                              │ ← SessionStart
+├─────────────────────────────────────────────┤
+│ Repeat for each turn:                       │
+│   User submits a prompt                     │ ← UserPromptSubmit
+│   Model reasons and may call tools          │
+│     Before each tool call                   │ ← PreToolUse
+│     After each tool call                    │ ← PostToolUse
+│   Turn ends                                 │ ← Stop
+├─────────────────────────────────────────────┤
+│ Session ends                                │ ← SessionEnd
+└─────────────────────────────────────────────┘
+```
+
+Any hook system worth using exposes at least these five moments. The three platforms in this course all do — they just use different names and offer different amounts of extra granularity.
+
+## Events by Platform
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+Claude Code has the richest event set of the three platforms. Every event uses `PascalCase` and is configured in `.claude/settings.json` (or inside a plugin's `hooks/hooks.json`).
+
+**Core lifecycle events:**
+- `SessionStart` — New session begins (fresh, resume, or compaction continuation).
+- `InstructionsLoaded` — `CLAUDE.md` files have been loaded.
+- `UserPromptSubmit` — User submitted a prompt, before the model sees it.
+- `PreToolUse` — Before a tool call runs.
+- `PermissionRequest` — Permission prompt about to be shown.
+- `PermissionDenied` — User denied a permission.
+- `PostToolUse` — After a tool call returns.
+- `PostToolUseFailure` — Tool call failed.
+- `Stop` — Turn finished.
+- `SessionEnd` — Session closed.
+
+**Subagent and task events:**
+- `SubagentStart`, `SubagentStop` — A delegated subagent starts or finishes.
+- `TaskCreated`, `TaskCompleted` — The TodoWrite task list changes.
+
+**Environment events:**
+- `CwdChanged`, `FileChanged` — Working directory or a tracked file changed.
+- `WorktreeCreate`, `WorktreeRemove` — Git worktree created or removed.
+- `PreCompact`, `PostCompact` — Context compaction about to happen / just finished.
+- `ConfigChange`, `Notification` — Settings changed; Claude raised a notification.
+
+Each event can match on tool name, command pattern, or permission rules. Matchers use the same permission-rule syntax you see elsewhere in Claude Code (e.g. `"matcher": "Bash"`, `"matcher": "Edit(src/**)"`).
+
+</hfoption>
+<hfoption id="Codex">
+
+Codex hooks are experimental and must be enabled explicitly. In `~/.codex/config.toml`:
+
+```toml
+[features]
+codex_hooks = true
+```
+
+Codex ships a smaller core set of events, all `PascalCase`, configured in `~/.codex/hooks.json` or `<repo>/.codex/hooks.json`:
+
+- `SessionStart` — Session begins. Matcher filters the `source` field: `startup` or `resume`.
+- `UserPromptSubmit` — User prompt submitted.
+- `PreToolUse` — Before a tool call. Today this only fires for the `Bash` tool.
+- `PostToolUse` — After a tool call. Today this also only fires for `Bash`.
+- `Stop` — Turn finished.
+
+The Codex event set is intentionally close to the classic Claude Code lifecycle, which makes cross-agent hook scripts easier to share — but note the current Bash-only scope on the tool events.
+
+Matchers are regexes evaluated against `tool_name` for tool events or `source` for `SessionStart`. Windows is not yet supported.
+
+</hfoption>
+<hfoption id="OpenCode">
+
+OpenCode does not have a JSON event config. Plugins are TypeScript or JavaScript modules in `.opencode/plugins/`, and each exported plugin returns an object whose **keys are event names**. The runtime calls the matching key when the event fires.
+
+**Typed hook keys (first-class):**
+- `"tool.execute.before"` — About to execute a tool.
+- `"tool.execute.after"` — Tool execution finished.
+- `"shell.env"` — About to launch a shell command; mutate the environment.
+- `"experimental.session.compacting"` — Session is being compacted.
+
+**Generic `event` callback** — receives `{ event }` with an `event.type` field. Types include lifecycle and UI events like:
+- `session.created`, `session.updated`, `session.idle`, `session.compacted`, `session.deleted`, `session.error`, `session.diff`, `session.status`
+- `message.updated`, `message.removed`, `message.part.updated`, `message.part.removed`
+- `command.executed`, `file.edited`, `file.watcher.updated`
+- `permission.asked`, `permission.replied`
+- `lsp.client.diagnostics`, `lsp.updated`
+- `todo.updated`, `server.connected`, `installation.updated`
+- `tui.prompt.append`, `tui.command.execute`, `tui.toast.show`
+
+OpenCode has no `UserPromptSubmit` event. The nearest equivalent is reading the new user message through the generic `event` callback when `message.updated` fires.
+
+</hfoption>
+</hfoptions>
+
+## Event Input: What Your Hook Receives
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+Command hooks receive a JSON payload on **stdin**. HTTP hooks receive the same payload as the POST body. Common fields across events:
+
+```json
+{
+  "session_id": "...",
+  "transcript_path": "/path/to/transcript.jsonl",
+  "cwd": "/path/to/project",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse"
+}
+```
+
+Tool-related events add `tool_name`, `tool_input`, and (on `PostToolUse`) `tool_response`. Subagent events add `agent_id` and `agent_type`. The project root is also available as an environment variable `CLAUDE_PROJECT_DIR`.
+
+</hfoption>
+<hfoption id="Codex">
+
+Command hooks receive JSON on stdin. Common fields:
+
+```json
+{
+  "session_id": "...",
+  "transcript_path": "/path/to/transcript.jsonl",
+  "cwd": "/path/to/project",
+  "hook_event_name": "PreToolUse",
+  "model": "gpt-5-codex"
+}
+```
+
+Turn-scoped events add `turn_id`. Tool events add `tool_name`, `tool_use_id`, and `tool_input.command`. `PostToolUse` also includes `tool_response`. `UserPromptSubmit` adds `prompt`. `Stop` adds `stop_hook_active` and `last_assistant_message`.
+
+</hfoption>
+<hfoption id="OpenCode">
+
+OpenCode hooks are JS/TS functions, not stdin scripts. Each event type has a typed `(input, output)` signature:
+
+```ts
+"tool.execute.before": async (input, output) => {
+  // input.tool       — tool name (e.g. "read", "bash")
+  // input.sessionID  — session identifier
+  // output.args      — tool arguments (mutable)
+}
+```
+
+`"tool.execute.after"` adds the result on `output`. `"shell.env"` gives you `output.env` to mutate. The generic `event` callback receives `{ event }` where `event.type` identifies the event.
+
+The plugin also receives a context object at construction time: `{ project, directory, worktree, client, $ }`. Use `client.app.log({...})` for structured logging and `$` (Bun shell) to run commands.
+
+</hfoption>
+</hfoptions>
+
+## How Hooks Influence the Agent
+
+Hooks are not purely observational — they can change what happens next.
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+**Exit codes (command hooks):**
+- Exit `0` — allow, no change.
+- Exit `2` with a message on stderr — block or continue per event semantics (e.g. block the tool call on `PreToolUse`, erase the prompt on `UserPromptSubmit`).
+
+**JSON on stdout** for finer control:
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "No network access in this project"
+  }
+}
+```
+
+Also supported: top-level `continue`, `stopReason`, `suppressOutput`, `systemMessage`, and the legacy `{ "decision": "block", "reason": "..." }` form.
+
+**HTTP hooks** return the same JSON as a 2xx response body. Non-2xx responses or timeouts are treated as non-blocking errors.
+
+</hfoption>
+<hfoption id="Codex">
+
+**Exit codes:**
+- `0` — success.
+- `2` with stderr message — block or continue per event.
+
+**JSON on stdout** mirrors Claude Code's shape:
+
+```json
+{
+  "continue": true,
+  "systemMessage": "Injected context for the model",
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny"
+  }
+}
+```
+
+For `SessionStart`, `UserPromptSubmit`, and `PostToolUse`, `hookSpecificOutput` can include `additionalContext` to inject text into the conversation.
+
+</hfoption>
+<hfoption id="OpenCode">
+
+OpenCode hooks influence the agent by mutating the `output` object or by throwing. To rewrite a tool call, mutate `output.args`. To block it, throw an error:
+
+```ts
+"tool.execute.before": async (input, output) => {
+  if (input.tool === "bash" && /rm -rf/.test(output.args.command ?? "")) {
+    throw new Error("dangerous command blocked by policy")
+  }
+}
+```
+
+There are no exit codes or JSON-over-stdin. All influence happens through code.
+
+</hfoption>
+</hfoptions>
+
+## Choosing the Right Event
+
+A quick reference for common goals:
+
+- **Log every tool call** → `PreToolUse` / `tool.execute.before`.
+- **Run a linter after an edit** → `PostToolUse` (match `Edit|Write`) / `tool.execute.after`.
+- **Block dangerous commands** → `PreToolUse` with exit code `2` or a thrown error.
+- **Inject repo context on each turn** → `UserPromptSubmit` with `additionalContext` (Claude Code / Codex), or the `event` callback on `message.updated` (OpenCode).
+- **Persist conversation state** → `Stop` / `SessionEnd`, or `session.idle` on OpenCode.
+- **Add environment variables to shells** → `shell.env` (OpenCode), or wrap the shell in a command hook on the other platforms.
+
+## Key Takeaways
+
+The three platforms expose the same underlying lifecycle with different vocabulary and different levels of granularity. Claude Code has the richest event set and supports four handler types. Codex has a smaller, tightly focused set behind a feature flag. OpenCode folds hooks into its plugin system as typed function keys rather than a JSON config. Once you pick an event for the goal at hand, the rest of the work is the same on all three.
+
+Next, a quick quiz before we wire these events into a live Gradio dashboard.

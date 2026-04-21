@@ -1,336 +1,401 @@
-# Hands-On: Extending Nano Harness
+# Hands-On: Build an Agent Activity Dashboard with Gradio
 
-This section adds two tools — `web_fetch` and `hf_search` — and runs the harness against several models.
+This project wires the hooks you configured in the previous lesson into a live dashboard. The dashboard is a Gradio app that accepts hook events over HTTP, shows the most recent calls in a table, and plots tool usage over time. It works against Claude Code, Codex, and OpenCode — with the same agent doing the work, you see what actually happens under the hood.
 
-## Extension 1: Add web_fetch Tool
+![Architecture diagram: agent hooks -> HTTP POST -> FastAPI receiver -> Gradio UI](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit5/hooks-dashboard-architecture.svg)
 
-Add to your nano_harness.py:
+## What You'll Build
 
-```python
-import urllib.request
-import urllib.error
+One Python process that does two things at once:
+1. A **FastAPI** endpoint at `POST /event` that any hook can post to.
+2. A **Gradio** app mounted on the same server that renders the events live.
 
-def web_fetch(url, max_bytes=10000):
-    """Fetch web page content with size limit."""
-    try:
-        with urllib.request.urlopen(url, timeout=TIMEOUT_S) as response:
-            content = response.read(max_bytes + 1)
-            if len(content) > max_bytes:
-                content = content[:max_bytes] + b"\n...[truncated]"
-            return content.decode("utf-8", errors="replace")
-    except urllib.error.URLError as e:
-        return f"Error: Failed to fetch {url}: {e}"
-    except Exception as e:
-        return f"Error: {type(e).__name__}: {str(e)}"
-```
+The Gradio app polls the in-memory event buffer and re-renders every second, so you can watch the agent work in real time.
 
-A byte cap prevents loading huge responses, the `timeout` stops the request from hanging, and errors are returned as strings so the agent can react.
+## Project Setup
 
-**In system prompt:**
-```python
-SYSTEM_PROMPT = """
-...
-Tools:
-  - web_fetch(url, max_bytes=10000) → fetch webpage
-...
-"""
-```
-
-**Example usage:**
-```python
-# Agent writes:
-content = web_fetch("https://huggingface.co/")
-
-# Or with size limit:
-content = web_fetch("https://huggingface.co/", max_bytes=5000)
-```
-
-## Extension 2: Add hf_search Tool
-
-Add to nano_harness.py:
-
-```python
-def hf_search(query, resource_type="models", limit=5):
-    """Search Hugging Face Hub (requires HF_TOKEN)."""
-    if not API_KEY:
-        return "Error: HF_TOKEN not set. Can't access Hugging Face API."
-    
-    try:
-        url = f"https://huggingface.co/api/{resource_type}"
-        params = f"?search={query}&limit={limit}"
-        
-        req = urllib.request.Request(
-            url + params,
-            headers={"Authorization": f"Bearer {API_KEY}"}
-        )
-        
-        with urllib.request.urlopen(req, timeout=TIMEOUT_S) as response:
-            data = json.loads(response.read())
-            
-            # Format results
-            results = []
-            for item in data[:limit]:
-                results.append({
-                    "id": item.get("id"),
-                    "downloads": item.get("downloads", 0),
-                    "description": item.get("description", "")[:200]
-                })
-            
-            return results
-    
-    except Exception as e:
-        return f"Error: {type(e).__name__}: {str(e)}"
-```
-
-The API key stays in the environment, results are capped by `limit`, and errors are caught and returned.
-
-**In system prompt:**
-```python
-SYSTEM_PROMPT = """
-...
-Tools:
-  - hf_search(query, resource_type='models', limit=10) → search HF
-...
-"""
-```
-
-**Example usage:**
-```python
-# Agent writes:
-results = hf_search("bert", resource_type="models", limit=5)
-final_answer(results)
-```
-
-## Full Extended Example
-
-Create `nano_harness_extended.py` with all tools. This version uses the Responses API so the same loop works against the Hugging Face router and a direct OpenAI endpoint without changing the control flow.
-
-```python
-#!/usr/bin/env python3
-import json
-import os
-import re
-import subprocess
-import urllib.request
-import urllib.error
-from pathlib import Path
-from openai import OpenAI
-
-# Configuration
-TASK = "Search for bert models on Hugging Face and summarize top 3."
-MODEL = os.getenv("NANO_MODEL", "zai-org/GLM-5.1")
-BASE_URL = os.getenv("OPENAI_BASE_URL", "https://router.huggingface.co/v1")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY", "")
-WORKSPACE = str(Path.cwd())
-MAX_STEPS = 50
-TIMEOUT_S = 30
-MAX_CHARS = 8000
-ALLOW_COMMANDS = ["ls", "cat", "pwd", "echo", "head", "tail", "wc", "rg"]
-TEMPERATURE = 0.2
-
-SYSTEM_PROMPT = f"""You are a code-first agent.
-Reply with executable Python only.
-
-Tools:
-  - list_dir(path='.') → list files
-  - read_file(path, max_chars=4000) → read file
-  - write_file(path, content) → write file
-  - exec_cmd(args) → run allowed command
-  - web_fetch(url, max_bytes=10000) → fetch webpage
-  - hf_search(query, limit=5) → search HF Hub
-  
-Allowed commands: {ALLOW_COMMANDS}
-
-When done, call final_answer(result).
-Output only Python code, no prose."""
-
-def clip(x, n=MAX_CHARS):
-    s = str(x)
-    return s[:n] + f"\n...[truncated]" if len(s) > n else s
-
-def main():
-    ws = Path(WORKSPACE).resolve()
-    done = False
-    
-    def safe_path(path):
-        p = (ws / path).resolve()
-        try:
-            p.relative_to(ws)
-        except ValueError:
-            raise ValueError(f"Path escapes workspace: {path}")
-        return p
-    
-    def list_dir(path="."):
-        p = safe_path(path)
-        return sorted(x.name + ("/" if x.is_dir() else "") for x in p.iterdir())
-    
-    def read_file(path, max_chars=4000):
-        p = safe_path(path)
-        return clip(p.read_text(errors="replace"), min(max_chars, MAX_CHARS))
-    
-    def write_file(path, content):
-        p = safe_path(path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(str(content))
-        return f"Wrote {len(str(content))} bytes"
-    
-    def exec_cmd(args):
-        if args[0] not in ALLOW_COMMANDS:
-            raise PermissionError(f"Command {args[0]} not allowed")
-        result = subprocess.run(
-            args, capture_output=True, timeout=TIMEOUT_S, text=True
-        )
-        return clip(result.stdout, MAX_CHARS)
-    
-    def web_fetch(url, max_bytes=10000):
-        try:
-            with urllib.request.urlopen(url, timeout=TIMEOUT_S) as r:
-                content = r.read(max_bytes)
-                return content.decode("utf-8", errors="replace")
-        except Exception as e:
-            return f"Error: {type(e).__name__}: {str(e)}"
-    
-    def hf_search(query, resource_type="models", limit=5):
-        if not API_KEY:
-            return "Error: HF_TOKEN not set"
-        try:
-            url = f"https://huggingface.co/api/{resource_type}"
-            req = urllib.request.Request(
-                f"{url}?search={query}&limit={limit}",
-                headers={"Authorization": f"Bearer {API_KEY}"}
-            )
-            with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
-                data = json.loads(r.read())
-                return [
-                    {
-                        "id": item.get("id"),
-                        "downloads": item.get("downloads", 0),
-                        "description": item.get("description", "")[:100]
-                    }
-                    for item in data[:limit]
-                ]
-        except Exception as e:
-            return f"Error: {str(e)}"
-    
-    def final_answer(value):
-        nonlocal done
-        done = True
-        return value
-    
-    # Initialize
-    client = OpenAI(
-        api_key=API_KEY,
-        base_url=BASE_URL
-    )
-    
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": TASK}
-    ]
-    
-    # Main loop
-    for step in range(MAX_STEPS):
-        print(f"\n[Step {step + 1}]")
-        
-        # Call LLM
-        response = client.responses.create(
-            model=MODEL,
-            temperature=TEMPERATURE,
-            input=messages
-        )
-        
-        content = response.output_text
-        print(f"Model:\n{content[:300]}...")
-        
-        messages.append({"role": "assistant", "content": content})
-        
-        # Execute code
-        try:
-            code = re.search(r"```python\n(.*?)\n```", content, re.DOTALL)
-            if not code:
-                raise ValueError("No Python code block found")
-            
-            exec_globals = {
-                "list_dir": list_dir,
-                "read_file": read_file,
-                "write_file": write_file,
-                "exec_cmd": exec_cmd,
-                "web_fetch": web_fetch,
-                "hf_search": hf_search,
-                "final_answer": final_answer,
-                "json": json
-            }
-            
-            exec(code.group(1), exec_globals)
-            result = "Executed successfully"
-        
-        except Exception as e:
-            result = f"Error: {type(e).__name__}: {str(e)}"
-        
-        if done:
-            print(f"✓ Task complete")
-            break
-        
-        messages.append({"role": "user", "content": result})
-    
-    if not done:
-        print(f"✗ Max steps reached")
-
-if __name__ == "__main__":
-    main()
-```
-
-## Running the Harness
-
-Run it against `zai-org/GLM-5.1` on Hugging Face Inference Providers:
+Create a fresh project directory:
 
 ```bash
-export HF_TOKEN="hf_..."
-export NANO_MODEL="zai-org/GLM-5.1"
-python nano_harness_extended.py
+mkdir agent-activity-dashboard
+cd agent-activity-dashboard
 ```
 
-Inference Providers route the request to a backing provider automatically. If you want to try a different HF model, set `NANO_MODEL` to any text-generation repo that's enabled on Inference Providers — the loop and tool set stay the same.
+Install dependencies:
 
-## Exercise: Extend Further
-
-Add these tools yourself:
-
-### 1. git_log Tool
-```python
-# Add "git" to ALLOW_COMMANDS first, then:
-def git_log(limit=10):
-    """Get recent git commits."""
-    return exec_cmd(["git", "log", "--oneline", f"-{limit}"])
+```bash
+pip install "gradio>=4.41" "fastapi" "uvicorn[standard]" "pandas"
 ```
 
-### 2. json_parse Tool
-```python
-def json_parse(json_string):
-    """Parse JSON safely."""
-    try:
-        return json.loads(json_string)
-    except json.JSONDecodeError as e:
-        return f"Error: {str(e)}"
+Create `requirements.txt` for later deployment:
+
+```text
+gradio>=4.41
+fastapi
+uvicorn[standard]
+pandas
 ```
 
-### 3. compute_stats Tool
+## Step 1: Build the Receiver and Dashboard
+
+Create `app.py`:
+
 ```python
-def compute_stats(numbers):
-    """Compute min, max, mean."""
-    nums = list(map(float, numbers))
+import datetime as dt
+from collections import Counter, deque
+from typing import Any
+
+import gradio as gr
+import pandas as pd
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+# ---------- Shared state ----------
+MAX_EVENTS = 500
+events: deque[dict[str, Any]] = deque(maxlen=MAX_EVENTS)
+
+
+def _truncate(value: Any, n: int) -> str:
+    text = "" if value is None else str(value)
+    return text if len(text) <= n else text[: n - 1] + "…"
+
+
+def _normalize(body: dict[str, Any], headers: dict[str, str]) -> dict[str, Any]:
+    """Map Claude Code / Codex / OpenCode payloads to one shape."""
+    platform = (
+        body.get("platform")
+        or headers.get("x-platform")
+        or "unknown"
+    )
+    event_name = body.get("event") or body.get("hook_event_name") or "Unknown"
+    tool = body.get("tool") or body.get("tool_name") or ""
+    args = body.get("args") or body.get("tool_input") or body.get("prompt") or ""
     return {
-        "min": min(nums),
-        "max": max(nums),
-        "mean": sum(nums) / len(nums),
-        "count": len(nums)
+        "timestamp": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "platform": str(platform),
+        "event": str(event_name),
+        "tool": str(tool),
+        "args": _truncate(args, 200),
     }
+
+
+# ---------- FastAPI receiver ----------
+api = FastAPI(title="Agent Activity Dashboard")
+
+
+@api.post("/event")
+async def event(req: Request):
+    try:
+        body = await req.json()
+    except Exception:
+        body = {}
+    record = _normalize(body, {k.lower(): v for k, v in req.headers.items()})
+    events.appendleft(record)
+    # Return an empty directive so Claude Code / Codex hooks don't block anything.
+    return JSONResponse({})
+
+
+@api.get("/health")
+def health():
+    return {"ok": True, "events": len(events)}
+
+
+# ---------- Gradio views ----------
+COLUMNS = ["timestamp", "platform", "event", "tool", "args"]
+
+
+def events_df() -> pd.DataFrame:
+    if not events:
+        return pd.DataFrame(columns=COLUMNS)
+    return pd.DataFrame(list(events), columns=COLUMNS)
+
+
+def tool_counts_df() -> pd.DataFrame:
+    counter = Counter(e["tool"] for e in events if e["tool"])
+    rows = [{"tool": tool, "count": n} for tool, n in counter.most_common(15)]
+    return pd.DataFrame(rows, columns=["tool", "count"])
+
+
+def summary_md() -> str:
+    total = len(events)
+    platforms = sorted({e["platform"] for e in events}) or ["(none)"]
+    tools = sorted({e["tool"] for e in events if e["tool"]})
+    tools_display = ", ".join(tools) if tools else "(none)"
+    return (
+        f"**Events:** {total} (buffer holds up to {MAX_EVENTS})  \n"
+        f"**Platforms seen:** {', '.join(platforms)}  \n"
+        f"**Tools seen:** {tools_display}"
+    )
+
+
+def refresh():
+    return events_df(), tool_counts_df(), summary_md()
+
+
+def clear_events():
+    events.clear()
+    return refresh()
+
+
+with gr.Blocks(title="Agent Activity Dashboard") as ui:
+    gr.Markdown("# Agent Activity Dashboard")
+    gr.Markdown(
+        "Point your Claude Code, Codex, or OpenCode hooks at "
+        "`POST http://localhost:8000/event` to see live activity here."
+    )
+
+    header = gr.Markdown(value=summary_md())
+
+    with gr.Row():
+        clear_btn = gr.Button("Clear events", variant="secondary")
+
+    chart = gr.BarPlot(
+        value=tool_counts_df(),
+        x="tool",
+        y="count",
+        title="Tool usage",
+        tooltip=["tool", "count"],
+        height=280,
+    )
+
+    table = gr.Dataframe(
+        value=events_df(),
+        headers=COLUMNS,
+        label="Recent events (newest first)",
+        wrap=True,
+        interactive=False,
+    )
+
+    # Poll the shared buffer once a second.
+    gr.Timer(1.0).tick(refresh, outputs=[table, chart, header])
+    clear_btn.click(clear_events, outputs=[table, chart, header])
+
+
+# Mount Gradio on the FastAPI app so `/event` and the UI share one process.
+app = gr.mount_gradio_app(api, ui, path="/")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
-Add these to the harness and watch how the agent's traces change.
+Run it:
+
+```bash
+python app.py
+```
+
+Open `http://localhost:8000` in a browser. The dashboard is empty — that's expected until a hook sends an event.
+
+> [!TIP]
+> The FastAPI route for `/event` is defined before Gradio is mounted at `/`, so POSTs hit the receiver and everything else lands on the Gradio UI.
+
+## Step 2: Connect Your Agent
+
+Use the hook config from the previous lesson. A quick reminder of the shape for each platform, adjusted so the normalizer in `app.py` can make sense of the payload.
+
+<hfoptions id="tool">
+<hfoption id="Claude Code">
+
+`.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse":  [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8000/event", "headers": { "X-Platform": "claude-code" } }] }],
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8000/event", "headers": { "X-Platform": "claude-code" } }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "http", "url": "http://localhost:8000/event", "headers": { "X-Platform": "claude-code" } }] }],
+    "Stop":            [{ "hooks": [{ "type": "http", "url": "http://localhost:8000/event", "headers": { "X-Platform": "claude-code" } }] }],
+    "SessionStart":    [{ "hooks": [{ "type": "http", "url": "http://localhost:8000/event", "headers": { "X-Platform": "claude-code" } }] }]
+  }
+}
+```
+
+Claude Code's payload already includes `hook_event_name`, `tool_name`, and `tool_input`, so the normalizer picks them up without extra work. The `X-Platform` header tags them as `claude-code`.
+
+Start a new Claude Code session in this project directory and ask it to do something concrete:
+
+```
+List the files in this directory, then read README.md and summarize it.
+```
+
+</hfoption>
+<hfoption id="Codex">
+
+Make sure `~/.codex/config.toml` has:
+
+```toml
+[features]
+codex_hooks = true
+```
+
+`.codex/hooks.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse":  [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"PreToolUse\", tool:.tool_name, args:.tool_input}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
+    "PostToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"PostToolUse\", tool:.tool_name, result:.tool_response}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"UserPromptSubmit\", args:.prompt}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
+    "Stop":            [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"Stop\", args:.last_assistant_message}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
+    "SessionStart":    [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"SessionStart\"}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }]
+  }
+}
+```
+
+Each hook reshapes Codex's payload into the normalized `{platform, event, tool, args}` shape, then POSTs it. The `--max-time 2` on `curl` protects the agent from hanging if the dashboard is slow.
+
+Restart Codex to pick up the hooks, then try:
+
+```
+Run `ls` in this directory and then show me the first 20 lines of app.py.
+```
+
+</hfoption>
+<hfoption id="OpenCode">
+
+`.opencode/plugins/dashboard.ts`:
+
+```ts
+import type { Plugin } from "@opencode-ai/plugin"
+
+const URL = process.env.DASHBOARD_URL ?? "http://localhost:8000/event"
+
+async function send(event: string, payload: Record<string, unknown>) {
+  try {
+    await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ platform: "opencode", event, ...payload }),
+      signal: AbortSignal.timeout(2000),
+    })
+  } catch {
+    // dashboard may be offline; never block a tool
+  }
+}
+
+export const DashboardPlugin: Plugin = async () => ({
+  "tool.execute.before": async (input, output) =>
+    send("PreToolUse", { tool: input.tool, args: output.args }),
+
+  "tool.execute.after": async (input, output) =>
+    send("PostToolUse", {
+      tool: input.tool,
+      args:
+        typeof (output as { output?: unknown }).output === "string"
+          ? ((output as { output: string }).output.slice(0, 200))
+          : "",
+    }),
+
+  event: async ({ event }) => {
+    if (event.type === "session.created") await send("SessionStart", {})
+    if (event.type === "session.idle") await send("Stop", {})
+  },
+})
+```
+
+If this is the first OpenCode plugin in the project, initialize a local package.json too:
+
+```bash
+cd .opencode
+bun init -y
+bun add -d @opencode-ai/plugin
+```
+
+Restart OpenCode so the plugin loads at startup, then run:
+
+```
+Read README.md and list its sections.
+```
+
+</hfoption>
+</hfoptions>
+
+## Step 3: Watch It Live
+
+Leave `python app.py` running in one terminal and your agent running in another. As the agent works, events stream into the dashboard:
+
+```
+timestamp              platform     event            tool    args
+2026-04-20T10:15:02Z   claude-code  UserPromptSubmit          List the files…
+2026-04-20T10:15:03Z   claude-code  PreToolUse       Bash    {"command":"ls"}
+2026-04-20T10:15:03Z   claude-code  PostToolUse      Bash    {"exit_code":0,…}
+2026-04-20T10:15:04Z   claude-code  PreToolUse       Read    {"path":"README…
+2026-04-20T10:15:04Z   claude-code  PostToolUse      Read    {"content":"# …
+2026-04-20T10:15:06Z   claude-code  Stop                     …
+```
+
+The bar chart updates live as tools accumulate, which makes it obvious when the agent is stuck in a loop on the same tool.
+
+## Step 4: Add a Guardrail
+
+A log-only dashboard is already useful, but the real power of hooks is that they can intervene. Extend the Claude Code hook to block dangerous commands.
+
+Add a second hook handler for `PreToolUse` that runs before the dashboard logger:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -Eq 'rm -rf|:\\(\\)\\{.*\\|.*&.*\\}:' && { echo 'blocked: dangerous shell pattern' >&2; exit 2; } || exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "http", "url": "http://localhost:8000/event",
+            "headers": { "X-Platform": "claude-code" } }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Now the same `PreToolUse` event does two things: denies obviously destructive shell patterns (exit code `2` with a stderr message) and logs everything else to the dashboard. Try asking the agent to run `rm -rf ~/` — you'll see it refuse, and you'll see the guardrail event in the dashboard.
+
+> [!TIP]
+> The equivalent OpenCode guard is a `throw new Error("blocked: dangerous shell pattern")` inside `"tool.execute.before"`. For Codex, the hook prints `jq -c '{hookSpecificOutput:{hookEventName:"PreToolUse", permissionDecision:"deny", permissionDecisionReason:"…"}}'` on stdout instead of exiting 2.
+
+## Step 5: Deploy (Optional)
+
+For a team-facing dashboard, host the Gradio app on [Hugging Face Spaces](https://huggingface.co/spaces). Push `app.py` and `requirements.txt`, and update the hook URLs from `http://localhost:8000/event` to `https://YOUR-USERNAME-agent-dashboard.hf.space/event`.
+
+A few cautions for a shared dashboard:
+
+- Payloads can contain secrets (prompts, file contents, command lines). Redact sensitive fields in `_normalize` before appending to the buffer.
+- A public Space is, well, public. Put authentication in front of `/event`, or keep the Space private and use a personal access token in the hook `headers`.
+- The in-memory buffer resets on restart. For durable history, swap `deque` for a SQLite file or a Spaces persistent volume.
+
+## Full Directory Layout
+
+```
+agent-activity-dashboard/
+├── app.py                              # Gradio + FastAPI server
+├── requirements.txt
+├── .claude/
+│   └── settings.json                   # Claude Code hooks
+├── .codex/
+│   └── hooks.json                      # Codex hooks
+└── .opencode/
+    └── plugins/
+        └── dashboard.ts                # OpenCode plugin
+```
+
+## Best Practices Demonstrated
+
+This project shows how to pick the right event for observability (`PreToolUse` and `PostToolUse`), how to collapse three different payload shapes into one normalized record, and how to use exit codes / `hookSpecificOutput` / thrown errors to enforce policy. The Gradio + FastAPI pattern — one process, two surfaces — keeps the whole thing short and makes it easy to host on Spaces.
 
 ## Key Takeaways
 
-Tools connect the agent to the world. Every tool needs size limits, timeouts, and informative error strings so the agent can adapt. The same loop runs unchanged against any model on Hugging Face Inference Providers.
+A hook is only useful if its output goes somewhere. A Gradio dashboard is a fast way to turn raw hook events into something you can actually learn from: you can watch an agent work, see where it's stuck, and prove that guardrails fire. The same dashboard works across Claude Code, Codex, and OpenCode because the event shape is narrow and the normalizer is small.
 
-Next, the unit 5 quiz.
+Next, one more quiz to wrap up the unit.

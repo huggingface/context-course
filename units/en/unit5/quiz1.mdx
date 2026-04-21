@@ -1,25 +1,25 @@
-# Quiz: Nano Harness and Agent Internals
+# Quiz 1: Hook Fundamentals
 
-Test your understanding of agent loops, tools, and sandboxing.
+Test your understanding of hooks, the events they cover, and how they differ across Claude Code, Codex, and OpenCode.
 
 <Question
   choices={[
     {
-      text: "Call model → return result immediately",
-      explain: "That's not an agent loop. A loop requires observation and repetition."
+      text: "A hook is a model prompt that reminds the agent to run a command",
+      explain: "That's a skill, not a hook. Hooks are runtime handlers — the runtime calls them regardless of what the model chose to do."
     },
     {
-      text: "Call model → parse Python code → execute with tools → observe → repeat until final_answer()",
-      explain: "Correct! That's the core loop: model → code → execute → observe → repeat.",
+      text: "A hook is a user-defined handler that runs at a deterministic point in the agent's lifecycle, independent of the model's cooperation",
+      explain: "Correct! Hooks fire on events like PreToolUse and Stop, and they run whether or not the model 'wanted' them to.",
       correct: true
     },
     {
-      text: "Model returns JSON → parse → store in database → done",
-      explain: "That's a one-shot API call, not an agent loop."
+      text: "A hook is a way to package skills, MCP servers, and agents into a distributable bundle",
+      explain: "That's a plugin. Some plugin systems (like Claude Code's) can bundle hooks, but a hook is not the same as a plugin."
     },
     {
-      text: "Keep calling the model until it returns the word 'done'",
-      explain: "The agent needs to execute code, not just call the model repeatedly."
+      text: "A hook is a kind of subagent that runs in parallel with the main agent",
+      explain: "Subagents are isolated model instances. Hooks are runtime callbacks — much lighter weight and not model calls by default."
     }
   ]}
 />
@@ -27,21 +27,21 @@ Test your understanding of agent loops, tools, and sandboxing.
 <Question
   choices={[
     {
-      text: "The model outputs English text like 'The answer is 42'",
-      explain: "Nano Harness is code-first. Model outputs Python code, not prose."
-    },
-    {
-      text: "The model outputs Python code that calls tools; agent executes that code in a sandbox",
-      explain: "Correct! Model → Python code → execution → observation.",
+      text: "Claude Code uses PascalCase JSON events (PreToolUse, Stop); Codex uses a smaller PascalCase JSON set behind a feature flag; OpenCode uses TS/JS plugin modules with keys like 'tool.execute.before'",
+      explain: "Correct! The three platforms share the same lifecycle but differ in syntax and surface.",
       correct: true
     },
     {
-      text: "The model outputs JSON which the agent parses",
-      explain: "Some models do this, but nano_harness expects Python code."
+      text: "All three platforms use the exact same settings.json format for hook events",
+      explain: "False. Only Claude Code uses settings.json. Codex uses hooks.json, and OpenCode uses code-first plugins."
     },
     {
-      text: "The model outputs commands like 'list_dir' and the agent translates them",
-      explain: "The model directly outputs Python function calls."
+      text: "OpenCode exposes hooks through JSON configuration, like Claude Code",
+      explain: "False. OpenCode has no JSON event config — plugins are TS/JS modules exporting hook handlers as object keys."
+    },
+    {
+      text: "Only Claude Code supports HTTP hooks; Codex and OpenCode only support shell commands",
+      explain: "Close but not quite. Claude Code's 'http' handler type is unique, but Codex command hooks can call curl, and OpenCode plugins can call fetch() — both achieve HTTP delivery."
     }
   ]}
 />
@@ -49,21 +49,21 @@ Test your understanding of agent loops, tools, and sandboxing.
 <Question
   choices={[
     {
-      text: "The message history grows with every loop iteration (model output + observation)",
-      explain: "Correct! Each step adds assistant response + user observation. History provides memory.",
+      text: "PreToolUse fires after the tool returns, so you can log the result",
+      explain: "False. PreToolUse fires *before* the tool call. PostToolUse is the 'after' event."
+    },
+    {
+      text: "UserPromptSubmit fires when the user submits a prompt, before the model sees it — ideal for injecting extra context",
+      explain: "Correct! This is the right event for prepending or modifying the prompt, and both Claude Code and Codex support it.",
       correct: true
     },
     {
-      text: "The message history is cleared every step to save tokens",
-      explain: "False. Full history is kept so the model can learn from prior steps."
+      text: "Stop fires only at session end, not per turn",
+      explain: "False. Stop fires at the end of each turn; SessionEnd (Claude Code) is the session-level event."
     },
     {
-      text: "The message history is stored in a database for later analysis",
-      explain: "The history is maintained in memory during the loop."
-    },
-    {
-      text: "The message history doesn't matter; only the latest model output matters",
-      explain: "False. History provides crucial context for the model to make good decisions."
+      text: "PostToolUse in Codex fires for every tool, just like in Claude Code",
+      explain: "False. Codex PreToolUse and PostToolUse currently fire for the Bash tool only. Claude Code fires them for every tool."
     }
   ]}
 />
@@ -71,21 +71,21 @@ Test your understanding of agent loops, tools, and sandboxing.
 <Question
   choices={[
     {
-      text: "safe_path() allows reading any file on the system",
-      explain: "False. safe_path() confines paths to the workspace directory."
-    },
-    {
-      text: "safe_path() prevents directory traversal by checking that paths stay within WORKSPACE",
-      explain: "Correct! It resolves paths and ensures they're within the workspace.",
+      text: "A Claude Code command hook exits with code 2 and writes a reason to stderr to block the action",
+      explain: "Correct! Exit 2 + stderr is the documented blocking signal; on PreToolUse it blocks the tool call, on UserPromptSubmit it erases the prompt.",
       correct: true
     },
     {
-      text: "safe_path() is optional; security isn't really needed",
-      explain: "Safety is critical. Without safe_path(), agents could read /etc/passwd."
+      text: "A Claude Code hook returns HTTP 500 to block the action",
+      explain: "False. Non-2xx responses from HTTP hooks are treated as non-blocking errors, not as explicit block signals."
     },
     {
-      text: "safe_path() encrypts paths for transmission",
-      explain: "No, it just prevents path escape attacks."
+      text: "An OpenCode hook writes to stdin to block a tool call",
+      explain: "False. OpenCode hooks block by throwing an Error. There is no stdin — they are TS/JS functions, not processes."
+    },
+    {
+      text: "Hooks cannot block or modify tool calls; they are observe-only",
+      explain: "False. All three platforms support influencing the agent: Claude Code and Codex via exit codes or JSON output, OpenCode via mutating `output` or throwing."
     }
   ]}
 />
@@ -93,21 +93,21 @@ Test your understanding of agent loops, tools, and sandboxing.
 <Question
   choices={[
     {
-      text: "exec_cmd() allows any shell command to run",
-      explain: "False. Only whitelisted commands (ls, cat, pwd, etc.) are allowed."
+      text: "Hooks replace skills: once you have hooks, you don't need to write skills anymore",
+      explain: "False. Skills teach the model *when* and *how* to do something; hooks fire around every step regardless of what the model chose. They complement each other."
     },
     {
-      text: "exec_cmd() maintains a whitelist of safe commands; anything else is blocked",
-      explain: "Correct! Only safe commands like 'ls' work. 'rm' and 'curl' are blocked.",
+      text: "Hooks are the right surface when you need deterministic behavior — like 'always run the linter after an Edit' — that shouldn't depend on the model remembering",
+      explain: "Correct! That's exactly what hooks are for: turning conventions into code so the runtime enforces them.",
       correct: true
     },
     {
-      text: "exec_cmd() has a timeout to prevent hanging commands",
-      explain: "True, but the whitelist is the primary security control."
+      text: "Hooks are mainly for user interface theming",
+      explain: "False. A few events (like Claude Code's Notification) relate to UI, but hooks are mostly about observability, guardrails, and automation."
     },
     {
-      text: "exec_cmd() runs commands with admin privileges",
-      explain: "No. Commands run with normal user privileges and are rate-limited."
+      text: "Hooks only make sense for single-agent workflows",
+      explain: "False. SubagentStart / SubagentStop (Claude Code) and session.* events (OpenCode) make hooks useful in multi-agent workflows too."
     }
   ]}
 />

@@ -15,7 +15,8 @@ Sign up here (it's free) 👉 [huggingface.co/context-course](https://huggingfac
 | 2 | MCP: The Model Context Protocol | Build MCP servers that give agents dynamic access to external tools and data. |
 | 3 | Plugins: Bundling for Distribution | Package skills and MCP servers into plugins that work across agent platforms. |
 | 4 | Subagents: Multi-Agent Workflows | Orchestrate complex tasks by spawning specialized child agents. |
-| 5 | Bonus: Nano Harness | Build your own minimal agent from scratch to understand how it all works under the hood. |
+| 5 | Hooks: Observing and Guarding the Lifecycle | Use hooks to log, block, or automate around every step the agent takes — then visualize it live in Gradio. |
+| 6 | Bonus: Nano Harness | Build your own minimal agent from scratch to understand how it all works under the hood. |
 
 ## Prerequisites
 

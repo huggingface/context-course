@@ -69,15 +69,28 @@
   - local: unit4/quiz2
     title: "Quiz 2: Multi-Agent Workflows"
 
-- title: "5. Bonus: Nano Harness — Build Your Own Agent"
+- title: "5. Hooks: Observing and Guarding the Agent Lifecycle"
   sections:
   - local: unit5/introduction
-    title: Introduction to Nano Harness
-  - local: unit5/agent-loop
-    title: The Agentic Loop Deep Dive
-  - local: unit5/tools-and-sandboxing
-    title: Tools and Sandboxing in Detail
-  - local: unit5/hands-on
-    title: "Hands-On: Extending Nano Harness"
+    title: "Unit 5: Hooks"
+  - local: unit5/hook-events
+    title: Hook Events and the Agent Lifecycle
   - local: unit5/quiz1
+    title: "Quiz 1: Hook Fundamentals"
+  - local: unit5/hands-on
+    title: "Hands-On: Agent Activity Dashboard with Gradio"
+  - local: unit5/quiz2
+    title: "Quiz 2: Hooks in Practice"
+
+- title: "6. Bonus: Nano Harness — Build Your Own Agent"
+  sections:
+  - local: unit6/introduction
+    title: Introduction to Nano Harness
+  - local: unit6/agent-loop
+    title: The Agentic Loop Deep Dive
+  - local: unit6/tools-and-sandboxing
+    title: Tools and Sandboxing in Detail
+  - local: unit6/hands-on
+    title: "Hands-On: Extending Nano Harness"
+  - local: unit6/quiz1
     title: "Quiz: Nano Harness and Agent Internals"
