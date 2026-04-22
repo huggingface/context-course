@@ -4,7 +4,9 @@
 
 ## Why Context Engineering Matters
 
-Ask Claude Code to "publish a dataset to Hugging Face" with no extra context, and the agent has to guess at authentication, schema, and required fields. It may get stuck, ask clarifying questions, or fill in plausible but wrong values.
+Without the right context, even a capable agent is working blind. It fills gaps with guesses, asks questions it shouldn't need to ask, and wastes time on work that has to be redone. They can start failing on ordinary tasks instead of just hard tasks. Instead of needing a better model, the agent needs better context.
+
+For example, ask Claude Code to "publish a dataset to Hugging Face" with no extra context, and the agent has to guess at authentication, schema, and required fields. It may get stuck, ask clarifying questions, or fill in plausible but wrong values. This wastes time and tokens.
 
 Give the same agent authentication instructions, the dataset schema, the API format, and pointers to common pitfalls, and the task finishes faster and more reliably.
 
@@ -20,6 +22,8 @@ This principle runs through the rest of the course. It's the same reason communi
 A **skill** is a self-contained package of knowledge that makes an agent good at one specific task. Skills are portable across projects and agents, reusable once installed, structured in a format agents can parse, and extensible through links to scripts and APIs.
 
 A skill is essentially an onboarding document for an agent: the same kind of step-by-step guide you'd give a new colleague, but written so the agent can load it on demand.
+
+They typically exist in the form of a directory that contains a `SKILL.md` markdown document with metadata and instructions. The directory is usually filled with key metadata, scripts and references that vary between different types of skills.
 
 ## From Prompts to Portable Knowledge
 
