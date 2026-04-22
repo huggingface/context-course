@@ -90,7 +90,7 @@ def exec_cmd(args):
             timeout=TIMEOUT_S,  # e.g., 30 seconds
             text=True
         )
-        return clip(result.stdout, MAX_CHARS)
+        return (result.stdout or result.stderr)[:MAX_CHARS]
     except subprocess.TimeoutExpired:
         return "Error: Command timed out"
 ```
@@ -156,6 +156,7 @@ When executing agent code:
 ```python
 # Only these functions are available
 exec_globals = {
+    "__builtins__": {}, # need to explicitly remove builtins
     "list_dir": list_dir,
     "read_file": read_file,
     "write_file": write_file,
