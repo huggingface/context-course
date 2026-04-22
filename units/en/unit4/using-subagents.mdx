@@ -118,7 +118,9 @@ Or define which subagent should run which skill:
 ---
 name: hf-researcher
 description: Hugging Face specialist
-tools: hf-api-search, hf-dataset-fetch
+skills: 
+	- hf-api-search 
+	- hf-dataset-fetch
 model: sonnet
 ---
 You are an expert at finding and evaluating models on Hugging Face.
