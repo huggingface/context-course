@@ -324,11 +324,11 @@ class UnitSnippetTests(unittest.TestCase):
 
     def test_gradio_auth_snippet_uses_supported_surface(self):
         block = block_after(
-            UNITS_DIR / "unit2" / "building-servers.mdx",
-            "### Authentication in Gradio MCP",
+            UNITS_DIR / "unit2" / "gradio-mcp.mdx",
+            "### Authentication",
             "python",
         )
-        self.assertIn('auth=("admin", "secret")', block.code)
+        self.assertIn("demo.launch(mcp_server=True, auth=authenticate)", block.code)
         self.assertNotIn("gr.Header", block.code)
 
     def test_unit6_main_loop_documents_responses_api(self):
@@ -339,7 +339,10 @@ class UnitSnippetTests(unittest.TestCase):
         )
         self.assertIn("client.responses.create(", block.code)
         self.assertIn("content = response.output_text", block.code)
-        self.assertIn('result = "Executed successfully"', block.code)
+        self.assertIn('"__builtins__": {}', block.code)
+        self.assertIn("FINAL_RESULT", block.code)
+        self.assertIn("ALLOW_WRITE = False", (UNITS_DIR / "unit6" / "agent-loop.mdx").read_text(encoding="utf-8"))
+        self.assertNotIn('result = "Executed successfully"', block.code)
         self.assertNotIn("client.messages.create(", block.code)
 
     def test_unit6_extended_harness_runs_against_openai_compatible_client(self):
@@ -350,7 +353,7 @@ class UnitSnippetTests(unittest.TestCase):
 
         block = block_after(
             UNITS_DIR / "unit6" / "hands-on.mdx",
-            "Create `nano_harness_extended.py` with all tools:",
+            "Create `nano_harness_extended.py` with all tools. This version uses the Responses API so the same loop works against the Hugging Face router and a direct OpenAI endpoint without changing the control flow.",
             "python",
         )
 
@@ -368,11 +371,20 @@ class UnitSnippetTests(unittest.TestCase):
         request = client.responses.calls[-1]
         self.assertEqual("https://router.huggingface.co/v1", client.base_url)
         self.assertEqual("hf_test_token", client.api_key)
-        self.assertEqual("zai-org/GLM-5", request["model"])
+        self.assertEqual("zai-org/GLM-5.1", request["model"])
         self.assertEqual("system", request["input"][0]["role"])
         self.assertIn("code-first agent", request["input"][0]["content"])
         self.assertEqual("user", request["input"][1]["role"])
         self.assertIn("Task complete", stdout.getvalue())
+
+    def test_codex_marketplace_examples_use_paths_relative_to_marketplace_file(self):
+        expected = '"path": "../../.codex/plugins/text-processor-plugin"'
+        for relative_path in [
+            UNITS_DIR / "unit3" / "building-plugins.mdx",
+            UNITS_DIR / "unit3" / "using-plugins.mdx",
+        ]:
+            text = relative_path.read_text(encoding="utf-8")
+            self.assertIn(expected, text)
 
     def test_codex_plugin_manifest_references_skills_and_mcp_config(self):
         block = block_after(
@@ -390,7 +402,7 @@ class UnitSnippetTests(unittest.TestCase):
             "Create `.opencode/plugins/text-processor-plugin.ts`:",
             "ts",
         )
-        self.assertIn("export const TextProcessorPlugin = async", block.code)
+        self.assertIn("export const TextProcessorPlugin: Plugin = async", block.code)
         self.assertIn('"tool.execute.before"', block.code)
         self.assertNotIn("../text-processor-mcp/server.py", block.code)
 
