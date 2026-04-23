@@ -2,6 +2,8 @@
 
 Test your ability to wire hooks into real workflows.
 
+## Question 1: How should the dashboard server be structured?
+
 <Question
   choices={[
     {
@@ -23,6 +25,8 @@ Test your ability to wire hooks into real workflows.
     }
   ]}
 />
+
+## Question 2: How does the Gradio dashboard refresh?
 
 <Question
   choices={[
@@ -46,6 +50,8 @@ Test your ability to wire hooks into real workflows.
   ]}
 />
 
+## Question 3: How do hook-based guardrails block dangerous actions?
+
 <Question
   choices={[
     {
@@ -67,6 +73,8 @@ Test your ability to wire hooks into real workflows.
     }
   ]}
 />
+
+## Question 4: What makes shell-command hooks safe?
 
 <Question
   choices={[
@@ -90,6 +98,8 @@ Test your ability to wire hooks into real workflows.
   ]}
 />
 
+## Question 5: Why can one dashboard support multiple agents?
+
 <Question
   choices={[
     {
@@ -112,6 +122,16 @@ Test your ability to wire hooks into real workflows.
   ]}
 />
 
+## Summary
+
+If you got 4-5 correct, you can wire hooks into a real observability and guardrail flow. If not, review the hands-on example, especially the payload normalization and blocking patterns.
+
+## Key Takeaways
+
+- One FastAPI + Gradio process is enough for a lightweight live dashboard
+- Hook handlers should fail fast, sanitize payloads, and avoid shell-injection patterns
+- A shared receiver works across Claude Code, Codex, and OpenCode once you normalize the event shape
+
 ## What's Next
 
-You now have five end-to-end surfaces for shaping how a code agent works: skills, MCP servers, plugins, subagents, and hooks. The bonus unit goes one level deeper and builds an agent from scratch, so you understand what's happening inside the runtime every one of those surfaces plugs into.
+You've finished Unit 5: Hooks. You now have five end-to-end surfaces for shaping how a code agent works: skills, MCP servers, plugins, subagents, and hooks. The bonus unit goes one level deeper and builds an agent from scratch, so you understand what every one of those surfaces is plugging into.

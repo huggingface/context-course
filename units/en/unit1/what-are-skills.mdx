@@ -2,11 +2,13 @@
 
 This lesson looks at skills in more depth: what they are, what problems they solve, and how they compare to prompts.
 
-## The Problem: Agents Without Context
+## The Same Problem, Bigger Workflow
 
-Building on the Claude Code example from last section, imagine you're working on the Hugging Face Hub and ask your code agent:
+The intro lesson used a simple "publish a dataset to Hugging Face" request to show the basic failure mode: without context, the agent has to guess. Now take that same problem and raise the stakes with a longer workflow:
 
 > "Train a model on this dataset and publish it when done."
+
+This is not a new argument so much as an escalation. The missing context now compounds across several linked decisions instead of just one.
 
 Without proper context, your agent might:
 

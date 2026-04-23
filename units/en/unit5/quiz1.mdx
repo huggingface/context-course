@@ -2,6 +2,8 @@
 
 Test your understanding of hooks, the events they cover, and how they differ across Claude Code, Codex, and OpenCode.
 
+## Question 1: What is a hook?
+
 <Question
   choices={[
     {
@@ -23,6 +25,8 @@ Test your understanding of hooks, the events they cover, and how they differ acr
     }
   ]}
 />
+
+## Question 2: How do hook surfaces differ across platforms?
 
 <Question
   choices={[
@@ -46,6 +50,8 @@ Test your understanding of hooks, the events they cover, and how they differ acr
   ]}
 />
 
+## Question 3: Which lifecycle events matter most?
+
 <Question
   choices={[
     {
@@ -67,6 +73,8 @@ Test your understanding of hooks, the events they cover, and how they differ acr
     }
   ]}
 />
+
+## Question 4: How do hooks block or modify actions?
 
 <Question
   choices={[
@@ -90,6 +98,8 @@ Test your understanding of hooks, the events they cover, and how they differ acr
   ]}
 />
 
+## Question 5: When should you use hooks instead of skills?
+
 <Question
   choices={[
     {
@@ -111,3 +121,19 @@ Test your understanding of hooks, the events they cover, and how they differ acr
     }
   ]}
 />
+
+---
+
+## Summary
+
+If you got 4-5 correct, you understand the core hook model well enough to start wiring real guardrails and observability. If not, review the event lifecycle and the platform comparison before continuing.
+
+## Key Takeaways
+
+- Hooks are deterministic runtime handlers, not prompts or plugins
+- Claude Code, Codex, and OpenCode expose similar lifecycle moments with different configuration surfaces
+- Hooks are the right tool when behavior must happen every time rather than relying on the model to remember
+
+## Next Steps
+
+Next, wire hooks into a real dashboard so you can see agent activity live.

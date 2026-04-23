@@ -152,9 +152,41 @@ For **remote connections** where the server runs elsewhere:
 Streamable HTTP is the current standard for remote MCP servers, introduced in protocol revision 2025-03-26 and carried forward in subsequent revisions. The older HTTP+SSE transport from 2024-11-05 is deprecated but still supported for backward compatibility.
 
 Configuration:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
 ```bash
-claude mcp add --transport http remote-server https://your-server.example.com/mcp
+claude mcp add hf-mcp-server -t http "https://huggingface.co/mcp?login"
 ```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```
+codex mcp add hf-mcp-server --url "https://huggingface.co/mcp?login"
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```json
+{
+  "mcp": {
+    "remote-server": {
+      "type": "remote",
+      "url": "https://your-server.example.com/mcp"
+    }
+  }
+}
+```
+
+</hfoption>
+
+</hfoptions>
 
 | Aspect | Stdio | Streamable HTTP |
 |--------|-------|-----------------|

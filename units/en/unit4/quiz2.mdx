@@ -2,6 +2,8 @@
 
 Test your ability to design and implement multi-agent workflows.
 
+## Question 1: When is the overhead of subagents worth it?
+
 <Question
   choices={[
     {
@@ -23,6 +25,8 @@ Test your ability to design and implement multi-agent workflows.
     }
   ]}
 />
+
+## Question 2: How do parent agents share context with subagents?
 
 <Question
   choices={[
@@ -46,6 +50,8 @@ Test your ability to design and implement multi-agent workflows.
   ]}
 />
 
+## Question 3: How should you design for subagent failure?
+
 <Question
   choices={[
     {
@@ -67,6 +73,8 @@ Test your ability to design and implement multi-agent workflows.
     }
   ]}
 />
+
+## Question 4: How do Claude Code and Codex expose subagents?
 
 <Question
   choices={[
@@ -90,6 +98,8 @@ Test your ability to design and implement multi-agent workflows.
   ]}
 />
 
+## Question 5: What built-in agent types does Codex provide?
+
 <Question
   choices={[
     {
@@ -111,3 +121,19 @@ Test your ability to design and implement multi-agent workflows.
     }
   ]}
 />
+
+---
+
+## Summary
+
+If you got 4-5 correct, you're ready to design multi-agent workflows without reaching for subagents unnecessarily. If you missed several, review the platform-specific invocation patterns and failure-handling guidance.
+
+## Key Takeaways
+
+- Use subagents when the task shape justifies isolation or parallelism
+- Pass only the context a child agent needs, and use files when the payload is too large for a prompt
+- Design for retries, partial results, and platform-specific invocation details from the start
+
+## Next Steps
+
+You've finished Unit 4: Subagents. Next up is Unit 5, where you'll add deterministic lifecycle hooks around those same agent workflows.

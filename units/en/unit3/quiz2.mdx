@@ -2,6 +2,8 @@
 
 Test your understanding of plugin development, distribution, and best practices.
 
+## Question 1: Where does `plugin.json` belong?
+
 <Question
   choices={[
     {
@@ -23,6 +25,8 @@ Test your understanding of plugin development, distribution, and best practices.
     }
   ]}
 />
+
+## Question 2: What does the manifest-first plugin structure look like?
 
 <Question
   choices={[
@@ -46,6 +50,8 @@ Test your understanding of plugin development, distribution, and best practices.
   ]}
 />
 
+## Question 3: How should plugin permissions be designed?
+
 <Question
   choices={[
     {
@@ -67,6 +73,8 @@ Test your understanding of plugin development, distribution, and best practices.
     }
   ]}
 />
+
+## Question 4: How do you test plugins locally?
 
 <Question
   choices={[
@@ -90,6 +98,8 @@ Test your understanding of plugin development, distribution, and best practices.
   ]}
 />
 
+## Question 5: How should secrets be handled?
+
 <Question
   choices={[
     {
@@ -111,3 +121,19 @@ Test your understanding of plugin development, distribution, and best practices.
     }
   ]}
 />
+
+---
+
+## Summary
+
+If you got 4-5 correct, you're ready to build and distribute plugins responsibly. If not, review the build and usage lessons before publishing anything.
+
+## Key Takeaways
+
+- Keep plugin structure explicit: manifest, bundled components, and documentation each have a clear place
+- Ask for the minimum permissions you need and explain why
+- Test locally before publishing, and keep secrets in environment variables rather than plugin files
+
+## Next Steps
+
+You've finished Unit 3: Plugins. You now know how to package reusable agent behavior and distribute it safely. Next up is Unit 4, where those components become building blocks for multi-agent workflows.

@@ -24,13 +24,15 @@ Sign up here (it's free) 👉 [huggingface.co/context-course](https://huggingfac
 * A Hugging Face account ([hf.co/join](https://hf.co/join))
 * Access to a code agent: Claude Code, Codex, or an open source alternative
 
-## Tools Covered
+## Reference Agents
 
-This course is **tool-agnostic** — concepts apply across agents, with specific examples for:
+This edition keeps the examples consistent by following three reference agents end-to-end:
 
 * **Claude Code** — `claude` in your terminal
 * **Codex** — `codex` CLI from OpenAI
-* **Open Code** — aider, Continue, Gemini CLI, and other open source agents
+* **OpenCode** — `opencode` from opencode.ai
+
+If you use Cursor or GitHub Copilot, the concepts in the course still transfer, but their MCP and extension workflows are not covered step-by-step in this edition.
 
 ## Quick Start
 

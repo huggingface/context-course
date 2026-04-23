@@ -19,13 +19,9 @@ MCP eliminates this. You write your data sources as MCP servers once, and they w
 
 ## MCP as Universal Adapter
 
-MCP uses a simple architecture:
+From a learner's point of view, MCP gives you one consistent way to expose tools, resources, and prompts to agents. The important idea in this intro is simple: build the integration once, then reuse it across compatible agents.
 
-- **Host**: Your AI application (Claude, VS Code, an agent framework)
-- **Client**: Protocol handler inside the host
-- **Server**: Your external program exposing capabilities
-
-The client and server communicate using JSON-RPC 2.0 messages. You write servers; the host handles the protocol.
+We'll unpack the precise vocabulary in the next lesson: host, client, server, capability types, and the JSON-RPC messages underneath. For now, keep the outcome in mind rather than the wire format.
 
 ## Skills + MCP
 

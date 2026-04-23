@@ -2,6 +2,8 @@
 
 Test your understanding of subagent patterns, architectures, and when to use them.
 
+## Question 1: What is a subagent?
+
 <Question
   choices={[
     {
@@ -23,6 +25,8 @@ Test your understanding of subagent patterns, architectures, and when to use the
     }
   ]}
 />
+
+## Question 2: What is the fan-out / fan-in pattern?
 
 <Question
   choices={[
@@ -46,6 +50,8 @@ Test your understanding of subagent patterns, architectures, and when to use the
   ]}
 />
 
+## Question 3: What is the pipeline pattern?
+
 <Question
   choices={[
     {
@@ -67,6 +73,8 @@ Test your understanding of subagent patterns, architectures, and when to use the
     }
   ]}
 />
+
+## Question 4: When should you reach for subagents?
 
 <Question
   choices={[
@@ -90,6 +98,8 @@ Test your understanding of subagent patterns, architectures, and when to use the
   ]}
 />
 
+## Question 5: What is the supervisor pattern?
+
 <Question
   choices={[
     {
@@ -111,3 +121,19 @@ Test your understanding of subagent patterns, architectures, and when to use the
     }
   ]}
 />
+
+---
+
+## Summary
+
+If you got 4-5 correct, the core subagent patterns are in place. If not, revisit the patterns lesson before moving into the hands-on workflow.
+
+## Key Takeaways
+
+- Subagents are isolated child agents, not separate platforms or background skills
+- Fan-out / fan-in is parallel; pipeline is sequential; supervisor coordinates specialists
+- The best signal for subagents is independent or clearly staged work that justifies the coordination overhead
+
+## Next Steps
+
+Next, put these patterns to work in the hands-on multi-agent workflow.

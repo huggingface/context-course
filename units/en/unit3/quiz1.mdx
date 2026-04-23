@@ -2,6 +2,8 @@
 
 Test your understanding of plugins, their anatomy, and how they differ across platforms.
 
+## Question 1: What is a plugin?
+
 <Question
   choices={[
     {
@@ -23,6 +25,8 @@ Test your understanding of plugins, their anatomy, and how they differ across pl
     }
   ]}
 />
+
+## Question 2: What does `plugin.json` do?
 
 <Question
   choices={[
@@ -46,6 +50,8 @@ Test your understanding of plugins, their anatomy, and how they differ across pl
   ]}
 />
 
+## Question 3: How do manifest-first plugins differ by platform?
+
 <Question
   choices={[
     {
@@ -67,6 +73,8 @@ Test your understanding of plugins, their anatomy, and how they differ across pl
     }
   ]}
 />
+
+## Question 4: How do skills and MCP servers fit inside a plugin?
 
 <Question
   choices={[
@@ -90,6 +98,8 @@ Test your understanding of plugins, their anatomy, and how they differ across pl
   ]}
 />
 
+## Question 5: What can a Codex plugin reference?
+
 <Question
   choices={[
     {
@@ -111,3 +121,19 @@ Test your understanding of plugins, their anatomy, and how they differ across pl
     }
   ]}
 />
+
+---
+
+## Summary
+
+If you got 4-5 correct, you have a solid grasp of plugin anatomy. If you missed several, reread the introduction and anatomy lessons before moving on.
+
+## Key Takeaways
+
+- Plugins are a packaging surface, not the same thing as a skill or an MCP server
+- Claude Code and Codex use manifest-first plugins, while OpenCode uses code-first modules
+- On manifest-first platforms, `plugin.json` tells the agent where bundled components live
+
+## Next Steps
+
+Next, use plugins in a real workflow and see how installation and activation differ by platform.

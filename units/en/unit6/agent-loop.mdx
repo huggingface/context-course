@@ -4,63 +4,6 @@ The core of nano_harness is a loop that runs at most fifty times: call the LLM, 
 
 ![The agentic loop: Initialize, Call LLM, Parse, Execute, Check completion](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit5/agent-loop.svg)
 
-## The Loop Visually
-
-```
-┌─────────────────────────────────────────────┐
-│ 1. Initialize: task + system prompt         │
-│    message_history = [system_msg]           │
-│    step = 0                                 │
-└──────────────┬──────────────────────────────┘
-               │
-               ▼
-        ┌──────────────────────┐
-        │ 2. Call LLM          │
-        │    with message_hist │
-        │    (max_tokens: 4096)│
-        └──────┬───────────────┘
-               │
-               ▼
-        ┌──────────────────────┐
-        │ 3. Parse output      │
-        │    Extract Python    │
-        │    code blocks       │
-        └──────┬───────────────┘
-               │
-               ▼
-        ┌──────────────────────┐
-        │ 4. Execute Python    │
-        │    Capture stdout/   │
-        │    stderr            │
-        └──────┬───────────────┘
-               │
-               ▼
-        ┌──────────────────────┐
-        │ 5. Check:            │
-        │    final_answer()    │
-        │    called?           │
-        └──────┬───────────────┘
-               │         │
-              No        Yes → Done!
-               │
-               ▼
-        ┌──────────────────────┐
-        │ 6. Append result     │
-        │    to message_hist   │
-        │    step += 1         │
-        └──────┬───────────────┘
-               │
-               ▼
-        ┌──────────────────────┐
-        │ 7. step < 50?        │
-        └──────┬────────────┬──┘
-               │            │
-              Yes           No
-               │            │
-               ▼            └──→ Done!
-        (Back to step 2)
-```
-
 ## Code Walkthrough
 
 ### Configuration
@@ -75,10 +18,11 @@ MAX_STEPS = 50
 TEMPERATURE = 0.2
 TIMEOUT_S = 30
 MAX_CHARS = 8000
+ALLOW_WRITE = False
 ALLOW_COMMANDS = ["ls", "cat", "pwd", "echo", "head", "tail", "wc", "rg"]
 ```
 
-`MODEL` is the HF model ID routed through Inference Providers, `MAX_STEPS` caps iterations at 50, `TEMPERATURE=0.2` keeps output deterministic, `ALLOW_COMMANDS` is the shell allowlist, and `MAX_CHARS` bounds tool output to prevent context overflow.
+`MODEL` is the HF model ID routed through Inference Providers, `MAX_STEPS` caps iterations at 50, `TEMPERATURE=0.2` keeps output deterministic, `ALLOW_COMMANDS` is the shell allowlist, `ALLOW_WRITE=False` keeps file mutation off by default, and `MAX_CHARS` bounds tool output to prevent context overflow.
 
 ### System Prompt
 
@@ -89,7 +33,7 @@ Output only executable Python code, no prose.
 Tools available:
 - list_dir(path='.'): List directory contents
 - read_file(path, max_chars=4000): Read file
-- write_file(path, content): Write file
+- write_file(path, content): Write file (only if ALLOW_WRITE=True)
 - exec_cmd(args): Run shell command
 
 When task is complete, call:
@@ -124,26 +68,39 @@ def read_file(path, max_chars=4000):
     return clip(content, min(max_chars, MAX_CHARS))  # Limit output
 
 def write_file(path, content):
-    """Write or create file."""
+    """Write or create file if writes are enabled."""
+    if not ALLOW_WRITE:
+        raise PermissionError("write_file disabled")
     p = safe_path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(content)
+    p.write_text(str(content), encoding="utf-8")
+    return f"Wrote {len(str(content))} bytes"
 
 def exec_cmd(args):
     """Execute shell command (whitelisted only)."""
     if args[0] not in ALLOW_COMMANDS:
         raise PermissionError(f"Command {args[0]} not allowed")
     result = subprocess.run(args, capture_output=True, timeout=TIMEOUT_S, text=True)
-    return (result.stdout or result.stderr)[:MAX_CHARS]  # Limit output
+    output_parts = []
+    if result.stdout:
+        output_parts.append(f"stdout:\n{result.stdout}")
+    if result.stderr:
+        output_parts.append(f"stderr:\n{result.stderr}")
+    output = "\n\n".join(output_parts) or f"(exit code {result.returncode} with no output)"
+    return clip(output, MAX_CHARS)
+
+DONE = False
+FINAL_RESULT = None
 
 def final_answer(value):
     """Agent calls this when task is complete."""
-    global DONE
+    global DONE, FINAL_RESULT
     DONE = True
+    FINAL_RESULT = value
     return value
 ```
 
-Each tool enforces safety at the boundary: path confinement, command allowlisting, output size limits.
+Each tool enforces safety at the boundary: path confinement, command allowlisting, output size limits, and explicit write gating.
 
 ### The Main Loop
 
@@ -151,7 +108,9 @@ The harness uses the Responses API. The OpenAI SDK accepts message-style `input`
 
 ```python
 def main():
-    global DONE
+    global DONE, FINAL_RESULT
+    DONE = False
+    FINAL_RESULT = None
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": TASK}
@@ -176,21 +135,43 @@ def main():
         # 3. Parse and execute Python code
         code = extract_python(content)  # Parse code block from response
         try:
+            stdout_buffer = io.StringIO()
+            stderr_buffer = io.StringIO()
             exec_globals = {
+                "__builtins__": {},
                 "list_dir": list_dir,
                 "read_file": read_file,
                 "write_file": write_file,
                 "exec_cmd": exec_cmd,
                 "final_answer": final_answer
             }
-            exec(code, exec_globals)
-            result = "Executed successfully"
+            with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+                exec(code, exec_globals)
+
+            stdout_text = stdout_buffer.getvalue().strip()
+            stderr_text = stderr_buffer.getvalue().strip()
+
+            if DONE:
+                result = f"Final answer: {clip(FINAL_RESULT)}"
+            else:
+                observations = []
+                if stdout_text:
+                    observations.append(f"stdout:\n{clip(stdout_text)}")
+                if stderr_text:
+                    observations.append(f"stderr:\n{clip(stderr_text)}")
+                result = "\n\n".join(observations) or "Executed successfully (no output)"
+        except FileNotFoundError:
+            result = "Error: FileNotFoundError: File not found"
+        except PermissionError as e:
+            result = f"Error: PermissionError: {str(e)}"
+        except subprocess.TimeoutExpired:
+            result = "Error: TimeoutError: Command took too long"
         except Exception as e:
             result = f"Error: {type(e).__name__}: {str(e)}"
         
         # 4. Check if agent called final_answer()
         if DONE:
-            print(f"✓ Task complete")
+            print(f"✓ Task complete: {FINAL_RESULT}")
             break
         
         # 5. Add observation to message history
@@ -200,29 +181,30 @@ def main():
         print(f"✗ Max steps ({MAX_STEPS}) reached without final_answer()")
 ```
 
-Four things matter in this loop. The message history accumulates system prompt, user task, and alternating assistant/observation turns. The LLM call uses a configurable model and a low temperature (0.2) for deterministic behavior. Code execution runs through `exec()` with a restricted globals dict that only exposes the tool functions, and exceptions are caught and reported. Observations are appended to history so the next iteration sees the result and can adapt.
+Four things matter in this loop. The message history accumulates system prompt, user task, and alternating assistant/observation turns. The LLM call uses a configurable model and a low temperature (0.2) for deterministic behavior. Code execution runs through `exec()` with a restricted globals dict that strips builtins and exposes only the tool functions. The loop then feeds back one of four observation types: stdout, stderr, an explicit final answer, or a structured error string.
 
 ## Error Recovery
 
-When something fails, the agent gets a detailed error:
+The main loop above already handles the common failure modes explicitly:
 
 ```python
 try:
-    exec(code, exec_globals)
-except FileNotFoundError as e:
+    with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+        exec(code, exec_globals)
+except FileNotFoundError:
     result = "Error: FileNotFoundError: File not found"
 except PermissionError as e:
-    result = "Error: PermissionError: Command not allowed"
+    result = f"Error: PermissionError: {str(e)}"
 except subprocess.TimeoutExpired:
     result = "Error: TimeoutError: Command took too long"
 except Exception as e:
     result = f"Error: {type(e).__name__}: {str(e)}"
 
-# Model sees this error and tries a different approach
+# The model sees this observation and tries a different approach
 messages.append({"role": "user", "content": result})
 ```
 
-The agent reads the error as an observation and adjusts: list the directory after a missing file, swap a blocked command for a whitelisted one, break long-running work into smaller steps.
+The agent reads the failure as an observation and adjusts: list the directory after a missing file, stop trying `write_file` when writes are disabled, swap a blocked command for a whitelisted one, or break long-running work into smaller steps.
 
 ## Step Limit Safety
 

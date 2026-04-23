@@ -103,6 +103,8 @@ cp -R /local/path/to/text-processor-plugin ~/.codex/plugins/text-processor-plugi
 
 Then edit or create `~/.agents/plugins/marketplace.json`:
 
+Because `source.path` is resolved relative to `~/.agents/plugins/marketplace.json`, the path needs to walk up from `~/.agents/plugins/` before pointing at `~/.codex/plugins/`.
+
 ```json
 {
   "name": "local-example-plugins",
@@ -114,7 +116,7 @@ Then edit or create `~/.agents/plugins/marketplace.json`:
       "name": "text-processor-plugin",
       "source": {
         "source": "local",
-        "path": "./.codex/plugins/text-processor-plugin"
+        "path": "../../.codex/plugins/text-processor-plugin"
       },
       "policy": {
         "installation": "AVAILABLE",

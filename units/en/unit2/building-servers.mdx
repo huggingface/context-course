@@ -229,124 +229,6 @@ if __name__ == "__main__":
     mcp.run()
 ```
 
-## Gradio MCP Integration
-
-Gradio can automatically create MCP servers. Install Gradio with MCP support:
-
-```bash
-pip install "gradio[mcp]"
-```
-
-Create a Gradio app with MCP:
-
-```python
-import gradio as gr
-
-def letter_counter(word: str, letter: str) -> int:
-    """Count occurrences of a letter in text.
-    
-    Args:
-        word: The input text
-        letter: The letter to search for
-    
-    Returns:
-        The count of the letter
-    """
-    return word.lower().count(letter.lower())
-
-def reverse_text(text: str) -> str:
-    """Reverse a string.
-    
-    Args:
-        text: The input text
-    
-    Returns:
-        The reversed text
-    """
-    return text[::-1]
-
-# Create UI
-with gr.Blocks() as demo:
-    with gr.Tab("Letter Counter"):
-        word_input = gr.Textbox(label="Enter text")
-        letter_input = gr.Textbox(label="Enter letter")
-        count_output = gr.Number(label="Count")
-        gr.Button("Count").click(letter_counter, [word_input, letter_input], count_output)
-    
-    with gr.Tab("Text Reversal"):
-        text_input = gr.Textbox(label="Enter text")
-        reversed_output = gr.Textbox(label="Reversed")
-        gr.Button("Reverse").click(reverse_text, [text_input], reversed_output)
-
-if __name__ == "__main__":
-    demo.launch(mcp_server=True)
-```
-
-Launch with `mcp_server=True` to automatically:
-- Convert functions into MCP tools
-- Create a web UI at `http://localhost:7860`
-- Expose an MCP endpoint at `http://localhost:7860/gradio_api/mcp/`
-- Handle JSON-RPC serialization automatically
-
-Your functions are now both web UI components AND MCP tools.
-
- > [!NOTE]
-> The purpose of exposing MCP features as UI components is:
-> - It allows non-agent users to interact with the tools in a browser.
-> - It gives a quick human test harness for the tools.
->   
-> Agent-only setups do **not** require UI.
-## Advanced Gradio MCP Features
-
-### Resources in Gradio
-
-Define resources with the `@gr.mcp.resource()` decorator:
-
-```python
-import gradio as gr
-
-@gr.mcp.resource("config://app")
-def get_app_config() -> str:
-    """Current application configuration."""
-    return """version: 1.0
-debug: false
-max_users: 1000
-api_key_required: true"""
-
-# Your UI components and tools here...
-
-if __name__ == "__main__":
-    demo.launch(mcp_server=True)
-```
-
-### MCP-Only Functions
-
-Define tools that only exist in MCP (not in the UI):
-
-```python
-import gradio as gr
-
-@gr.api()
-def database_query(sql: str) -> str:
-    """Execute a database query.
-    
-    This function is only available via MCP, not in the web UI.
-    """
-    # Execute query
-    return "Query results..."
-
-# Your regular UI components...
-
-if __name__ == "__main__":
-    demo.launch(mcp_server=True)
-```
-
-### Authentication in Gradio MCP
-
-Gradio's built-in `auth` argument on `launch()` protects the web UI with basic auth, but it does **not** protect the `/gradio_api/mcp/` endpoint. Treat an `mcp_server=True` app as publicly reachable on the network it's bound to.
-
-For production deployments, put the app behind a reverse proxy that enforces authentication on the MCP path, deploy it as a private Hugging Face Space, or implement authentication at the transport layer (for example, with an OAuth-aware MCP gateway). See the [Gradio security notes](https://www.gradio.app/guides/sharing-your-app#authentication) for UI auth and the [MCP Authorization spec](https://modelcontextprotocol.io/specification/basic/authorization) for transport-level options.
-
 ## Error Handling in FastMCP
 
 Handle errors gracefully by returning error messages:
@@ -430,8 +312,80 @@ npx @modelcontextprotocol/inspector python calculator_server.py
 
 Both open the inspector in your browser and connect it to the server over stdio.
 
+## Gradio MCP Integration
+
+FastMCP is the better default when you want a pure MCP server. Gradio is useful when you want the same functions to be usable by both agents and humans in a browser.
+
+Install Gradio with MCP support:
+
+```bash
+pip install "gradio[mcp]"
+```
+
+Create a Gradio app with MCP:
+
+```python
+import gradio as gr
+
+def letter_counter(word: str, letter: str) -> int:
+    """Count occurrences of a letter in text.
+
+    Args:
+        word: The input text
+        letter: The letter to search for
+
+    Returns:
+        The count of the letter
+    """
+    return word.lower().count(letter.lower())
+
+def reverse_text(text: str) -> str:
+    """Reverse a string.
+
+    Args:
+        text: The input text
+
+    Returns:
+        The reversed text
+    """
+    return text[::-1]
+
+# Create UI
+with gr.Blocks() as demo:
+    with gr.Tab("Letter Counter"):
+        word_input = gr.Textbox(label="Enter text")
+        letter_input = gr.Textbox(label="Enter letter")
+        count_output = gr.Number(label="Count")
+        gr.Button("Count").click(letter_counter, [word_input, letter_input], count_output)
+
+    with gr.Tab("Text Reversal"):
+        text_input = gr.Textbox(label="Enter text")
+        reversed_output = gr.Textbox(label="Reversed")
+        gr.Button("Reverse").click(reverse_text, [text_input], reversed_output)
+
+if __name__ == "__main__":
+    demo.launch(mcp_server=True)
+```
+
+Launch with `mcp_server=True` to automatically:
+- Convert functions into MCP tools
+- Create a web UI at `http://localhost:7860`
+- Expose an MCP endpoint at `http://localhost:7860/gradio_api/mcp/`
+- Handle JSON-RPC serialization automatically
+
+Your functions are now both web UI components AND MCP tools.
+
+> [!NOTE]
+> Exposing tools through a UI is useful because:
+> - Non-agent users can interact with the same functions in a browser
+> - You get a quick human test harness for the tools
+>
+> Agent-only setups do **not** require UI.
+
+For `@gr.mcp.resource()`, `@gr.api()`, deployment, and authentication details, continue to the dedicated Gradio lesson next. This page only needs the core idea: `mcp_server=True` turns the same functions into both browser handlers and MCP tools.
+
 ## Key Takeaways
 
-FastMCP turns docstrings into tool descriptions and type hints into JSON schemas. Tools are callable functions, resources expose read-only data through URIs, and prompts serve as instruction templates. Gradio adds a web UI to the same functions when you pass `mcp_server=True`. Write clear docstrings, return error messages instead of raising, and test locally before deploying.
+FastMCP turns docstrings into tool descriptions and type hints into JSON schemas. Tools are callable functions, resources expose read-only data through URIs, and prompts serve as instruction templates. Finish the pure-server path first: add error handling, test locally, and only then decide whether you want a browser UI. If you do, Gradio adds one with `mcp_server=True`, and the next lesson goes deeper on Gradio-specific MCP features.
 
 Next we'll point our agents at these servers.

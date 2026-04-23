@@ -60,7 +60,7 @@ def write_file(path, content):
     p = safe_path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(str(content), encoding="utf-8")
-    return f"Wrote {len(content)} bytes to {p}"
+    return f"Wrote {len(str(content))} bytes to {p}"
 ```
 
 Writing is off by default — the agent must have `ALLOW_WRITE=True` to touch disk. Paths are confined, and parent directories are created on demand.
@@ -90,12 +90,18 @@ def exec_cmd(args):
             timeout=TIMEOUT_S,  # e.g., 30 seconds
             text=True
         )
-        return (result.stdout or result.stderr)[:MAX_CHARS]
+        output_parts = []
+        if result.stdout:
+            output_parts.append(f"stdout:\n{result.stdout}")
+        if result.stderr:
+            output_parts.append(f"stderr:\n{result.stderr}")
+        output = "\n\n".join(output_parts) or f"(exit code {result.returncode} with no output)"
+        return clip(output, MAX_CHARS)
     except subprocess.TimeoutExpired:
         return "Error: Command timed out"
 ```
 
-Only commands in the allowlist run — `ls`, `cat`, `pwd`, `echo`, `head`, `tail`, `wc`, `rg`. Anything that mutates state or reaches the network (`rm`, `mv`, `curl`, `wget`) is rejected. A subprocess timeout stops hangs, and the output is clipped to `MAX_CHARS`.
+Only commands in the allowlist run — `ls`, `cat`, `pwd`, `echo`, `head`, `tail`, `wc`, `rg`. Anything that mutates state or reaches the network (`rm`, `mv`, `curl`, `wget`) is rejected. A subprocess timeout stops hangs, stdout and stderr are both captured, and the combined output is clipped to `MAX_CHARS`.
 
 **Examples:**
 ```python
@@ -173,6 +179,8 @@ exec(agent_code, exec_globals)
 # - use network directly
 # - access parent process variables
 ```
+
+This is intentionally strict. If you want helpers like `len()` or `print()`, add a small allowlist of safe builtins explicitly rather than inheriting Python's full default builtins by accident.
 
 ### Error Containment
 

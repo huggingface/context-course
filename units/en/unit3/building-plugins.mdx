@@ -366,6 +366,8 @@ cp -R /absolute/path/to/text-processor-plugin ~/.codex/plugins/text-processor-pl
 
 Add it to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 
+Because `source.path` is resolved relative to the marketplace file, the path below walks back from `~/.agents/plugins/` to `~/.codex/plugins/` first.
+
 ```json
 {
   "name": "local-example-plugins",
@@ -377,7 +379,7 @@ Add it to your personal marketplace at `~/.agents/plugins/marketplace.json`:
       "name": "text-processor-plugin",
       "source": {
         "source": "local",
-        "path": "./.codex/plugins/text-processor-plugin"
+        "path": "../../.codex/plugins/text-processor-plugin"
       },
       "policy": {
         "installation": "AVAILABLE",

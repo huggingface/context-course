@@ -1,6 +1,6 @@
 # Gradio MCP Integration: Web UIs + MCP Servers
 
-As we saw previously, Gradio can turn the same functions into both a web UI and an MCP server. Pass `mcp_server=True` to `launch()` and your Gradio app exposes each function as a tool that agents can call.
+This lesson picks up where the previous server-building lesson left off. You already saw the minimal `mcp_server=True` pattern; here the goal is to go deeper on when Gradio is a good fit, how to expose MCP-only surfaces, and how to deploy the result safely.
 
 ## What Is Gradio MCP Integration?
 
@@ -28,50 +28,16 @@ gradio>=4.0.0
 ```
 
 
-## Creating a Simple Gradio MCP App
-
-Here's the minimal example:
-
-```python
-import gradio as gr
-
-def greet(name: str) -> str:
-    """Greet someone by name.
-    
-    Args:
-        name: The person's name
-    
-    Returns:
-        A greeting message
-    """
-    return f"Hello, {name}!"
-
-demo = gr.Interface(
-    fn=greet,
-    inputs="text",
-    outputs="text",
-    title="Greeting App"
-)
-
-if __name__ == "__main__":
-    demo.launch(mcp_server=True)
-```
-
-When you run this:
-- Web interface appears at `http://localhost:7860`
-- MCP server starts at `http://localhost:7860/gradio_api/mcp/`
-- Agents can immediately call the `greet` tool
-
 > [!TIP]
-> Type hints and docstrings are essential! Gradio uses them to generate the MCP tool schema. Always include:
+> Type hints and docstrings are essential. Gradio uses them to generate the MCP tool schema. Always include:
 > - Type hints on all parameters and return value
-> - Docstring with description
-> - "Args:" section documenting each parameter
-> - "Returns:" section describing output
+> - A docstring description
+> - An `Args:` section documenting each parameter
+> - A `Returns:` section describing the output
 
-## Building a Multi-Tool Example
+## Building a Practical Gradio MCP App
 
-Let's create a practical app with multiple tools:
+Instead of another hello-world example, let's build a small text toolkit that is useful both in a browser and through MCP:
 
 ```python
 import gradio as gr

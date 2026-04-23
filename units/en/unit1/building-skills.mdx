@@ -440,46 +440,24 @@ Expected output shows:
 - Duplicate rows (if any)
 - Quality recommendations
 
-## Step 6: Initialize Git Repository
+## Step 6: Optional Version Control Hygiene
 
-Set up proper version control:
+This part is not specific to skills, but it is worth doing if you plan to keep iterating on the skill or share it with others:
 
 ```bash
-# Create .gitignore
-cat > .gitignore << 'EOF'
-__pycache__/
-*.pyc
-*.pyo
-.DS_Store
-*.egg-info/
-dist/
-build/
-.venv/
-venv/
-validation_report.json
-EOF
-
-# Create LICENSE file (MIT)
-cat > LICENSE << 'EOF'
-MIT License
-
-Copyright (c) 2026 Your Name
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, and/or sell copies of the
-Software...
-EOF
-
-# Add all files to git
+git init
 git add .
-git commit -m "Initial commit: Dataset validation skill"
+git commit -m "Initial dataset validation skill"
 ```
+
+Treat the skill directory like any other small software project: keep a `.gitignore`, add a `LICENSE` when you're ready to publish, and use version control so instruction changes are easy to review.
 
 ## Step 7: Test with Your Agent
 
 For local iteration, symlink the skill into your agent's skills directory so edits take effect immediately. Copying still works, but symlinks make mid-session iteration much easier.
+
+> [!NOTE]
+> The commands below use Unix-style symlinks (`ln -s`). On Windows, either copy the skill directory instead or create a directory symlink in PowerShell with `New-Item -ItemType SymbolicLink -Path <destination> -Target <source>`.
 
 <hfoptions id="tool">
 <hfoption id="Claude Code">

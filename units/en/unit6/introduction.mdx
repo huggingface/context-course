@@ -21,7 +21,7 @@ Nano Harness is a ~220-line Python agent framework that:
 2. **Calls an LLM** — Uses OpenAI-compatible API (defaults to HF router)
 3. **Generates Python code** — Model outputs executable Python code that will help complete the task
 4. **Executes safely** — In a sandboxed environment with allowed tools
-5. **Observes results** — stdout, stderr, exceptions
+5. **Observes results** — stdout, stderr, exceptions, or a captured final answer
 6. **Updates context** — Feeds observations back to the model
 7. **Repeats** — Until the task is done or we hit step limit (we're assuming 50 steps in our implementation)
 
@@ -32,10 +32,9 @@ Instead of returning JSON or text, the model outputs Python code:
 
 ```python
 # Model says:
-list_dir('.')  # Lists workspace
-models = read_file('models.txt')  # Reads file
-print(f"Found {len(models)} models")
-final_answer("Summary: " + str(len(models)) + " models")
+files = list_dir(".")
+models = read_file("models.txt")
+final_answer("Files:\n" + "\n".join(files) + "\n\nmodels.txt:\n" + models)
 ```
 
 The agent parses and executes it.
