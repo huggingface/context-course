@@ -74,16 +74,16 @@ Parent orchestrates:
    └─ Subagent: Test code (using code from stage 2)
 ```
 
-Clear separation of concerns, easy to track progress.
+Clear separation of concerns, easy to track progress. 
+
+A single agent could handle these stages sequentially, but subagents give each stage an isolated context window. The testing subagent receives only the finished code, not the full history of design discussions and implementation decisions that built up in the parent's context. This keeps each stage focused and prevents context bloat from degrading output quality on longer pipelines. It also allows the subagent to be more nit-picky and critical of the work the previous agent did and ensures outputs are as robust as possible.
 
 ## The Strong Signal: "10+ Files"
 
-If you find yourself saying:
+A strong signal to determine whether you need to use subagents in your workflow is if you find yourself thinking something along the lines of:
 - "I need to read 10+ files to understand this"
 - "I'm doing 3+ independent pieces of work"
 - "I want a second opinion on this"
-
-**→ That's when subagents shine.**
 
 ## Subagent Benefits
 
@@ -95,4 +95,4 @@ Avoid subagents for sequential dependent work where task B needs output from tas
 
 ## What You'll Learn
 
-This unit covers subagent patterns (fan-out/fan-in, pipeline, supervisor, swarm), the signals that tell you a task wants subagents, how to invoke them in Claude Code and Codex, and a hands-on research–implement–review pipeline.
+This unit covers subagent patterns (fan-out/fan-in, pipeline, supervisor, swarm), the signals that tell you a task needs subagents, how to invoke them in Claude Code and Codex, and a hands-on research–implement–review pipeline.

@@ -9,7 +9,7 @@ Nano Harness is a ~220-line Python agent built for reading, not production. It s
 
 ## Why start from scratch?
 
-First, learning from scratch is a great way to understand how anything works under the hood.
+Learning from scratch is a great way to understand how anything works under the hood.
 
 Reading a minimal harness makes the design choices legible: when to retry, how to parse output, how to handle errors, and where the security boundary sits. This unit uses `zai-org/GLM-5.1` via Hugging Face Inference Providers as the single model, so the only moving parts are the loop and the tools.
 
@@ -19,11 +19,11 @@ Nano Harness is a ~220-line Python agent framework that:
 
 1. **Takes a task** — "Inspect the workspace and provide a summary"
 2. **Calls an LLM** — Uses OpenAI-compatible API (defaults to HF router)
-3. **Parses Python code** — Model outputs executable Python code
+3. **Generates Python code** — Model outputs executable Python code that will help complete the task
 4. **Executes safely** — In a sandboxed environment with allowed tools
 5. **Observes results** — stdout, stderr, exceptions
 6. **Updates context** — Feeds observations back to the model
-7. **Repeats** — Until the task is done or we hit step limit
+7. **Repeats** — Until the task is done or we hit step limit (we're assuming 50 steps in our implementation)
 
 ## Key Features
 

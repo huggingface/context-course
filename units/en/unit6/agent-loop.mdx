@@ -134,7 +134,7 @@ def exec_cmd(args):
     if args[0] not in ALLOW_COMMANDS:
         raise PermissionError(f"Command {args[0]} not allowed")
     result = subprocess.run(args, capture_output=True, timeout=TIMEOUT_S, text=True)
-    return result.stdout[:MAX_CHARS]  # Limit output
+    return (result.stdout or result.stderr)[:MAX_CHARS]  # Limit output
 
 def final_answer(value):
     """Agent calls this when task is complete."""

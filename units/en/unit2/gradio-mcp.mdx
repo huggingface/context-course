@@ -1,6 +1,6 @@
 # Gradio MCP Integration: Web UIs + MCP Servers
 
-Gradio can turn the same functions into both a web UI and an MCP server. Pass `mcp_server=True` to `launch()` and your Gradio app exposes each function as a tool agents can call.
+As we saw previously, Gradio can turn the same functions into both a web UI and an MCP server. Pass `mcp_server=True` to `launch()` and your Gradio app exposes each function as a tool that agents can call.
 
 ## What Is Gradio MCP Integration?
 
@@ -12,6 +12,21 @@ Gradio is a Python library for building web UIs for machine learning models and 
 4. Handles JSON-RPC serialization and protocol details
 
 You get two interfaces for the price of one: humans use the web UI, agents use MCP.
+
+## Installing Gradio with MCP Support
+
+Install Gradio with MCP support:
+
+```bash
+pip install "gradio[mcp]"
+```
+
+Create a `requirements.txt` for deployment:
+
+```
+gradio>=4.0.0
+```
+
 
 ## Creating a Simple Gradio MCP App
 
@@ -127,20 +142,6 @@ if __name__ == "__main__":
 ```
 
 Each function becomes a separate MCP tool that agents can call independently.
-
-## Installing Gradio with MCP Support
-
-Install Gradio with MCP support:
-
-```bash
-pip install "gradio[mcp]"
-```
-
-Create a `requirements.txt` for deployment:
-
-```
-gradio>=4.0.0
-```
 
 ## Advanced Gradio MCP Features
 

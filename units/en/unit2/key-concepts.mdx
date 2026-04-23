@@ -49,19 +49,22 @@ MCP servers expose three kinds of capabilities to clients:
 Tools are callable functions that agents invoke to perform actions or retrieve data. Each tool has a unique name (like `search_github`), a description of what it does, a JSON Schema defining its input parameters, and the actual function implementation. When an agent reasons that a tool would help with the current task, it calls the tool with appropriate parameters, the server executes it and returns results, and the agent incorporates those results into its reasoning. Tools are model-controlled — the agent decides whether and when to call them. They can modify state (writing files, sending messages), include error handling, and return structured or unstructured results.
 
 ### Resources
-Resources are read-only data sources that agents can access for information. Each resource has a URI (like `file:///path/to/code.py`), a human-readable name, a description, and a MIME type. When an agent needs information to reason about a problem, it requests a resource by URI, the server retrieves the content, and the agent uses it as context. Unlike tools, resources are application-controlled — the host decides what to expose. They're always available without being explicitly called, making them ideal for static or semi-static data like project files, documentation, or configuration.
+Resources are read-only data sources that agents can access for information. Each resource has a URI (like `file:///path/to/code.py`), a human-readable name, a description, and a MIME type. When an agent needs information to reason about a problem, it requests a resource by URI, the server retrieves the content, and the agent uses it as context. Unlike tools, resources are application-controlled — the host determines what is exposed. They're always available without being explicitly called, making them ideal for static or semi-static data like project files, documentation, or configuration.
 
 ### Prompts
-Prompts are instruction templates that guide agent behavior for specific contexts or domains. Each prompt has a name (like `code_review`), a description of when it applies, optional arguments for dynamic behavior, and the actual template text. When an agent recognizes a situation where a prompt applies, it requests the prompt (optionally with arguments), receives the instantiated text, and uses it to structure its reasoning. Prompts are user-controlled — they're deployed separately and updated independently. They're non-executable text instructions, ideal for standardizing approaches to recurring tasks like code reviews or security audits.
+Prompts are instruction templates that agents can request to help guide their own behavior for specific contexts or domains. Each prompt has a name (like `code_review`), a description of when it applies, optional arguments for dynamic behavior, and the actual template text. When an agent recognizes a situation where a prompt applies, it requests the prompt (optionally with arguments), receives the instantiated text, and uses it to structure its reasoning. Prompts are user-controlled — they're deployed separately and updated independently. They're non-executable text instructions, ideal for standardizing approaches to recurring tasks like code reviews or security audits.
 
 ![The three MCP capability types: Tools, Resources, and Prompts](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit2/capability-types.svg)
 
 > [!NOTE]
-> 90% of MCP usage is for tools.
+> On average, about ~90% of MCP usage is for tools.
 
 ## Communication Protocol: JSON-RPC Over Transports
 
 MCP uses **JSON-RPC 2.0** as its messaging protocol. Every request and response is a JSON-RPC message. The protocol is transport-agnostic—the same JSON-RPC format works over any transport.
+
+> [!NOTE]
+> A transport can be defined as any communication channel that carries a message. For example, processes that exist on the same machine (stdio), or connect over a network connection (e.g. HTTP).
 
 A typical client request to call a tool:
 ```json
@@ -109,9 +112,34 @@ For **local connections** where the server runs on your machine:
 - Most secure (no network exposure)
 
 Configuration:
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
 ```bash
 claude mcp add --transport stdio my-server -- python /path/to/server.py
 ```
+
+</hfoption>
+
+<hfoption id="Codex">
+
+```bash
+codex mcp add my-server -- python /path/to/server.py
+```
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+```bash
+opencode mcp add my-server --command "python" --args "/path/to/server.py"
+```
+
+</hfoption>
+
+</hfoptions>
 
 ### Streamable HTTP Transport
 For **remote connections** where the server runs elsewhere:
