@@ -99,6 +99,41 @@ Edit `opencode.json` in your project root:
 
 </hfoption>
 
+<hfoption id="Pi">
+
+Pi uses the `pi-mcp-adapter` package rather than a built-in MCP client.
+
+Install once:
+
+```bash
+pi install npm:pi-mcp-adapter
+```
+
+Then add servers to `.mcp.json` (project) or `~/.config/mcp/mcp.json` (shared user config):
+
+```json
+{
+  "mcpServers": {
+    "calculator": {
+      "command": "python",
+      "args": ["/path/to/server.py"]
+    },
+    "my-api": {
+      "url": "https://api.example.com/mcp"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_xxxxx"
+      }
+    }
+  }
+}
+```
+
+</hfoption>
+
 </hfoptions>
 
 ## Managing Servers
@@ -160,6 +195,20 @@ Set `"enabled": false` in `opencode.json` to disable a server without removing i
 
 </hfoption>
 
+<hfoption id="Pi">
+
+```text
+/mcp
+/mcp tools
+/mcp reconnect
+/mcp reconnect <server>
+/mcp-auth <server>
+```
+
+Use `/mcp` for the interactive panel, `/mcp tools` to list discovered tools, and `/mcp reconnect` when a lazy-loaded server needs to be reconnected.
+
+</hfoption>
+
 </hfoptions>
 
 ## Configuration Scopes
@@ -206,6 +255,19 @@ Local config values override remote organization defaults.
 
 </hfoption>
 
+<hfoption id="Pi">
+
+With `pi-mcp-adapter`, config can live at four levels:
+
+- **Shared user** — `~/.config/mcp/mcp.json`
+- **Pi user override** — `~/.pi/agent/mcp.json`
+- **Shared project** — `.mcp.json`
+- **Pi project override** — `.pi/mcp.json`
+
+Project files override user-global files. Prefer `.mcp.json` for repo-shared config and `.pi/mcp.json` only when you need a Pi-specific override.
+
+</hfoption>
+
 </hfoptions>
 
 ## Transport Types
@@ -248,6 +310,20 @@ url = "https://huggingface.co/mcp?login"
   "mcp": {
     "hf-mcp": {
       "type": "remote",
+      "url": "https://huggingface.co/mcp?login"
+    }
+  }
+}
+```
+
+</hfoption>
+
+<hfoption id="Pi">
+
+```json
+{
+  "mcpServers": {
+    "hf-mcp": {
       "url": "https://huggingface.co/mcp?login"
     }
   }
@@ -311,6 +387,23 @@ url = "https://username-reviewer.hf.space/mcp"
 
 </hfoption>
 
+<hfoption id="Pi">
+
+```json
+{
+  "mcpServers": {
+    "sentiment-analyzer": {
+      "url": "https://username-sentiment.hf.space/mcp"
+    },
+    "code-reviewer": {
+      "url": "https://username-reviewer.hf.space/mcp"
+    }
+  }
+}
+```
+
+</hfoption>
+
 </hfoptions>
 
 Remote servers via Streamable HTTP don't require restarting your agent, work across the internet and firewalls, can be updated independently, and support optional authentication via headers.
@@ -347,6 +440,25 @@ opencode mcp debug <server-name>
 
 </hfoption>
 
+<hfoption id="Pi">
+
+Open the interactive MCP panel:
+
+```text
+/mcp
+/mcp tools
+/mcp reconnect <server-name>
+```
+
+Also verify the shared config files Pi reads:
+
+```bash
+cat .mcp.json
+cat .pi/mcp.json
+```
+
+</hfoption>
+
 </hfoptions>
 
 **2. Test the server manually:**
@@ -379,6 +491,6 @@ Use environment variables for API keys and secrets, absolute paths for local ser
 
 ## Key Takeaways
 
-Claude Code uses `claude mcp add`, Codex uses `codex mcp add` or `config.toml`, and OpenCode uses `opencode.json`. The pattern is the same: name a server, pick a transport, and point it at a command (stdio) or URL (Streamable HTTP). Keep secrets in environment variables and test servers locally before debugging client config.
+Claude Code uses `claude mcp add`, Codex uses `codex mcp add` or `config.toml`, OpenCode uses `opencode.json`, and Pi commonly uses `pi-mcp-adapter` plus `.mcp.json`. The pattern is the same: name a server, pick a transport, and point it at a command (stdio) or URL (Streamable HTTP). Keep secrets in environment variables and test servers locally before debugging client config.
 
 Next we'll look at Gradio's MCP integration in depth.

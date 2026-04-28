@@ -517,6 +517,25 @@ opencode
 ```
 
 </hfoption>
+<hfoption id="Pi">
+
+```bash
+# Create a test project
+mkdir my_project
+cd my_project
+
+# Symlink the skill into the project-local Pi skills directory
+mkdir -p .pi/skills
+ln -s /absolute/path/to/hf-dataset-validation .pi/skills/hf-dataset-validation
+
+# Start Pi
+pi
+
+# At the prompt:
+# "Validate my dataset at test_data/sample.csv"
+```
+
+</hfoption>
 </hfoptions>
 
 Your agent should:

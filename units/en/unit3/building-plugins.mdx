@@ -1,6 +1,6 @@
 # Building Your Own Plugin
 
-Unit 2 produced a text-processor MCP server. In this lesson we package it as a **plugin**. For Claude Code and Codex that means a manifest plus bundled skills and MCP config; for OpenCode it means a plugin module written in TypeScript, with MCP configuration handled separately.
+Unit 2 produced a text-processor MCP server. In this lesson we package it as a **plugin**. For Claude Code and Codex that means a manifest plus bundled skills and MCP config; for OpenCode it means a plugin module written in TypeScript, with MCP configuration handled separately; for Pi it means a package declared in `package.json`, optionally paired with `pi-mcp-adapter` when you want MCP tools inside Pi.
 
 ![Plugin development lifecycle from creation through distribution and use](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit3/plugin-lifecycle.svg)
 
@@ -22,11 +22,11 @@ touch skills/extract-keywords/SKILL.md
 touch skills/check-reading-level/SKILL.md
 ```
 
-Notice what's different from Unit 2: no server code here. For Claude Code and Codex, the plugin **references** the MCP server you already built and deployed. OpenCode's native plugin branch below adds behavior in code and can still point at the same server separately if you want both surfaces.
+Notice what's different from Unit 2: no server code here. For Claude Code and Codex, the plugin **references** the MCP server you already built and deployed. OpenCode's native plugin branch below adds behavior in code and can still point at the same server separately if you want both surfaces. The Pi branch below reuses the same `skills/` directory inside a Pi package, and can pair those skills with the `pi-mcp-adapter` setup from Unit 2 when you want MCP tools available in Pi.
 
 ## Step 1: Write the Skills
 
-This step applies directly to **Claude Code** and **Codex**, where plugins bundle `skills/`. If you're following the OpenCode branch, skip ahead to Step 2: OpenCode plugins are code modules, not skill bundles.
+This step applies directly to **Claude Code**, **Codex**, and **Pi**, where the bundle can ship `skills/`. If you're following the OpenCode branch, skip ahead to Step 2: OpenCode plugins are code modules, not skill bundles.
 
 Skills teach the agent *when* and *how* to use your MCP tools. Each skill wraps one of the tools from your text-processor server.
 
@@ -116,7 +116,7 @@ User: "Is this documentation appropriate for beginners?"
 
 ## Step 2: Create the Plugin Entry Point
 
-Claude Code and Codex use manifests to declare what the plugin provides. OpenCode uses a plugin module instead. The entry point differs by platform.
+Claude Code and Codex use manifests to declare what the plugin provides. OpenCode uses a plugin module instead. Pi uses `package.json` plus optional `extensions/`. The entry point differs by platform.
 
 <hfoptions id="tool">
 <hfoption id="Claude Code">
@@ -267,6 +267,49 @@ If you want to install the same plugin from npm instead of a local file, add it 
 ```
 
 If you also want the Unit 2 Python MCP server in OpenCode, configure it separately in `opencode.json` under the `mcp` key. That MCP configuration sits beside the plugin system; it is not the plugin itself.
+
+</hfoption>
+
+<hfoption id="Pi">
+
+Pi packages use `package.json` as the manifest. Reuse the same `skills/` directory and declare it there:
+
+```bash
+mkdir -p extensions
+```
+
+Create `package.json`:
+
+```json
+{
+  "name": "text-processor-plugin",
+  "version": "1.0.0",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./skills"],
+    "extensions": ["./extensions"]
+  }
+}
+```
+
+Create `extensions/text-processor.ts`:
+
+```ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+export default function (pi: ExtensionAPI) {
+  pi.registerCommand("text-processor-status", {
+    description: "Confirm the text-processor package is loaded",
+    handler: async (_args, ctx) => {
+      ctx.ui.notify(
+        "text-processor skills loaded. Pair this package with pi-mcp-adapter if you also want MCP tools.",
+      );
+    },
+  });
+}
+```
+
+Pi loads the `skills/` directory directly from the package. If you want the Unit 2 MCP server available as tools inside Pi, pair this package with the `pi-mcp-adapter` setup from Unit 2.
 
 </hfoption>
 </hfoptions>
@@ -427,6 +470,43 @@ opencode mcp list
 ```
 
 If you edit the plugin file or the `plugin` list in `opencode.json`, restart OpenCode to reload startup plugins.
+
+</hfoption>
+
+<hfoption id="Pi">
+
+Install the package from the local path:
+
+```bash
+pi install /absolute/path/to/text-processor-plugin -l
+pi install npm:pi-mcp-adapter
+```
+
+Add the Unit 2 server to `.mcp.json` so the package's skills have tools to call:
+
+```json
+{
+  "mcpServers": {
+    "text-processor": {
+      "url": "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+Start Pi:
+
+```bash
+pi
+```
+
+Test conversationally:
+
+```text
+Analyze the complexity of this paragraph for me
+```
+
+Use `/reload` after editing the package files or `.mcp.json` so Pi refreshes skills, extensions, and adapter state in the current session.
 
 </hfoption>
 </hfoptions>

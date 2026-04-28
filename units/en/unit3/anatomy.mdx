@@ -1,6 +1,6 @@
 # Plugin Anatomy
 
-What's inside a plugin depends on whether the platform is **manifest-first** or **code-first**. Claude Code and Codex use manifests plus root-level plugin components. OpenCode plugins are JavaScript/TypeScript modules loaded from local files or npm.
+What's inside a plugin depends on whether the platform is **manifest-first** or **code-first**. Claude Code and Codex use manifests plus root-level plugin components. OpenCode plugins are JavaScript/TypeScript modules loaded from local files or npm. Pi's closest equivalent is a package declared in `package.json` that can bundle skills, extensions, prompts, and themes.
 
 ## Plugin Structure
 
@@ -8,6 +8,7 @@ There isn't one universal plugin shape:
 
 1. **Manifest-first plugins** use a `plugin.json` manifest plus root-level directories and config files such as `skills/`, `.mcp.json`, or `.app.json`.
 2. **Code-first plugins** are JS/TS modules that export hooks or custom tools. Skills and MCP configuration stay as separate surfaces.
+3. **Package-based bundles** use `package.json` plus conventional directories such as `skills/` and `extensions/`.
 
 Let's see how each platform implements that idea.
 
@@ -228,12 +229,58 @@ The plugin factory receives `{ project, client, $, directory, worktree }` — us
 - Distribution via local files or npm packages
 
 </hfoption>
+
+<hfoption id="Pi">
+
+### Pi Package Structure
+
+Pi's closest equivalent to a plugin is a **Pi package**. There is no hidden manifest directory. The package manifest lives in `package.json`, and Pi loads skills, extensions, prompts, and themes from the package root.
+
+```text
+my-pi-package/
+├── package.json              # Package manifest
+├── skills/                   # Skill bundles
+│   ├── analyze-text/
+│   │   └── SKILL.md
+│   └── extract-keywords/
+│       └── SKILL.md
+├── extensions/               # TS/JS runtime extensions (optional)
+│   └── text-processor.ts
+├── prompts/                  # Prompt templates (optional)
+├── themes/                   # Themes (optional)
+└── README.md
+```
+
+**package.json**:
+
+```json
+{
+  "name": "text-processor-plugin",
+  "version": "1.0.0",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./skills"],
+    "extensions": ["./extensions"],
+    "prompts": ["./prompts"],
+    "themes": ["./themes"]
+  }
+}
+```
+
+**Key Characteristics:**
+- `package.json` is the manifest; there is no `.pi-plugin/` directory
+- Skills live in `skills/` and load like any other Pi skill
+- Extensions add tools, commands, UI, and lifecycle handlers
+- Prompt templates and themes can ship in the same package
+- If you want MCP-backed tools, pair the package with `pi-mcp-adapter` and a `.mcp.json` file
+
+</hfoption>
 </hfoptions>
 
 ![Side-by-side comparison of Claude Code and Codex plugin directory structures](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit3/plugin-structure-comparison.svg)
 
 ## Key Takeaways
 
-Claude Code and Codex use manifest-first plugin bundles: a `plugin.json` manifest alongside root-level components like `skills/`, `.mcp.json`, and integration files. OpenCode uses a code-first model: plugins are JS/TS modules loaded from `.opencode/plugins/` or npm, with skills and MCP configuration handled separately.
+Claude Code and Codex use manifest-first plugin bundles: a `plugin.json` manifest alongside root-level components like `skills/`, `.mcp.json`, and integration files. OpenCode uses a code-first model: plugins are JS/TS modules loaded from `.opencode/plugins/` or npm, with skills and MCP configuration handled separately. Pi packages use `package.json` plus conventional directories such as `skills/` and `extensions/`.
 
 Next we'll build a plugin from scratch.

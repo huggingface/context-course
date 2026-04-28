@@ -262,6 +262,66 @@ rm .opencode/plugins/text-processor-plugin.ts
 Or remove the package name from the `plugin` array in `opencode.json`. Restart OpenCode after editing plugin files or the `plugin` list so startup picks up the new state.
 
 </hfoption>
+
+<hfoption id="Pi">
+
+### Installing Packages in Pi
+
+Pi's closest equivalent to a plugin is a Pi package: a local folder, git repo, or npm package that bundles skills, extensions, prompts, and themes.
+
+#### From a local directory
+
+```bash
+pi install /local/path/to/text-processor-plugin -l
+```
+
+`-l` writes the package into `.pi/settings.json` for the current project.
+
+#### From npm or git
+
+```bash
+pi install npm:@your-org/text-processor-plugin
+pi install git:github.com/your-org/text-processor-plugin
+```
+
+#### Pairing with MCP
+
+If the package's skills depend on the Unit 2 MCP server, install the adapter once and add the server to `.mcp.json`:
+
+```bash
+pi install npm:pi-mcp-adapter
+```
+
+```json
+{
+  "mcpServers": {
+    "text-processor": {
+      "url": "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+#### Using Package Behavior
+
+Once loaded, use the skill conversationally or explicitly:
+
+```text
+What's the reading level of this README?
+/skill:check-reading-level What's the reading level of this README?
+```
+
+#### Managing Packages
+
+```bash
+pi list
+pi config
+pi remove /local/path/to/text-processor-plugin
+```
+
+Use `/reload` inside Pi after editing local package files or `.mcp.json`.
+
+</hfoption>
 </hfoptions>
 
 ## Common Plugin Tasks
@@ -303,6 +363,18 @@ export GITHUB_TOKEN="ghp_xxxxx"
 ```
 
 Or configure them directly in `opencode.json` under each MCP server's `environment` block.
+
+</hfoption>
+
+<hfoption id="Pi">
+
+Set environment variables in your shell:
+
+```bash
+export HF_TOKEN="hf_xxxxx"
+```
+
+Pi reads shell environment variables directly, and `pi-mcp-adapter` can interpolate them from `.mcp.json` server entries.
 
 </hfoption>
 </hfoptions>
@@ -366,6 +438,18 @@ ls -la .opencode/plugins/
 If you use npm-installed plugins, verify the `plugin` array in `opencode.json`. If the plugin imports external packages, make sure `.opencode/package.json` contains those dependencies. Then restart OpenCode so startup reloads the plugin.
 
 </hfoption>
+
+<hfoption id="Pi">
+
+Then inspect the installed package list:
+
+```bash
+pi list
+```
+
+Use `/reload` after fixing the local files so Pi refreshes the package in the current session.
+
+</hfoption>
 </hfoptions>
 
 **Bundled or adjacent MCP server not starting?**
@@ -401,10 +485,30 @@ opencode mcp debug text-processor
 Check that `opencode.json` is valid JSON and MCP server commands point to existing files.
 
 </hfoption>
+
+<hfoption id="Pi">
+
+Pi packages and MCP are separate. If the package loads but the adapter does not see the server:
+
+```bash
+cat ./.mcp.json
+```
+
+Inside Pi, use:
+
+```text
+/mcp
+/mcp reconnect text-processor
+/mcp tools
+```
+
+Check that `pi-mcp-adapter` is installed and the server entry uses a valid `command`/`args` or `url`.
+
+</hfoption>
 </hfoptions>
 
 ## Key Takeaways
 
-In Claude Code, use `/plugin marketplace add` and `/plugin install`, with `/plugin` as the browser. In Codex, use `/plugins` plus repo or personal marketplace files, and restart after changes. In OpenCode, native plugins are JS/TS modules in `.opencode/plugins/` or npm packages listed in `opencode.json`; skills and MCP servers remain separate extension points.
+In Claude Code, use `/plugin marketplace add` and `/plugin install`, with `/plugin` as the browser. In Codex, use `/plugins` plus repo or personal marketplace files, and restart after changes. In OpenCode, native plugins are JS/TS modules in `.opencode/plugins/` or npm packages listed in `opencode.json`; skills and MCP servers remain separate extension points. In Pi, install packages with `pi install`, keep plugin-equivalent resources in `package.json` plus `skills/` or `extensions/`, and pair them with `pi-mcp-adapter` when you need MCP tools.
 
 Next up: a quiz on plugin distribution and best practices.

@@ -289,6 +289,24 @@ url = "https://yourname-space-name.hf.space/gradio_api/mcp/"
 
 </hfoption>
 
+<hfoption id="Pi">
+
+With `pi-mcp-adapter` installed, add the Space endpoint to `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "my-tools": {
+      "url": "https://yourname-space-name.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+Open `pi` and use `/mcp tools` to confirm the adapter can see the Gradio-generated tools.
+
+</hfoption>
+
 </hfoptions>
 
 > [!TIP]

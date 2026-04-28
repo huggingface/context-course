@@ -47,6 +47,19 @@ OpenCode walks up from the current working directory to the git root, checking e
 
 </hfoption>
 
+<hfoption id="Pi">
+
+| Scope | Path |
+|-------|------|
+| Project | `.pi/skills/<name>/SKILL.md` |
+| Shared repo tree | `.agents/skills/<name>/SKILL.md` |
+| User | `~/.pi/agent/skills/<name>/SKILL.md` |
+| Shared user | `~/.agents/skills/<name>/SKILL.md` |
+
+Pi scans the Pi-specific paths plus the shared `.agents/skills/` tree, so the same skill can work in Pi and other harnesses without duplication.
+
+</hfoption>
+
 </hfoptions>
 
 ## Installing a Skill
@@ -124,6 +137,22 @@ You can control which skills agents may use via `opencode.json`:
 
 </hfoption>
 
+<hfoption id="Pi">
+
+Pi discovers the shared `.agents/skills/` tree that `hf skills add` creates, so the simplest install flow is:
+
+```bash
+# Creates .agents/skills/hf-cli/SKILL.md
+hf skills add
+
+# Start Pi in the same repository
+pi
+```
+
+For one-off testing, you can also load a skill explicitly with `pi --skill /absolute/path/to/SKILL.md`.
+
+</hfoption>
+
 </hfoptions>
 
 ## Invoking Skills
@@ -159,6 +188,18 @@ $hf-cli
 <hfoption id="OpenCode">
 
 Agents invoke skills via the native `skill` tool by passing the skill name. OpenCode matches tasks to skills automatically based on the description in frontmatter.
+
+</hfoption>
+
+<hfoption id="Pi">
+
+```text
+# Implicit — Pi selects based on task matching
+Upload my model to the Hub
+
+# Explicit — force the skill
+/skill:hf-cli Upload my model to the Hub
+```
 
 </hfoption>
 
@@ -217,6 +258,17 @@ ls .agents/skills/hf-cli/SKILL.md
 ```bash
 ls .opencode/skills/hf-cli/SKILL.md
 ```
+
+</hfoption>
+
+<hfoption id="Pi">
+
+```bash
+ls .pi/skills/hf-cli/SKILL.md
+ls .agents/skills/hf-cli/SKILL.md
+```
+
+Pi loads either path, plus the user-level directories under `~/.pi/agent/skills/` and `~/.agents/skills/`.
 
 </hfoption>
 

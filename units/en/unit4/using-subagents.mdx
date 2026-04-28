@@ -1,6 +1,6 @@
 # Using Subagents
 
-The approach differs between Claude Code and Codex, but the core idea is the same: a parent agent delegates a scoped task to a child, often in parallel.
+The approach differs between Claude Code, Codex, and Pi, but the core idea is the same: a parent agent delegates a scoped task to a child, often in parallel.
 
 ![Fan-out fan-in pattern where a parent agent spawns parallel subagents](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit4/fan-out-fan-in.svg)
 
@@ -402,6 +402,58 @@ Codex:
 6. **Let subagents inherit parent sandbox** — No need to repeat sandbox settings
 
 </hfoption>
+
+<hfoption id="Pi">
+
+### Install a Subagent Extension
+
+Pi does not ship with built-in subagents, but the official repo includes a `subagent` example extension that spawns isolated `pi` subprocesses.
+
+Project-local setup:
+
+```bash
+mkdir -p .pi/extensions/subagent .pi/agents .pi/prompts
+```
+
+### Custom Agents
+
+Define agents in `.pi/agents/*.md` with YAML frontmatter:
+
+```markdown
+---
+name: researcher
+description: Research-focused agent for deep file exploration
+tools: read, grep, find, ls
+---
+You are an expert researcher. Explore files broadly, compress findings,
+and return only the context another agent will need.
+```
+
+### Workflow Prompts
+
+The example extension also supports reusable prompt templates in `.pi/prompts/`. For example:
+
+```text
+/implement add OAuth2 authentication
+/scout-and-plan refactor auth to support OAuth
+```
+
+### Conversational Invocation
+
+Once the extension is loaded, you can still ask naturally:
+
+```text
+Use scout to map the auth system, then have planner produce an implementation plan.
+Run two reviewers in parallel after the code change.
+```
+
+The extension delegates each subtask to a separate `pi` process with its own context window.
+
+### Best Practices in Pi
+
+Keep agents in `.pi/agents/`, use read-only tool lists for reviewer agents, and rely on prompt templates or explicit requests for orchestration. Because this is extension-driven rather than built in, the exact workflow is yours to tune.
+
+</hfoption>
 </hfoptions>
 
 ![Comparison of subagent approaches in Claude Code and Codex](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit4/subagent-comparison.svg)
@@ -488,10 +540,28 @@ Codex:
 Use `/agent` to monitor progress or steer either agent during execution.
 
 </hfoption>
+
+<hfoption id="Pi">
+
+```text
+Use the subagent extension to review the payment system in parallel:
+
+Task 1 (security reviewer):
+  Find SQL injection, token leakage, privilege escalation, and unsafe secrets handling.
+
+Task 2 (performance reviewer):
+  Find slow queries, N+1 patterns, unnecessary work inside request paths, and missing caches.
+
+Run both in parallel, then summarize the risks and concrete fixes.
+```
+
+With the official example extension, this is usually modeled as parallel tasks that each target a named agent from `.pi/agents/`.
+
+</hfoption>
 </hfoptions>
 
 ## Key Takeaways
 
-In Claude Code, use conversational invocation, custom agents in `.claude/agents/`, CLAUDE.md policies, and background execution with Ctrl+B. In Codex, request subagents in natural language with three built-in types (default, worker, explorer), define custom TOML agents, monitor with `/agent`, and use CSV batch jobs for parallel work. Both platforms benefit from subagents when you have many files, several independent tasks, or need a fresh perspective. For parallel file edits, isolate work with git worktrees.
+In Claude Code, use conversational invocation, custom agents in `.claude/agents/`, CLAUDE.md policies, and background execution with Ctrl+B. In Codex, request subagents in natural language with three built-in types (default, worker, explorer), define custom TOML agents, monitor with `/agent`, and use CSV batch jobs for parallel work. In Pi, install a subagent extension, define agents in `.pi/agents/`, and drive orchestration through prompt templates or explicit requests. All three approaches help when you have many files, several independent tasks, or need a fresh perspective. For parallel file edits, isolate work with git worktrees.
 
 Next, a hands-on multi-agent workflow.

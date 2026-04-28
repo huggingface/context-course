@@ -1,6 +1,6 @@
 # Hands-On: Build an Agent Activity Dashboard with Gradio
 
-This project wires the hooks you configured in the previous lesson into a live dashboard. The dashboard is a Gradio app that accepts hook events over HTTP, shows the most recent calls in a table, and plots tool usage over time. It works against Claude Code, Codex, and OpenCode — with the same agent doing the work, you see what actually happens under the hood.
+This project wires the hooks you configured in the previous lesson into a live dashboard. The dashboard is a Gradio app that accepts hook events over HTTP, shows the most recent calls in a table, and plots tool usage over time. It works against Claude Code, Codex, OpenCode, and Pi — with the same agent doing the work, you see what actually happens under the hood.
 
 ![Architecture diagram: agent hooks -> HTTP POST -> FastAPI receiver -> Gradio UI](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit5/hooks-dashboard-architecture.svg)
 
@@ -61,7 +61,7 @@ def _truncate(value: Any, n: int) -> str:
 
 
 def _normalize(body: dict[str, Any], headers: dict[str, str]) -> dict[str, Any]:
-    """Map Claude Code / Codex / OpenCode payloads to one shape."""
+    """Map Claude Code / Codex / OpenCode / Pi payloads to one shape."""
     platform = (
         body.get("platform")
         or headers.get("x-platform")
@@ -91,7 +91,7 @@ async def event(req: Request):
         body = {}
     record = _normalize(body, {k.lower(): v for k, v in req.headers.items()})
     events.appendleft(record)
-    # Return an empty directive so Claude Code / Codex hooks don't block anything.
+    # Return an empty body so hook callers never block on the dashboard receiver.
     return JSONResponse({})
 
 
@@ -140,7 +140,7 @@ def clear_events():
 with gr.Blocks(title="Agent Activity Dashboard") as ui:
     gr.Markdown("# Agent Activity Dashboard")
     gr.Markdown(
-        "Point your Claude Code, Codex, or OpenCode hooks at "
+        "Point your Claude Code, Codex, OpenCode, or Pi hooks/extensions at "
         "`POST http://localhost:8000/event` to see live activity here."
     )
 
@@ -305,6 +305,62 @@ bun add -d @opencode-ai/plugin
 ```
 
 Restart OpenCode so the plugin loads at startup, then run:
+
+```
+Read README.md and list its sections.
+```
+
+</hfoption>
+
+<hfoption id="Pi">
+
+`.pi/extensions/dashboard.ts`:
+
+```ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const URL = process.env.DASHBOARD_URL ?? "http://localhost:8000/event";
+
+async function send(event: string, payload: Record<string, unknown>) {
+  try {
+    await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ platform: "pi", event, ...payload }),
+      signal: AbortSignal.timeout(2000),
+    });
+  } catch {
+    // dashboard may be offline; never block the agent
+  }
+}
+
+export default function (pi: ExtensionAPI) {
+  pi.on("session_start", async () => {
+    await send("SessionStart", {});
+  });
+
+  pi.on("before_agent_start", async (event) => {
+    await send("UserPromptSubmit", { args: event.prompt });
+  });
+
+  pi.on("tool_call", async (event) => {
+    await send("PreToolUse", { tool: event.toolName, args: event.input });
+  });
+
+  pi.on("tool_result", async (event) => {
+    await send("PostToolUse", {
+      tool: event.toolName,
+      args: event.details ?? event.content,
+    });
+  });
+
+  pi.on("agent_end", async () => {
+    await send("Stop", {});
+  });
+}
+```
+
+Create `.pi/extensions/` if needed, then start Pi (or run `/reload` if Pi is already open) and try:
 
 ```
 Read README.md and list its sections.

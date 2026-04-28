@@ -21,7 +21,7 @@ At the abstract level, every agent session moves through the same phases:
 └─────────────────────────────────────────────┘
 ```
 
-Any hook system worth using exposes at least these five moments. The three platforms in this course all do — they just use different names and offer different amounts of extra granularity.
+Any hook system worth using exposes at least these five moments. The platforms in this course all do — they just use different names and offer different amounts of extra granularity.
 
 ## Events by Platform
 
@@ -99,6 +99,29 @@ OpenCode does not have a JSON event config. Plugins are TypeScript or JavaScript
 OpenCode has no `UserPromptSubmit` event. The nearest equivalent is reading the new user message through the generic `event` callback when `message.updated` fires.
 
 </hfoption>
+
+<hfoption id="Pi">
+
+Pi hooks live inside TS/JS extensions in `.pi/extensions/` or `~/.pi/agent/extensions/`. The built-in lifecycle is lower_snake_case:
+
+**Core lifecycle events:**
+- `session_start` — Session begins (`startup`, `reload`, `new`, `resume`, or `fork`)
+- `before_agent_start` — User prompt received; can inject messages or edit the system prompt
+- `agent_start` — Agent loop begins
+- `turn_start`, `turn_end` — One model turn starts or finishes
+- `tool_call` — Before a tool executes; can mutate args or block
+- `tool_result` — After a tool executes; can rewrite the result
+- `agent_end` — Request finished
+- `session_shutdown` — Extension runtime is being torn down
+
+**Session/control events:**
+- `session_before_switch`, `session_before_fork` — Intercept `/new`, `/resume`, `/fork`, or `/clone`
+- `session_before_compact`, `session_compact`, `session_before_tree`, `session_tree` — Context management and tree navigation
+- `model_select`, `user_bash` — Model changes and user-initiated shell commands
+
+Pi doesn't use a JSON hook file. You register handlers in code with `pi.on("event_name", handler)` and ship them in an extension or Pi package.
+
+</hfoption>
 </hfoptions>
 
 ## Event Input: What Your Hook Receives
@@ -153,6 +176,36 @@ OpenCode hooks are JS/TS functions, not stdin scripts. Each event type has a typ
 `"tool.execute.after"` adds the result on `output`. `"shell.env"` gives you `output.env` to mutate. The generic `event` callback receives `{ event }` where `event.type` identifies the event.
 
 The plugin also receives a context object at construction time: `{ project, directory, worktree, client, $ }`. Use `client.app.log({...})` for structured logging and `$` (Bun shell) to run commands.
+
+</hfoption>
+
+<hfoption id="Pi">
+
+Pi hooks are TS/JS functions registered in an extension. Common event shapes look like this:
+
+```ts
+pi.on("before_agent_start", async (event, ctx) => {
+  // event.prompt        — user prompt text
+  // event.systemPrompt  — current system prompt for this turn
+  // event.images        — attached images (if any)
+});
+
+pi.on("tool_call", async (event, ctx) => {
+  // event.toolName      — "bash", "read", "write", etc.
+  // event.toolCallId    — unique tool call id
+  // event.input         — mutable tool arguments
+});
+
+pi.on("tool_result", async (event, ctx) => {
+  // event.toolName      — tool name
+  // event.input         — final tool arguments
+  // event.content       — tool result content blocks
+  // event.details       — structured tool details
+  // event.isError       — whether the tool failed
+});
+```
+
+For nested async work inside a handler, use `ctx.signal` so Esc can cancel the extension's own `fetch()` calls or other abort-aware work.
 
 </hfoption>
 </hfoptions>
@@ -222,21 +275,44 @@ OpenCode hooks influence the agent by mutating the `output` object or by throwin
 There are no exit codes or JSON-over-stdin. All influence happens through code.
 
 </hfoption>
+
+<hfoption id="Pi">
+
+Pi hooks influence the agent by returning structured values or mutating event state in code.
+
+- Return `{ block: true, reason: "..." }` from `tool_call` to cancel a tool.
+- Mutate `event.input` inside `tool_call` to rewrite arguments before execution.
+- Return `{ content, details, isError }` from `tool_result` to rewrite a tool result.
+- Return `message` or `systemPrompt` from `before_agent_start` to inject context into the next turn.
+
+```ts
+pi.on("tool_call", async (event) => {
+  if (event.toolName === "bash" && /rm -rf/.test(event.input.command as string)) {
+    return { block: true, reason: "dangerous command blocked by policy" };
+  }
+});
+
+pi.on("before_agent_start", async (event) => ({
+  systemPrompt: event.systemPrompt + "\n\nAlways explain risky shell commands before running them.",
+}));
+```
+
+</hfoption>
 </hfoptions>
 
 ## Choosing the Right Event
 
 A quick reference for common goals:
 
-- **Log every tool call** → `PreToolUse` / `tool.execute.before`.
-- **Run a linter after an edit** → `PostToolUse` (match `Edit|Write`) / `tool.execute.after`.
-- **Block dangerous commands** → `PreToolUse` with exit code `2` or a thrown error.
-- **Inject repo context on each turn** → `UserPromptSubmit` with `additionalContext` (Claude Code / Codex), or the `event` callback on `message.updated` (OpenCode).
-- **Persist conversation state** → `Stop` / `SessionEnd`, or `session.idle` on OpenCode.
-- **Add environment variables to shells** → `shell.env` (OpenCode), or wrap the shell in a command hook on the other platforms.
+- **Log every tool call** → `PreToolUse` / `tool.execute.before` / `tool_call`.
+- **Run a linter after an edit** → `PostToolUse` (match `Edit|Write`) / `tool.execute.after` / `tool_result`.
+- **Block dangerous commands** → `PreToolUse` with exit code `2`, a thrown error, or `tool_call` with `{ block: true }`.
+- **Inject repo context on each turn** → `UserPromptSubmit` with `additionalContext` (Claude Code / Codex), the `event` callback on `message.updated` (OpenCode), or `before_agent_start` (Pi).
+- **Persist conversation state** → `Stop` / `SessionEnd`, `session.idle` on OpenCode, or `agent_end` / `session_shutdown` on Pi.
+- **Add environment variables to shells** → `shell.env` (OpenCode), or mutate `tool_call` / wrap user bash handling in an extension on Pi.
 
 ## Key Takeaways
 
-The three platforms expose the same underlying lifecycle with different vocabulary and different levels of granularity. Claude Code has the richest event set and supports four handler types. Codex has a smaller, tightly focused set behind a feature flag. OpenCode folds hooks into its plugin system as typed function keys rather than a JSON config. Once you pick an event for the goal at hand, the rest of the work is the same on all three.
+The platforms expose the same underlying lifecycle with different vocabulary and different levels of granularity. Claude Code has the richest event set and supports four handler types. Codex has a smaller, tightly focused set behind a feature flag. OpenCode folds hooks into its plugin system as typed function keys rather than a JSON config. Pi uses extension events such as `before_agent_start`, `tool_call`, and `tool_result`. Once you pick an event for the goal at hand, the rest of the work is the same across them.
 
 Next, a quick quiz before we wire these events into a live Gradio dashboard.

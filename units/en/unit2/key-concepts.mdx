@@ -139,6 +139,27 @@ opencode mcp add my-server --command "python" --args "/path/to/server.py"
 
 </hfoption>
 
+<hfoption id="Pi">
+
+Pi has no built-in MCP client. Use `pi-mcp-adapter`, then point it at a standard `.mcp.json` file:
+
+```bash
+pi install npm:pi-mcp-adapter
+```
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "python",
+      "args": ["/path/to/server.py"]
+    }
+  }
+}
+```
+
+</hfoption>
+
 </hfoptions>
 
 ### Streamable HTTP Transport
@@ -183,6 +204,24 @@ codex mcp add hf-mcp-server --url "https://huggingface.co/mcp?login"
   }
 }
 ```
+
+</hfoption>
+
+<hfoption id="Pi">
+
+With `pi-mcp-adapter` installed, configure remote servers in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "hf-mcp-server": {
+      "url": "https://huggingface.co/mcp?login"
+    }
+  }
+}
+```
+
+Open `/mcp` inside Pi to inspect or connect to the server on demand.
 
 </hfoption>
 

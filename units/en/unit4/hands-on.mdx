@@ -33,6 +33,21 @@ touch AGENTS.md
 ```
 
 </hfoption>
+<hfoption id="Pi">
+
+```bash
+mkdir code-quality-pipeline
+cd code-quality-pipeline
+
+# Create files
+mkdir -p .pi/agents .pi/extensions/subagent .pi/prompts
+touch main.py
+touch AGENTS.md
+```
+
+Use the official Pi subagent example (or your own equivalent package) to populate `.pi/extensions/subagent/` before you start Pi.
+
+</hfoption>
 </hfoptions>
 
 ## Step 1: Define Custom Agents
@@ -165,6 +180,78 @@ Prefer concrete bottlenecks over generic performance advice.
 ```
 
 </hfoption>
+
+<hfoption id="Pi">
+
+Create `.pi/agents/researcher.md`:
+
+```markdown
+---
+name: researcher
+description: Explores codebase and documents architecture
+tools: read, grep, find, ls
+---
+You are an architecture researcher. Your job is to:
+1. Explore the codebase structure
+2. Identify key modules, dependencies, and patterns
+3. Document the architecture clearly
+4. Note areas for improvement
+
+Be thorough. Read 10+ files to build a complete picture.
+```
+
+Create `.pi/agents/implementer.md`:
+
+```markdown
+---
+name: implementer
+description: Writes code based on specifications
+tools: read, grep, find, ls, bash, edit, write
+---
+You are a skilled developer. Your job is to:
+1. Read the specification and architecture docs
+2. Write clean, well-tested code
+3. Follow existing patterns and conventions
+4. Document your changes
+
+Focus on correctness and maintainability.
+```
+
+Create `.pi/agents/security-reviewer.md`:
+
+```markdown
+---
+name: security-reviewer
+description: Reviews code for vulnerabilities
+tools: read, grep, find, ls
+---
+You are a security expert. Your job is to:
+1. Review code for security vulnerabilities
+2. Check for data leakage, injection attacks, and unsafe secrets handling
+3. Recommend fixes
+4. Assess overall security posture
+
+Be thorough. This code might be production-critical.
+```
+
+Create `.pi/agents/performance-reviewer.md`:
+
+```markdown
+---
+name: performance-reviewer
+description: Reviews code for performance issues
+tools: read, grep, find, ls
+---
+You are a performance specialist. Your job is to:
+1. Identify performance bottlenecks
+2. Suggest optimizations
+3. Calculate impact
+4. Recommend best practices
+
+Be specific with numbers and concrete suggestions.
+```
+
+</hfoption>
 </hfoptions>
 
 ## Step 2: Define Project Policies
@@ -237,6 +324,25 @@ For feature work, prefer a research -> implement -> verify flow.
 ```
 
 </hfoption>
+
+<hfoption id="Pi">
+
+Create `AGENTS.md`:
+
+```markdown
+# Code Quality Pipeline
+
+For feature work, prefer a research -> implement -> verify flow.
+
+- Start by using `researcher` to map the affected code paths and document current patterns.
+- Then hand the findings to `implementer` so one agent owns the change.
+- Before merge, run `security-reviewer` and `performance-reviewer` in parallel and wait for both.
+- Keep review agents read-only and report findings before committing.
+```
+
+If you use the official subagent example, you can also add project-local prompt templates under `.pi/prompts/` for common flows such as `research -> implement -> review`.
+
+</hfoption>
 </hfoptions>
 
 ## Step 3: Using the Pipeline
@@ -273,6 +379,18 @@ I want to add OAuth2 authentication.
 Spawn `researcher` first and have it map our current auth system across 15+ files.
 Then spawn `implementer` to add the OAuth2 integration based on those findings.
 Finally, spawn `security_reviewer` and `performance_reviewer` in parallel, wait for both, and summarize the risks before we merge.
+```
+
+</hfoption>
+
+<hfoption id="Pi">
+
+```
+I want to add OAuth2 authentication.
+
+Use `researcher` to map our current auth system across 15+ files.
+Then use `implementer` to add the OAuth2 integration based on those findings.
+Finally, run `security-reviewer` and `performance-reviewer` in parallel, wait for both, and summarize the risks before we merge.
 ```
 
 </hfoption>
@@ -414,6 +532,27 @@ Use `.claude/CLAUDE.md` for delegation guidance. If you also want automated chec
 Use `AGENTS.md` for delegation guidance. Keep runtime limits such as thread caps in `.codex/config.toml`, and ask Codex explicitly when you want it to spawn named agents.
 
 </hfoption>
+
+<hfoption id="Pi">
+
+Use `AGENTS.md` and prompt templates for delegation. Keep automation in extensions, for example `.pi/extensions/pipeline-guard.ts`:
+
+```ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+export default function (pi: ExtensionAPI) {
+  pi.on("tool_call", async (event) => {
+    if (event.toolName !== "bash") return;
+
+    const command = event.input.command as string;
+    if (/rm -rf|git reset --hard/.test(command)) {
+      return { block: true, reason: "Dangerous command blocked by pipeline policy" };
+    }
+  });
+}
+```
+
+</hfoption>
 </hfoptions>
 
 ## Example Results
@@ -453,6 +592,6 @@ This project demonstrates clear stage separation (research, implement, verify), 
 
 ## Key Takeaways
 
-A researcher agent explores and documents, an implementer writes code, and security and performance reviewers sign off in parallel. Define the specialists in `.claude/agents/*.md` or `.codex/agents/*.toml`, and keep the workflow in `CLAUDE.md` or `AGENTS.md`. Hooks and runtime settings are for automation around the workflow, not for driving subagent orchestration.
+A researcher agent explores and documents, an implementer writes code, and security and performance reviewers sign off in parallel. Define the specialists in `.claude/agents/*.md`, `.codex/agents/*.toml`, or `.pi/agents/*.md`, and keep the workflow in `CLAUDE.md` or `AGENTS.md`. Hooks, extensions, and runtime settings are for automation around the workflow, not for driving subagent orchestration.
 
 Next, the unit 4 quizzes.

@@ -352,6 +352,30 @@ url = "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
 
 </hfoption>
 
+<hfoption id="Pi">
+
+Install the adapter once:
+
+```bash
+pi install npm:pi-mcp-adapter
+```
+
+Then add the deployed server to `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "text-processor": {
+      "url": "https://YOUR-USERNAME-text-processor-mcp.hf.space/gradio_api/mcp/"
+    }
+  }
+}
+```
+
+Open `pi`, then use `/mcp` if you want to verify the server and its tools before prompting.
+
+</hfoption>
+
 </hfoptions>
 
 ### Step 4: Test with Your Agent
