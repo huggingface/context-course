@@ -1,43 +1,65 @@
-<svg viewBox="0 0 450 350" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="450" height="350" fill="#0d1117"/>
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The agentic loop: call the LLM, parse code, execute via tools, observe, repeat until final_answer().">
+  <defs>
+    <style>
+      text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
+      .title { font-size: 14px; fill: #c9d1d9; font-weight: 700; }
+      .step { font-size: 12px; fill: #c9d1d9; font-weight: 700; }
+      .dim { font-size: 10px; fill: #8b949e; }
+      .out { font-size: 10px; fill: #c9d1d9; }
+      .panel { fill: #161b22; stroke: #30363d; stroke-width: 1; }
+      .center { fill: #1f2937; stroke: #58a6ff; stroke-width: 1.5; }
+      .flow { stroke: #30363d; stroke-width: 1.5; fill: none; }
+      .exit { stroke: #3fb950; stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
+    </style>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#30363d"/>
+    </marker>
+    <marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#3fb950"/>
+    </marker>
+  </defs>
 
-  <!-- Vertical flow -->
-  <line x1="225" y1="40" x2="225" y2="80" stroke="#30363d" stroke-width="1"/>
-  <polygon points="225,85 220,75 230,75" fill="#30363d"/>
+  <rect width="720" height="360" fill="#0d1117"/>
 
-  <line x1="225" y1="110" x2="225" y2="150" stroke="#30363d" stroke-width="1"/>
-  <polygon points="225,155 220,145 230,145" fill="#30363d"/>
+  <text x="30" y="32" class="title">The agentic loop</text>
+  <text x="30" y="50" class="dim">Up to MAX_STEPS iterations. Errors become observations; the agent adapts.</text>
 
-  <line x1="225" y1="180" x2="225" y2="220" stroke="#30363d" stroke-width="1"/>
-  <polygon points="225,225 220,215 230,215" fill="#30363d"/>
+  <!-- center: LLM -->
+  <rect class="center" x="290" y="150" width="140" height="60" rx="30"/>
+  <text x="320" y="178" class="step">Call LLM</text>
+  <text x="304" y="195" class="dim">history → next code</text>
 
-  <line x1="225" y1="250" x2="225" y2="290" stroke="#30363d" stroke-width="1"/>
-  <polygon points="225,295 220,285 230,285" fill="#30363d"/>
+  <!-- top: prompt -->
+  <rect class="panel" x="280" y="60" width="160" height="50" rx="6"/>
+  <text x="312" y="84" class="step">User prompt</text>
+  <text x="298" y="100" class="dim">+ system + history</text>
+  <path d="M 360 110 L 360 148" class="flow" marker-end="url(#a)"/>
 
-  <!-- Horizontal line to check box -->
-  <line x1="225" y1="320" x2="300" y2="320" stroke="#30363d" stroke-width="1"/>
-  <polygon points="305,320 295,315 295,325" fill="#30363d"/>
+  <!-- right: parse -->
+  <rect class="panel" x="490" y="150" width="170" height="60" rx="6"/>
+  <text x="518" y="174" class="step">Parse output</text>
+  <text x="502" y="190" class="dim">extract Python block</text>
+  <text x="502" y="202" class="dim">restricted globals</text>
+  <path d="M 432 180 L 488 180" class="flow" marker-end="url(#a)"/>
 
-  <!-- Loop back arrow (right side, curving back up) -->
-  <path d="M 225 320 L 375 320 L 375 100 L 230 100" stroke="#30363d" stroke-width="1" fill="none"/>
-  <polygon points="225,100 235,98 230,108" fill="#30363d"/>
+  <!-- bottom: execute / tools -->
+  <rect class="panel" x="290" y="245" width="140" height="80" rx="6"/>
+  <text x="316" y="266" class="step">Execute</text>
+  <text x="304" y="282" class="dim">list_dir · read_file</text>
+  <text x="304" y="296" class="dim">exec_cmd · write_file</text>
+  <text x="304" y="312" class="dim">+ safe_path / allowlist</text>
+  <path d="M 575 212 C 575 250 470 250 432 282" class="flow" marker-end="url(#a)"/>
 
-  <!-- Labels -->
-  <text x="225" y="70" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Initialize</text>
+  <!-- left: observation -->
+  <rect class="panel" x="60" y="150" width="170" height="60" rx="6"/>
+  <text x="86" y="174" class="step">Observation</text>
+  <text x="74" y="190" class="dim">stdout / stderr / error</text>
+  <text x="74" y="202" class="dim">appended to history</text>
+  <path d="M 290 282 C 220 282 150 250 150 212" class="flow" marker-end="url(#a)"/>
+  <path d="M 230 180 L 288 180" class="flow" marker-end="url(#a)"/>
 
-  <text x="225" y="140" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Call LLM</text>
-
-  <text x="225" y="210" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Parse Output</text>
-
-  <text x="225" y="280" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Execute Code</text>
-
-  <text x="225" y="315" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">done?</text>
-
-  <!-- Decision labels -->
-  <text x="320" y="315" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="11" fill="#8b949e">yes</text>
-  <text x="385" y="210" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="11" fill="#8b949e">no</text>
-
-  <!-- Return label -->
-  <text x="330" y="335" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9">Return</text>
+  <!-- exit: final_answer -->
+  <text x="546" y="276" class="dim">if final_answer()</text>
+  <path d="M 430 285 C 540 285 600 285 660 285" class="exit" marker-end="url(#ag)"/>
+  <text x="630" y="305" class="step" fill="#3fb950">return</text>
 </svg>

@@ -39,8 +39,6 @@ A server can be:
 - A containerized application
 - Embedded in your application (like a Gradio app with `mcp_server=True`)
 
-![MCP architecture showing Host, Client, and Server roles](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit2/mcp-architecture.svg)
-
 ## The Three Capability Types
 
 MCP servers expose three kinds of capabilities to clients:
@@ -53,8 +51,6 @@ Resources are read-only data sources that agents can access for information. Eac
 
 ### Prompts
 Prompts are instruction templates that agents can request to help guide their own behavior for specific contexts or domains. Each prompt has a name (like `code_review`), a description of when it applies, optional arguments for dynamic behavior, and the actual template text. When an agent recognizes a situation where a prompt applies, it requests the prompt (optionally with arguments), receives the instantiated text, and uses it to structure its reasoning. Prompts are user-controlled — they're deployed separately and updated independently. They're non-executable text instructions, ideal for standardizing approaches to recurring tasks like code reviews or security audits.
-
-![The three MCP capability types: Tools, Resources, and Prompts](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit2/capability-types.svg)
 
 > [!NOTE]
 > On average, about ~90% of MCP usage is for tools.
@@ -235,8 +231,6 @@ Open `/mcp` inside Pi to inspect or connect to the server on demand.
 | **Performance** | Very fast | Network latency |
 | **Security** | No exposure | Requires auth |
 | **Use Case** | Development, single user | Production, teams, cloud |
-
-![Comparison of stdio and Streamable HTTP transport mechanisms](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit2/transport-comparison.svg)
 
 ## MCP Architecture Diagram
 

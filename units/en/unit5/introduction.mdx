@@ -48,8 +48,6 @@ The mental model is consistent across all three: events fire, handlers run, and 
 
 This unit walks through the hook lifecycle, shows the exact config shape for each platform, and then builds a working **Agent Activity Dashboard**: a Gradio app that receives hook events over HTTP and visualizes tool calls, prompts, and sessions in real time. By the end you will have one dashboard that works against all three agents.
 
-![Hook event flow from agent runtime through HTTP to a Gradio dashboard](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit5/hooks-dashboard-flow.svg)
-
 ## What You'll Learn
 
 This unit covers the common hook lifecycle shared by Claude Code, Codex, and OpenCode; where hook configuration lives on each platform and what JSON or code shape it takes; how hook handlers influence the agent through exit codes, JSON output, or thrown errors; and how to build a Gradio dashboard that turns hook events into a live view of agent activity.

@@ -1,25 +1,67 @@
-<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="400" height="220" fill="#0d1117"/>
+<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fan-out fan-in: one parent splits into parallel workers, each with its own context, then merges back.">
+  <defs>
+    <style>
+      text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
+      .title { font-size: 14px; fill: #c9d1d9; font-weight: 700; }
+      .role { font-size: 12px; fill: #c9d1d9; font-weight: 700; }
+      .label { font-size: 11px; fill: #c9d1d9; }
+      .dim { font-size: 10px; fill: #8b949e; }
+      .panel { fill: #161b22; stroke: #30363d; stroke-width: 1; }
+      .flow { stroke: #30363d; stroke-width: 1.5; fill: none; }
+      .flow-active { stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#30363d"/>
+    </marker>
+  </defs>
 
-  <!-- Lines from Parent to Workers -->
-  <line x1="200" y1="30" x2="80" y2="100" stroke="#30363d" stroke-width="1"/>
-  <line x1="200" y1="30" x2="200" y2="100" stroke="#30363d" stroke-width="1"/>
-  <line x1="200" y1="30" x2="320" y2="100" stroke="#30363d" stroke-width="1"/>
+  <rect width="720" height="380" fill="#0d1117"/>
 
-  <!-- Lines from Workers to Result -->
-  <line x1="80" y1="130" x2="200" y2="190" stroke="#30363d" stroke-width="1"/>
-  <line x1="200" y1="130" x2="200" y2="190" stroke="#30363d" stroke-width="1"/>
-  <line x1="320" y1="130" x2="200" y2="190" stroke="#30363d" stroke-width="1"/>
+  <text x="30" y="32" class="title">Fan-out / fan-in</text>
+  <text x="30" y="50" class="dim">Parent delegates scoped work; each child gets its own context window.</text>
 
-  <!-- Parent Agent label -->
-  <text x="200" y="25" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Parent Agent</text>
+  <!-- Parent -->
+  <rect class="panel" x="280" y="78" width="160" height="60" rx="6"/>
+  <circle cx="300" cy="108" r="6" fill="#58a6ff"/>
+  <text x="316" y="103" class="role">Parent agent</text>
+  <text x="316" y="120" class="dim">plans, splits, merges</text>
 
-  <!-- Worker labels -->
-  <text x="80" y="125" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">Worker</text>
-  <text x="200" y="125" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">Worker</text>
-  <text x="320" y="125" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="12" fill="#c9d1d9" text-anchor="middle">Worker</text>
+  <!-- Fan-out lines -->
+  <path d="M 360 138 C 360 170 140 170 140 200" class="flow-active" stroke="#3fb950" marker-end="url(#arrow)"/>
+  <path d="M 360 138 L 360 195" class="flow-active" stroke="#d29922" marker-end="url(#arrow)"/>
+  <path d="M 360 138 C 360 170 580 170 580 200" class="flow-active" stroke="#bc8cff" marker-end="url(#arrow)"/>
 
-  <!-- Aggregated label -->
-  <text x="200" y="210" font-family="'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace" font-size="14" fill="#c9d1d9" text-anchor="middle">Aggregated</text>
+  <!-- Worker 1 -->
+  <rect class="panel" x="60" y="200" width="160" height="100" rx="6"/>
+  <circle cx="80" cy="222" r="5" fill="#3fb950"/>
+  <text x="94" y="226" class="role">Worker A</text>
+  <text x="74" y="248" class="dim">scope: auth/</text>
+  <text x="74" y="264" class="dim">tools: Read, Grep</text>
+  <text x="74" y="280" class="dim">own context window</text>
+
+  <!-- Worker 2 -->
+  <rect class="panel" x="280" y="200" width="160" height="100" rx="6"/>
+  <circle cx="300" cy="222" r="5" fill="#d29922"/>
+  <text x="314" y="226" class="role">Worker B</text>
+  <text x="294" y="248" class="dim">scope: payments/</text>
+  <text x="294" y="264" class="dim">tools: Read, Grep</text>
+  <text x="294" y="280" class="dim">own context window</text>
+
+  <!-- Worker 3 -->
+  <rect class="panel" x="500" y="200" width="160" height="100" rx="6"/>
+  <circle cx="520" cy="222" r="5" fill="#bc8cff"/>
+  <text x="534" y="226" class="role">Worker C</text>
+  <text x="514" y="248" class="dim">scope: api/</text>
+  <text x="514" y="264" class="dim">tools: Read, Grep</text>
+  <text x="514" y="280" class="dim">own context window</text>
+
+  <!-- Fan-in lines -->
+  <path d="M 140 300 C 140 330 360 330 360 340" class="flow" marker-end="url(#arrow)"/>
+  <path d="M 360 300 L 360 337" class="flow" marker-end="url(#arrow)"/>
+  <path d="M 580 300 C 580 330 360 330 360 340" class="flow" marker-end="url(#arrow)"/>
+
+  <!-- Result -->
+  <rect class="panel" x="280" y="340" width="160" height="32" rx="6" fill="#1f2937" stroke="#58a6ff"/>
+  <text x="316" y="361" class="label">Merged findings</text>
+  <circle cx="300" cy="356" r="5" fill="#58a6ff"/>
 </svg>

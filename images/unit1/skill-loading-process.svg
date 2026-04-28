@@ -1,65 +1,78 @@
-<svg viewBox="0 0 520 420" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Progressive disclosure: skill loading happens in three stages of growing context cost">
   <defs>
     <style>
       text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace; }
-      .step { font-size: 12px; fill: #c9d1d9; }
-      .detail { font-size: 10px; fill: #8b949e; }
-      .num { font-size: 11px; fill: #7d8590; }
-      line { stroke: #30363d; stroke-width: 1; }
-      polygon { fill: #30363d; }
+      .title { font-size: 14px; fill: #c9d1d9; font-weight: 700; }
+      .stage { font-size: 12px; fill: #c9d1d9; font-weight: 700; }
+      .label { font-size: 11px; fill: #c9d1d9; }
+      .dim { font-size: 10px; fill: #8b949e; }
+      .badge { font-size: 10px; fill: #0d1117; font-weight: 700; }
+      .panel { fill: #161b22; stroke: #30363d; stroke-width: 1; }
+      .arrow { stroke: #30363d; stroke-width: 1.5; fill: none; }
     </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#30363d"/>
+    </marker>
   </defs>
 
-  <rect width="520" height="420" fill="#0d1117"/>
+  <rect width="760" height="360" fill="#0d1117"/>
 
-  <!-- Step 1 -->
-  <text x="20" y="30" class="num">1</text>
-  <text x="40" y="30" class="step">User starts conversation</text>
-  <text x="40" y="46" class="detail">"Help me publish a dataset"</text>
+  <text x="30" y="32" class="title">Progressive Disclosure</text>
+  <text x="30" y="50" class="dim">An agent loads only what it needs, when it needs it.</text>
 
-  <line x1="20" y1="56" x2="20" y2="76"/>
-  <polygon points="20,80 16,72 24,72"/>
+  <!-- Stage 1: scan metadata -->
+  <rect class="panel" x="30" y="80" width="220" height="240" rx="6"/>
+  <circle cx="50" cy="105" r="11" fill="#3fb950"/>
+  <text x="46" y="109" class="badge">1</text>
+  <text x="70" y="109" class="stage">Scan metadata</text>
+  <text x="50" y="135" class="dim">All skills, name + description only</text>
 
-  <!-- Step 2 -->
-  <text x="20" y="95" class="num">2</text>
-  <text x="40" y="95" class="step">Agent scans skills</text>
-  <text x="40" y="111" class="detail">project dir / personal / installed</text>
+  <!-- context bar tiny -->
+  <text x="50" y="170" class="label">context cost</text>
+  <rect x="50" y="178" width="180" height="14" fill="#21262d" stroke="#30363d"/>
+  <rect x="50" y="178" width="14" height="14" fill="#3fb950"/>
+  <text x="50" y="208" class="dim">~100 tokens</text>
 
-  <line x1="20" y1="121" x2="20" y2="141"/>
-  <polygon points="20,145 16,137 24,137"/>
+  <text x="50" y="240" class="label">always loaded</text>
+  <text x="50" y="258" class="dim">discovery is cheap, so the</text>
+  <text x="50" y="272" class="dim">agent can keep the full</text>
+  <text x="50" y="286" class="dim">catalog in memory.</text>
 
-  <!-- Step 3 -->
-  <text x="20" y="160" class="num">3</text>
-  <text x="40" y="160" class="step">Read metadata</text>
-  <text x="40" y="176" class="detail">name + description only (~100 tokens)</text>
+  <line x1="250" y1="200" x2="280" y2="200" class="arrow" marker-end="url(#arrowhead)"/>
 
-  <line x1="20" y1="186" x2="20" y2="206"/>
-  <polygon points="20,210 16,202 24,202"/>
+  <!-- Stage 2: activate one skill -->
+  <rect class="panel" x="280" y="80" width="220" height="240" rx="6"/>
+  <circle cx="300" cy="105" r="11" fill="#58a6ff"/>
+  <text x="296" y="109" class="badge">2</text>
+  <text x="320" y="109" class="stage">Activate skill</text>
+  <text x="300" y="135" class="dim">Full SKILL.md loaded into context</text>
 
-  <!-- Step 4 -->
-  <text x="20" y="225" class="num">4</text>
-  <text x="40" y="225" class="step">Activate skill</text>
-  <text x="40" y="241" class="detail">full SKILL.md loaded into context</text>
+  <text x="300" y="170" class="label">context cost</text>
+  <rect x="300" y="178" width="180" height="14" fill="#21262d" stroke="#30363d"/>
+  <rect x="300" y="178" width="60" height="14" fill="#58a6ff"/>
+  <text x="300" y="208" class="dim">~2-5k tokens</text>
 
-  <line x1="20" y1="251" x2="20" y2="271"/>
-  <polygon points="20,275 16,267 24,267"/>
+  <text x="300" y="240" class="label">on match only</text>
+  <text x="300" y="258" class="dim">the description triggered;</text>
+  <text x="300" y="272" class="dim">instructions, examples, and</text>
+  <text x="300" y="286" class="dim">guardrails come along.</text>
 
-  <!-- Step 5 -->
-  <text x="20" y="290" class="num">5</text>
-  <text x="40" y="290" class="step">Execute</text>
-  <text x="40" y="306" class="detail">follow instructions, run scripts</text>
+  <line x1="500" y1="200" x2="530" y2="200" class="arrow" marker-end="url(#arrowhead)"/>
 
-  <line x1="20" y1="316" x2="20" y2="336"/>
-  <polygon points="20,340 16,332 24,332"/>
+  <!-- Stage 3: pull deep refs / scripts -->
+  <rect class="panel" x="530" y="80" width="200" height="240" rx="6"/>
+  <circle cx="550" cy="105" r="11" fill="#bc8cff"/>
+  <text x="546" y="109" class="badge">3</text>
+  <text x="570" y="109" class="stage">Pull on demand</text>
+  <text x="550" y="135" class="dim">scripts/, references/, assets/</text>
 
-  <!-- Step 6 -->
-  <text x="20" y="355" class="num">6</text>
-  <text x="40" y="355" class="step">Feedback loop</text>
-  <text x="40" y="371" class="detail">issues reported, skill updated, all benefit</text>
+  <text x="550" y="170" class="label">context cost</text>
+  <rect x="550" y="178" width="160" height="14" fill="#21262d" stroke="#30363d"/>
+  <rect x="550" y="178" width="160" height="14" fill="#bc8cff" opacity="0.85"/>
+  <text x="550" y="208" class="dim">paid per file read</text>
 
-  <!-- Feedback loop-back line -->
-  <line x1="20" y1="381" x2="20" y2="395"/>
-  <line x1="20" y1="395" x2="480" y2="395"/>
-  <line x1="480" y1="395" x2="480" y2="25"/>
-  <line x1="480" y1="25" x2="30" y2="25"/>
+  <text x="550" y="240" class="label">deferred</text>
+  <text x="550" y="258" class="dim">heavy material stays on</text>
+  <text x="550" y="272" class="dim">disk until the agent calls</text>
+  <text x="550" y="286" class="dim">for it explicitly.</text>
 </svg>

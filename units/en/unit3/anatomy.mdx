@@ -277,8 +277,6 @@ my-pi-package/
 </hfoption>
 </hfoptions>
 
-![Side-by-side comparison of Claude Code and Codex plugin directory structures](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit3/plugin-structure-comparison.svg)
-
 ## Key Takeaways
 
 Claude Code and Codex use manifest-first plugin bundles: a `plugin.json` manifest alongside root-level components like `skills/`, `.mcp.json`, and integration files. OpenCode uses a code-first model: plugins are JS/TS modules loaded from `.opencode/plugins/` or npm, with skills and MCP configuration handled separately. Pi packages use `package.json` plus conventional directories such as `skills/` and `extensions/`.

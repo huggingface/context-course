@@ -2,8 +2,6 @@
 
 This project wires the hooks you configured in the previous lesson into a live dashboard. The dashboard is a Gradio app that accepts hook events over HTTP, shows the most recent calls in a table, and plots tool usage over time. It works against Claude Code, Codex, OpenCode, and Pi — with the same agent doing the work, you see what actually happens under the hood.
 
-![Architecture diagram: agent hooks -> HTTP POST -> FastAPI receiver -> Gradio UI](https://huggingface.co/datasets/mcp-course/images/resolve/main/unit5/hooks-dashboard-architecture.svg)
-
 ## What You'll Build
 
 One Python process that does two things at once:
