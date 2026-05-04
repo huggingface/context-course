@@ -1,0 +1,27 @@
+[agents]
+max_threads = 6
+max_depth = 1
+
+[agents.planner]
+description = "Read-only local Autolab research planner."
+config_file = "./agents/planner.toml"
+
+[agents.experiment_worker]
+description = "Local Autolab experiment worker constrained to one managed train.py run."
+config_file = "./agents/experiment-worker.toml"
+
+[agents.memory_keeper]
+description = "Local Autolab research memory maintainer."
+config_file = "./agents/memory-keeper.toml"
+
+[agents.reviewer]
+description = "Read-only local Autolab rule and comparability reviewer."
+config_file = "./agents/reviewer.toml"
+
+[agents.reporter]
+description = "Local Autolab fleet observer for HF Jobs and Trackio."
+config_file = "./agents/reporter.toml"
+
+[agents.researcher]
+description = "Read-only local Autolab literature scout."
+config_file = "./agents/researcher.toml"

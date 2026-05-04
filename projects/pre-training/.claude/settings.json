@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/prepare.py)",
+      "Write(/prepare.py)"
+    ]
+  }
+}

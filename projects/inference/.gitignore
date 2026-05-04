@@ -1,0 +1,8 @@
+.runtime/
+.venv/
+models/
+*.gguf
+*.log
+*.jsonl
+__pycache__/
+uv.lock

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(../pre-training/**)",
+      "Write(../pre-training/**)",
+      "Edit(../post-training/**)",
+      "Write(../post-training/**)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+[agents]
+max_threads = 3
+max_depth = 1
+
+[agents.inference_lab]
+description = "Local llama.cpp inference optimization coordinator."
+config_file = "./agents/inference-lab.toml"
+
+[agents.optimizer]
+description = "Read-only llama.cpp speed optimizer."
+config_file = "./agents/optimizer.toml"
+
+[agents.benchmarker]
+description = "Local llama.cpp endpoint benchmarker."
+config_file = "./agents/benchmarker.toml"
