@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root {
+        --bg: #07080a;
+        --panel: #0c0e11;
+        --ink: #e8e6df;
+        --dim: #b5b5ab;
+        --line: #2a2c30;
+        --line-strong: #4a4d52;
+        --amber: #d9b75b;
+        --green: #6ec588;
+        --blue: #7da4ff;
+      }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      .grid {
+        position: absolute; inset: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+        z-index: 0;
+      }
+      .scanlines {
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(to bottom,
+          rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px,
+          transparent 1px, transparent 4px);
+        pointer-events: none; z-index: 50;
+      }
+      .vignette {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+        pointer-events: none; z-index: 49;
+      }
+      .crt-flicker {
+        position: absolute; inset: 0;
+        background: rgba(217,183,91,0.04);
+        pointer-events: none; z-index: 48; opacity: 0;
+      }
+      .corner-tl, .corner-tr, .corner-bl, .corner-br {
+        position: absolute; width: 32px; height: 32px;
+        border: 3px solid var(--line-strong); z-index: 40;
+      }
+      .corner-tl { top: 24px; left: 24px; border-right: 0; border-bottom: 0; }
+      .corner-tr { top: 24px; right: 24px; border-left: 0; border-bottom: 0; }
+      .corner-bl { bottom: 24px; left: 24px; border-right: 0; border-top: 0; }
+      .corner-br { bottom: 24px; right: 24px; border-left: 0; border-top: 0; }
+      .brand {
+        position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+        font-size: 16px; opacity: 0.45;
+        letter-spacing: 0.32em; text-transform: uppercase; z-index: 40;
+      }
+
+      .stage {
+        position: absolute; inset: 0; z-index: 10;
+        display: grid;
+        grid-template-columns: 1fr 720px 480px 1fr;
+        grid-template-rows: auto 1fr;
+        gap: 24px 32px;
+        padding: 64px 80px 80px;
+      }
+      .header {
+        grid-column: 1 / -1; grid-row: 1;
+        display: flex; flex-direction: column; gap: 14px;
+      }
+      .chip {
+        display: inline-flex; align-items: center; gap: 14px;
+        padding: 10px 18px;
+        font-size: 18px; letter-spacing: 0.22em;
+        border: 1px solid var(--line-strong); align-self: flex-start;
+      }
+      .chip .dot {
+        width: 10px; height: 10px;
+        background: var(--amber); box-shadow: 0 0 12px rgba(217,183,91,0.6);
+      }
+      .title {
+        font-size: 88px; font-weight: 600;
+        letter-spacing: -0.02em; line-height: 1.0;
+        text-transform: lowercase;
+      }
+      .title .accent { color: var(--amber); margin-right: 18px; }
+      .subtitle {
+        font-size: 28px; font-weight: 400;
+        color: var(--dim); letter-spacing: 0.005em;
+      }
+      .subtitle .arr { color: var(--amber); margin: 0 6px; }
+
+      /* File panel */
+      .file-panel {
+        grid-column: 2; grid-row: 2;
+        display: flex; align-items: flex-start; justify-content: center;
+      }
+      .skill-file {
+        position: relative;
+        width: 100%;
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        font-size: 18px; line-height: 1.55;
+        color: var(--ink);
+      }
+      .file-bar {
+        display: flex; align-items: center; gap: 14px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--line);
+        font-size: 14px; color: var(--dim); letter-spacing: 0.12em;
+      }
+      .file-bar .tdot { width: 10px; height: 10px; }
+      .file-bar .tdot.r { background: #d96b5b; }
+      .file-bar .tdot.y { background: #d9b75b; }
+      .file-bar .tdot.g { background: #6ec588; }
+      .file-bar .name { margin-left: 8px; text-transform: uppercase; }
+      .file-body { padding: 24px 28px; }
+
+      .section {
+        position: relative;
+        padding: 14px 18px;
+        border-left: 3px solid var(--line);
+        margin-bottom: 16px;
+      }
+      .section.s-front { border-left-color: var(--amber); }
+      .section.s-body  { border-left-color: var(--green); }
+      .section.s-refs  { border-left-color: var(--blue); }
+
+      .ln { display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; }
+      .ln .key { color: var(--blue); }
+      .ln .val { color: var(--ink); }
+      .ln .dim { color: var(--dim); }
+      .ln .h2 { color: var(--amber); font-weight: 600; }
+      .ln .num { color: var(--dim); }
+      .ln code {
+        background: var(--bg); border: 1px solid var(--line);
+        padding: 1px 6px;
+      }
+      .ln .ref { color: var(--blue); }
+      .delim {
+        color: var(--dim); letter-spacing: 0.2em;
+      }
+
+      /* Annotations on right */
+      .annotations {
+        grid-column: 3; grid-row: 2;
+        position: relative;
+      }
+      .anno {
+        position: absolute;
+        left: 60px;
+        width: 380px;
+        padding: 18px 22px;
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        font-size: 18px; color: var(--ink);
+      }
+      .anno::before {
+        content: "";
+        position: absolute;
+        left: -60px; top: 50%; width: 60px; height: 1px;
+        background: var(--line-strong);
+      }
+      .anno::after {
+        content: "";
+        position: absolute;
+        left: -64px; top: calc(50% - 4px); width: 8px; height: 8px;
+        background: var(--bg);
+        border: 1px solid var(--line-strong);
+      }
+      .anno .anno-tag {
+        display: block;
+        font-size: 13px; letter-spacing: 0.22em;
+        text-transform: uppercase; margin-bottom: 6px;
+      }
+      .anno .anno-text {
+        font-size: 18px; color: var(--ink);
+        line-height: 1.45;
+      }
+      .anno.a-front { top: 48px; border-color: var(--amber); }
+      .anno.a-front .anno-tag { color: var(--amber); }
+      .anno.a-front::before { background: var(--amber); }
+      .anno.a-front::after { border-color: var(--amber); background: var(--amber); }
+      .anno.a-body { top: 290px; border-color: var(--green); }
+      .anno.a-body .anno-tag { color: var(--green); }
+      .anno.a-body::before { background: var(--green); }
+      .anno.a-body::after { border-color: var(--green); background: var(--green); }
+      .anno.a-refs { top: 580px; border-color: var(--blue); }
+      .anno.a-refs .anno-tag { color: var(--blue); }
+      .anno.a-refs::before { background: var(--blue); }
+      .anno.a-refs::after { border-color: var(--blue); background: var(--blue); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+      <div class="grid"></div>
+      <div class="vignette"></div>
+      <div class="scanlines"></div>
+      <div class="crt-flicker" id="crtFlicker"></div>
+      <div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="corner-bl"></div><div class="corner-br"></div>
+      <div class="brand">CONTEXT COURSE · UNIT 1</div>
+
+      <div class="stage">
+        <div class="header">
+          <div class="chip" id="chip"><span class="dot"></span>UNIT 1 · SKILL.MD</div>
+          <h1 class="title" id="title"><span class="accent">&gt;</span>skill anatomy</h1>
+          <p class="subtitle" id="subtitle">frontmatter<span class="arr">→</span>body<span class="arr">→</span>bundled refs · what the agent reads, and when</p>
+        </div>
+
+        <div class="file-panel">
+          <div class="skill-file" id="file">
+            <div class="file-bar" id="fileBar">
+              <span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span>
+              <span class="name">SKILL.md</span>
+            </div>
+            <div class="file-body">
+              <div class="section s-front" id="secFront">
+                <div class="ln delim">---</div>
+                <div class="ln"><span class="key">name</span>: <span class="val">publish-dataset</span></div>
+                <div class="ln"><span class="key">description</span>: <span class="val">upload datasets to the hugging face hub</span></div>
+                <div class="ln"><span class="key">license</span>: <span class="val">apache-2.0</span></div>
+                <div class="ln delim">---</div>
+              </div>
+              <div class="section s-body" id="secBody">
+                <div class="ln"><span class="h2">## When to use</span></div>
+                <div class="ln"><span class="dim">use when the user asks to publish, upload,</span></div>
+                <div class="ln"><span class="dim">or share a dataset to hugging face hub.</span></div>
+                <div class="ln">&nbsp;</div>
+                <div class="ln"><span class="h2">## Steps</span></div>
+                <div class="ln"><span class="num">1.</span> validate <code>load_dataset</code> works locally</div>
+                <div class="ln"><span class="num">2.</span> <code>hf auth login</code></div>
+                <div class="ln"><span class="num">3.</span> <code>dataset.push_to_hub("u/name")</code></div>
+              </div>
+              <div class="section s-refs" id="secRefs">
+                <div class="ln"><span class="h2">## See also</span></div>
+                <div class="ln"><span class="num">·</span> <span class="ref">./scripts/validate.py</span></div>
+                <div class="ln"><span class="num">·</span> <span class="ref">./refs/license-templates.md</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="annotations">
+          <div class="anno a-front" id="annoFront">
+            <div class="anno-tag">frontmatter · always read</div>
+            <div class="anno-text">name + description form the index. The agent matches prompts against these without loading the body.</div>
+          </div>
+          <div class="anno a-body" id="annoBody">
+            <div class="anno-tag">body · loaded on match</div>
+            <div class="anno-text">Markdown instructions the agent only sees once the skill is selected. Saves context.</div>
+          </div>
+          <div class="anno a-refs" id="annoRefs">
+            <div class="anno-tag">bundled · referenced as needed</div>
+            <div class="anno-text">Scripts, examples, and refs in the same folder. The agent reads them only when the body points there.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo(".grid",
+        { backgroundPosition: "0 0, 0 0" },
+        { backgroundPosition: "120px 120px, 120px 120px", duration: 12, ease: "none" }, 0);
+
+      [1.4, 4.6, 7.7, 10.6].forEach(t => {
+        tl.to("#crtFlicker", { opacity: 0.32, duration: 0.05, ease: "power2.in" }, t)
+          .to("#crtFlicker", { opacity: 0, duration: 0.18, ease: "power2.out" }, t + 0.05);
+      });
+
+      // Header
+      tl.from("#chip",     { opacity: 0, x: -30, duration: 0.40, ease: "power3.out" }, 0.10);
+      tl.from("#title",    { opacity: 0, y: 50,  duration: 0.60, ease: "expo.out"   }, 0.25);
+      tl.from("#subtitle", { opacity: 0, y: 24,  duration: 0.45, ease: "power3.out" }, 0.50);
+
+      // File frame
+      tl.from("#file", { opacity: 0, y: 30, duration: 0.50, ease: "power3.out" }, 0.55);
+      tl.from("#fileBar > *", { opacity: 0, y: -8, duration: 0.30, stagger: 0.05, ease: "power2.out" }, 0.95);
+
+      // Sections start hidden, reveal in sequence
+      tl.set(["#secFront", "#secBody", "#secRefs"], { opacity: 0 }, 0);
+      tl.set(["#secFront .ln", "#secBody .ln", "#secRefs .ln"], { opacity: 0 }, 0);
+
+      // ============================
+      // Phase 1: Frontmatter (1.0 — 3.5)
+      // ============================
+      tl.to("#secFront", { opacity: 1, duration: 0.20, ease: "power2.out" }, 1.10);
+      tl.to("#secFront .ln", {
+        opacity: 1, duration: 0.30,
+        stagger: 0.10, ease: "power2.out"
+      }, 1.20);
+      tl.from("#annoFront", {
+        opacity: 0, x: 40, duration: 0.55, ease: "back.out(1.4)"
+      }, 1.80);
+
+      // ============================
+      // Phase 2: Body (3.5 — 6.5)
+      // ============================
+      tl.to("#secBody", { opacity: 1, duration: 0.20, ease: "power2.out" }, 3.50);
+      tl.to("#secBody .ln", {
+        opacity: 1, duration: 0.25,
+        stagger: 0.08, ease: "power2.out"
+      }, 3.60);
+      tl.from("#annoBody", {
+        opacity: 0, x: 40, duration: 0.55, ease: "back.out(1.4)"
+      }, 4.40);
+
+      // ============================
+      // Phase 3: Refs (6.5 — 9.5)
+      // ============================
+      tl.to("#secRefs", { opacity: 1, duration: 0.20, ease: "power2.out" }, 6.50);
+      tl.to("#secRefs .ln", {
+        opacity: 1, duration: 0.25,
+        stagger: 0.10, ease: "power2.out"
+      }, 6.60);
+      tl.from("#annoRefs", {
+        opacity: 0, x: 40, duration: 0.55, ease: "back.out(1.4)"
+      }, 7.10);
+
+      // ============================
+      // Phase 4: Highlight passes (9.5 — 12.0)
+      // ============================
+      // Sweep across the three sections, each one glowing its accent color
+      tl.to("#secFront", {
+        backgroundColor: "rgba(217,183,91,0.10)",
+        duration: 0.25, ease: "power2.out"
+      }, 9.50);
+      tl.to("#secFront", {
+        backgroundColor: "rgba(0,0,0,0)",
+        duration: 0.45, ease: "power2.in"
+      }, 9.85);
+
+      tl.to("#secBody", {
+        backgroundColor: "rgba(110,197,136,0.10)",
+        duration: 0.25, ease: "power2.out"
+      }, 10.30);
+      tl.to("#secBody", {
+        backgroundColor: "rgba(0,0,0,0)",
+        duration: 0.45, ease: "power2.in"
+      }, 10.65);
+
+      tl.to("#secRefs", {
+        backgroundColor: "rgba(125,164,255,0.10)",
+        duration: 0.25, ease: "power2.out"
+      }, 11.10);
+      tl.to("#secRefs", {
+        backgroundColor: "rgba(0,0,0,0)",
+        duration: 0.45, ease: "power2.in"
+      }, 11.45);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

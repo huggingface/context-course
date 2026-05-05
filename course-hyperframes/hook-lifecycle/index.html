@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root {
+        --bg: #07080a; --panel: #0c0e11;
+        --ink: #e8e6df; --dim: #b5b5ab;
+        --line: #2a2c30; --line-strong: #4a4d52;
+        --amber: #d9b75b; --green: #6ec588; --blue: #7da4ff; --red: #d96b5b;
+      }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: var(--bg); color: var(--ink);
+        font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      .grid {
+        position: absolute; inset: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+        z-index: 0;
+      }
+      .scanlines {
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(to bottom,
+          rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px,
+          transparent 1px, transparent 4px);
+        pointer-events: none; z-index: 50;
+      }
+      .vignette {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+        pointer-events: none; z-index: 49;
+      }
+      .crt-flicker {
+        position: absolute; inset: 0;
+        background: rgba(217,183,91,0.04);
+        pointer-events: none; z-index: 48; opacity: 0;
+      }
+      .corner-tl, .corner-tr, .corner-bl, .corner-br {
+        position: absolute; width: 32px; height: 32px;
+        border: 3px solid var(--line-strong); z-index: 40;
+      }
+      .corner-tl { top: 24px; left: 24px; border-right: 0; border-bottom: 0; }
+      .corner-tr { top: 24px; right: 24px; border-left: 0; border-bottom: 0; }
+      .corner-bl { bottom: 24px; left: 24px; border-right: 0; border-top: 0; }
+      .corner-br { bottom: 24px; right: 24px; border-left: 0; border-top: 0; }
+      .brand {
+        position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+        font-size: 16px; opacity: 0.45;
+        letter-spacing: 0.32em; text-transform: uppercase; z-index: 40;
+      }
+
+      .stage {
+        position: absolute; inset: 0; z-index: 10;
+        display: grid;
+        grid-template-columns: 1fr 720px;
+        grid-template-rows: auto 1fr;
+        gap: 28px 56px;
+        padding: 64px 80px 80px;
+      }
+      .header {
+        grid-column: 1 / -1; grid-row: 1;
+        display: flex; flex-direction: column; gap: 14px;
+      }
+      .chip {
+        display: inline-flex; align-items: center; gap: 14px;
+        padding: 10px 18px;
+        font-size: 18px; letter-spacing: 0.22em;
+        border: 1px solid var(--line-strong); align-self: flex-start;
+      }
+      .chip .dot {
+        width: 10px; height: 10px;
+        background: var(--amber); box-shadow: 0 0 12px rgba(217,183,91,0.6);
+      }
+      .title { font-size: 88px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.0; text-transform: lowercase; }
+      .title .accent { color: var(--amber); margin-right: 18px; }
+      .subtitle { font-size: 28px; font-weight: 400; color: var(--dim); }
+      .subtitle .arr { color: var(--amber); margin: 0 6px; }
+
+      /* Timeline panel */
+      .timeline-panel {
+        grid-column: 1; grid-row: 2;
+        position: relative;
+        padding: 40px 30px;
+      }
+      .timeline-line {
+        position: absolute;
+        left: 60px; right: 60px;
+        top: 100px;
+        height: 2px;
+        background: var(--line-strong);
+      }
+      .timeline-line::after {
+        content: "";
+        position: absolute;
+        left: 0; top: 0; height: 100%; width: 0%;
+        background: var(--amber);
+        box-shadow: 0 0 10px rgba(217,183,91,0.5);
+      }
+      .timeline-progress {
+        position: absolute;
+        left: 60px;
+        top: 100px;
+        height: 2px;
+        width: 0;
+        background: var(--amber);
+        box-shadow: 0 0 10px rgba(217,183,91,0.5);
+        z-index: 2;
+      }
+      .ph {
+        position: absolute;
+        top: 80px; transform: translateX(-50%);
+        width: 22px; height: 22px;
+        background: var(--amber);
+        box-shadow: 0 0 18px rgba(217,183,91,0.8);
+        opacity: 0;
+        z-index: 6;
+      }
+
+      .events {
+        position: relative;
+        height: 100%;
+      }
+      .event {
+        position: absolute;
+        text-align: center;
+        width: 200px;
+        transform: translateX(-50%);
+      }
+      .event .marker {
+        margin: 0 auto 14px;
+        width: 28px; height: 28px;
+        background: var(--bg);
+        border: 2px solid var(--line-strong);
+      }
+      .event .lbl {
+        font-size: 16px; font-weight: 600;
+        color: var(--ink);
+        text-transform: lowercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
+      .event .sub {
+        font-size: 12px; color: var(--dim);
+        letter-spacing: 0.18em; text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+      .event .hook {
+        margin: 0 auto;
+        width: 200px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 14px 16px;
+        font-size: 14px; line-height: 1.5;
+        color: var(--ink); text-align: left;
+      }
+      .event .hook .htag {
+        display: block;
+        font-size: 11px; letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 6px;
+      }
+      .event .hook code {
+        display: block;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        padding: 6px 8px;
+        font-size: 12px;
+        color: var(--green);
+        margin-top: 6px;
+      }
+      .event.lit .marker {
+        border-color: var(--amber);
+        background: var(--amber);
+        box-shadow: 0 0 18px rgba(217,183,91,0.7);
+      }
+      .event.lit .lbl { color: var(--amber); }
+      .event.lit .hook { border-color: var(--amber); box-shadow: 0 0 14px rgba(217,183,91,0.25); }
+      .event.lit .hook .htag { color: var(--amber); }
+
+      .e1 { left: 90px; top: 76px; }
+      .e2 { left: 290px; top: 76px; }
+      .e3 { left: 490px; top: 76px; }
+      .e4 { left: 690px; top: 76px; }
+      .e5 { left: 890px; top: 76px; }
+
+      /* Terminal panel */
+      .terminal-panel { grid-column: 2; grid-row: 2; min-width: 0; }
+      .terminal {
+        width: 100%; height: 100%;
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        display: flex; flex-direction: column;
+      }
+      .terminal-bar {
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 22px;
+        border-bottom: 1px solid var(--line);
+        font-size: 16px; color: var(--dim); letter-spacing: 0.12em;
+      }
+      .terminal-bar .tdot { width: 12px; height: 12px; }
+      .terminal-bar .tdot.r { background: #d96b5b; }
+      .terminal-bar .tdot.y { background: #d9b75b; }
+      .terminal-bar .tdot.g { background: #6ec588; }
+      .terminal-bar .bar-title { margin-left: 12px; text-transform: uppercase; }
+      .terminal-bar .bar-meta { margin-left: auto; opacity: 0.55; }
+      .terminal-body {
+        flex: 1; padding: 28px 32px;
+        font-size: 22px; line-height: 1.55;
+        overflow: hidden;
+      }
+      .log-line { margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .log-line .lo-tag {
+        display: inline-block; margin-right: 12px;
+        color: var(--amber); font-size: 18px; letter-spacing: 0.04em;
+      }
+      .log-line .ev { color: var(--blue); margin-right: 8px; }
+      .log-line .ok { color: var(--green); }
+      .log-line .blk { color: var(--red); }
+      .log-line.dim { color: var(--dim); font-size: 18px; }
+      .cursor {
+        display: inline-block; width: 12px; height: 22px;
+        background: var(--amber); vertical-align: -3px; margin-left: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+      <div class="grid"></div>
+      <div class="vignette"></div>
+      <div class="scanlines"></div>
+      <div class="crt-flicker" id="crtFlicker"></div>
+      <div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="corner-bl"></div><div class="corner-br"></div>
+      <div class="brand">CONTEXT COURSE · UNIT 5</div>
+
+      <div class="stage">
+        <div class="header">
+          <div class="chip" id="chip"><span class="dot"></span>UNIT 5 · HOOKS</div>
+          <h1 class="title" id="title"><span class="accent">&gt;</span>hook lifecycle</h1>
+          <p class="subtitle" id="subtitle">five events fire as the agent runs<span class="arr"> · </span>observe<span class="arr"> · </span>block<span class="arr"> · </span>automate</p>
+        </div>
+
+        <div class="timeline-panel">
+          <div class="timeline-line"></div>
+          <div class="timeline-progress" id="tlProgress"></div>
+          <div class="ph" id="playhead"></div>
+
+          <div class="events">
+            <div class="event e1" id="ev1">
+              <div class="marker"></div>
+              <div class="lbl">SessionStart</div>
+              <div class="sub">on launch</div>
+              <div class="hook">
+                <span class="htag">hook</span>
+                load context, warm caches
+                <code>$ ./scripts/init.sh</code>
+              </div>
+            </div>
+            <div class="event e2" id="ev2">
+              <div class="marker"></div>
+              <div class="lbl">UserPromptSubmit</div>
+              <div class="sub">prompt arrives</div>
+              <div class="hook">
+                <span class="htag">hook</span>
+                scan for secrets, redact
+                <code>$ rg -q "AKIA|sk-" &amp;&amp; deny</code>
+              </div>
+            </div>
+            <div class="event e3" id="ev3">
+              <div class="marker"></div>
+              <div class="lbl">PreToolUse</div>
+              <div class="sub">before tool call</div>
+              <div class="hook">
+                <span class="htag">hook</span>
+                block dangerous tools
+                <code>$ check_allowlist "$tool"</code>
+              </div>
+            </div>
+            <div class="event e4" id="ev4">
+              <div class="marker"></div>
+              <div class="lbl">PostToolUse</div>
+              <div class="sub">after result</div>
+              <div class="hook">
+                <span class="htag">hook</span>
+                audit + log to dashboard
+                <code>$ curl post /events</code>
+              </div>
+            </div>
+            <div class="event e5" id="ev5">
+              <div class="marker"></div>
+              <div class="lbl">Stop</div>
+              <div class="sub">turn finished</div>
+              <div class="hook">
+                <span class="htag">hook</span>
+                save artifacts, notify
+                <code>$ ./scripts/cleanup.sh</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="terminal-panel">
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span>
+              <span class="bar-title">hooks.log</span>
+              <span class="bar-meta" id="barMeta">live</span>
+            </div>
+            <div class="terminal-body">
+              <div class="log-line dim" id="ll0">$ tail -f ~/.claude/logs/hooks.log</div>
+              <div class="log-line" id="ll1"><span class="lo-tag">▶</span><span class="ev">SessionStart</span>context loaded · 3 skills · 2 mcp</div>
+              <div class="log-line" id="ll2"><span class="lo-tag">▶</span><span class="ev">UserPromptSubmit</span><span class="ok">ok</span> · no secrets detected</div>
+              <div class="log-line" id="ll3"><span class="lo-tag">▶</span><span class="ev">PreToolUse</span><span class="ok">allow</span> · read_file in workspace</div>
+              <div class="log-line" id="ll4"><span class="lo-tag">▶</span><span class="ev">PostToolUse</span>logged · 412 bytes returned</div>
+              <div class="log-line" id="ll5"><span class="lo-tag">▶</span><span class="ev">Stop</span>artifacts saved · slack pinged<span class="cursor" id="cursor"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo(".grid",
+        { backgroundPosition: "0 0, 0 0" },
+        { backgroundPosition: "120px 120px, 120px 120px", duration: 12, ease: "none" }, 0);
+
+      [1.4, 4.0, 6.4, 8.8, 11.0].forEach(t => {
+        tl.to("#crtFlicker", { opacity: 0.32, duration: 0.05, ease: "power2.in" }, t)
+          .to("#crtFlicker", { opacity: 0, duration: 0.18, ease: "power2.out" }, t + 0.05);
+      });
+
+      tl.from("#chip",     { opacity: 0, x: -30, duration: 0.40, ease: "power3.out" }, 0.10);
+      tl.from("#title",    { opacity: 0, y: 50,  duration: 0.60, ease: "expo.out"   }, 0.25);
+      tl.from("#subtitle", { opacity: 0, y: 24,  duration: 0.45, ease: "power3.out" }, 0.50);
+
+      // Timeline line draws in
+      tl.fromTo(".timeline-line",
+        { scaleX: 0 },
+        { scaleX: 1, transformOrigin: "left center", duration: 0.65, ease: "expo.out" }, 0.65);
+
+      // Events appear (markers + labels first, then hook cards stagger)
+      const events = ["#ev1", "#ev2", "#ev3", "#ev4", "#ev5"];
+      events.forEach((sel, i) => {
+        const t = 0.85 + i * 0.10;
+        tl.from(`${sel} .marker`, { opacity: 0, scale: 0, duration: 0.30, ease: "back.out(1.7)", transformOrigin: "center" }, t);
+        tl.from(`${sel} .lbl`, { opacity: 0, y: -8, duration: 0.25, ease: "power2.out" }, t + 0.10);
+        tl.from(`${sel} .sub`, { opacity: 0, y: -6, duration: 0.22, ease: "power2.out" }, t + 0.18);
+        tl.from(`${sel} .hook`, { opacity: 0, y: 12, duration: 0.35, ease: "power3.out" }, t + 0.25);
+      });
+
+      // Terminal frame
+      tl.from(".terminal", { opacity: 0, x: 60, duration: 0.55, ease: "power3.out" }, 0.55);
+      tl.from(".terminal-bar > *", { opacity: 0, y: -8, duration: 0.30, stagger: 0.05, ease: "power2.out" }, 0.95);
+
+      tl.from("#ll0", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 1.30);
+
+      // Playhead launches
+      // Event x-positions (within timeline-panel): e1=90+30(panel pad)=actually translate-x means event center is at left value.
+      // Playhead `top: 80px` is offset from timeline-panel padding.
+      // We want playhead to slide horizontally from each event to next.
+      // Set playhead initial position to e1 center (event has translateX(-50%); left=90 means center is at left=90 within events container).
+      // events container is inside .timeline-panel which has padding 40 30. Pixel positions need to account for that.
+      // Easier: the playhead is positioned absolutely within timeline-panel. event 1 center at x=120 (90 + 30 panel padding).
+      // Keep it simple: position playhead via left in timeline-panel coords:
+      // Events: e1 left=90, e2 left=290, e3 left=490, e4 left=690, e5 left=890 (each within events container)
+      // events container starts at panel padding x=30, y=40. The event uses translateX(-50%) so visual center is at left value within its container.
+      // So in timeline-panel coordinates, event centers are at: 30 + 90 = 120, 320, 520, 720, 920.
+      // Playhead has translateX(-50%); set left in timeline-panel coords.
+      const evX = [120, 320, 520, 720, 920];
+
+      function fireHook(idx, t) {
+        // Light up event
+        tl.to(events[idx], { className: `event e${idx + 1} lit`, duration: 0.0 }, t);
+        // Move playhead
+        tl.to("#playhead", { left: evX[idx], duration: 0.0 }, t);
+        if (idx === 0) {
+          tl.to("#playhead", { opacity: 1, duration: 0.15, ease: "power2.out" }, t);
+        }
+        // Marker pulse: a quick scale flash
+        tl.to(`${events[idx]} .marker`, {
+          scale: 1.4, duration: 0.18, ease: "power2.out", transformOrigin: "center"
+        }, t);
+        tl.to(`${events[idx]} .marker`, {
+          scale: 1.0, duration: 0.30, ease: "power2.in", transformOrigin: "center"
+        }, t + 0.18);
+        // Update progress fill
+        const fillTo = (idx === 0) ? 0 : evX[idx] - 60;
+        tl.to("#tlProgress", { width: fillTo, duration: 0.40, ease: "power2.inOut" }, t - 0.40);
+        // Log line appear
+        const llSel = `#ll${idx + 1}`;
+        tl.from(llSel, { opacity: 0, x: -10, duration: 0.35, ease: "power3.out" }, t + 0.10);
+      }
+
+      // Initial setup of playhead
+      tl.set("#playhead", { left: evX[0], opacity: 0 }, 1.40);
+
+      fireHook(0, 1.80);   // SessionStart
+      fireHook(1, 3.40);   // UserPromptSubmit
+      fireHook(2, 5.20);   // PreToolUse
+      fireHook(3, 7.00);   // PostToolUse
+      fireHook(4, 8.80);   // Stop
+
+      // Final progress fill to end
+      tl.to("#tlProgress", { width: evX[4] - 60, duration: 0.40, ease: "power2.inOut" }, 8.40);
+
+      // Hold: all events lit
+      tl.to(["#ev1 .marker", "#ev2 .marker", "#ev3 .marker", "#ev4 .marker", "#ev5 .marker"], {
+        boxShadow: "0 0 22px rgba(217,183,91,0.7)",
+        duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 2
+      }, 10.20);
+
+      tl.fromTo("#cursor",
+        { opacity: 1 },
+        { opacity: 0, duration: 0.45, ease: "none", repeat: 22, yoyo: true },
+        1.5);
+      tl.fromTo("#barMeta",
+        { opacity: 0.55 },
+        { opacity: 1, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 10 },
+        1.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
