@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root {
+        --bg: #07080a; --panel: #0c0e11;
+        --ink: #e8e6df; --dim: #b5b5ab;
+        --line: #2a2c30; --line-strong: #4a4d52;
+        --amber: #d9b75b; --green: #6ec588; --blue: #7da4ff;
+      }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: var(--bg); color: var(--ink);
+        font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      .grid {
+        position: absolute; inset: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+        z-index: 0;
+      }
+      .scanlines {
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(to bottom,
+          rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px,
+          transparent 1px, transparent 4px);
+        pointer-events: none; z-index: 50;
+      }
+      .vignette {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+        pointer-events: none; z-index: 49;
+      }
+      .crt-flicker {
+        position: absolute; inset: 0;
+        background: rgba(217,183,91,0.04);
+        pointer-events: none; z-index: 48; opacity: 0;
+      }
+      .corner-tl, .corner-tr, .corner-bl, .corner-br {
+        position: absolute; width: 32px; height: 32px;
+        border: 3px solid var(--line-strong); z-index: 40;
+      }
+      .corner-tl { top: 24px; left: 24px; border-right: 0; border-bottom: 0; }
+      .corner-tr { top: 24px; right: 24px; border-left: 0; border-bottom: 0; }
+      .corner-bl { bottom: 24px; left: 24px; border-right: 0; border-top: 0; }
+      .corner-br { bottom: 24px; right: 24px; border-left: 0; border-top: 0; }
+      .brand {
+        position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+        font-size: 16px; opacity: 0.45;
+        letter-spacing: 0.32em; text-transform: uppercase; z-index: 40;
+      }
+
+      .stage {
+        position: absolute; inset: 0; z-index: 10;
+        display: grid;
+        grid-template-columns: 360px 1fr 360px;
+        grid-template-rows: auto 1fr;
+        gap: 28px 36px;
+        padding: 64px 80px 80px;
+      }
+      .header {
+        grid-column: 1 / -1; grid-row: 1;
+        display: flex; flex-direction: column; gap: 14px;
+      }
+      .chip {
+        display: inline-flex; align-items: center; gap: 14px;
+        padding: 10px 18px;
+        font-size: 18px; letter-spacing: 0.22em;
+        border: 1px solid var(--line-strong); align-self: flex-start;
+      }
+      .chip .dot {
+        width: 10px; height: 10px;
+        background: var(--amber); box-shadow: 0 0 12px rgba(217,183,91,0.6);
+      }
+      .title { font-size: 88px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.0; text-transform: lowercase; }
+      .title .accent { color: var(--amber); margin-right: 18px; }
+      .subtitle { font-size: 28px; font-weight: 400; color: var(--dim); }
+      .subtitle .arr { color: var(--amber); margin: 0 6px; }
+
+      /* Endpoint boxes */
+      .endpoint {
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        padding: 32px 28px;
+        display: flex; flex-direction: column; gap: 14px;
+        align-self: center;
+        height: 360px;
+        justify-content: center;
+      }
+      .endpoint .role {
+        font-size: 16px; letter-spacing: 0.28em;
+        text-transform: uppercase; color: var(--dim);
+      }
+      .endpoint .name {
+        font-size: 56px; font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .endpoint .meta {
+        font-size: 18px; color: var(--dim); line-height: 1.5;
+      }
+      .endpoint.client { border-color: var(--amber); }
+      .endpoint.client .name { color: var(--amber); }
+      .endpoint.server { border-color: var(--blue); }
+      .endpoint.server .name { color: var(--blue); }
+
+      .left { grid-column: 1; grid-row: 2; display: flex; align-items: center; justify-content: stretch; }
+      .right { grid-column: 3; grid-row: 2; display: flex; align-items: center; justify-content: stretch; }
+      .left .endpoint, .right .endpoint { width: 100%; }
+
+      /* Center wire + messages */
+      .wire {
+        grid-column: 2; grid-row: 2;
+        position: relative;
+      }
+      .wire-line {
+        position: absolute; left: 0; right: 0; top: 50%;
+        height: 2px; transform: translateY(-50%);
+        background: linear-gradient(90deg, var(--amber), var(--blue));
+        opacity: 0.4;
+        z-index: 1;
+      }
+      .protocol-tag {
+        position: absolute; left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--bg);
+        border: 1px solid var(--line-strong);
+        padding: 8px 18px;
+        font-size: 14px;
+        letter-spacing: 0.22em;
+        color: var(--dim);
+        z-index: 2;
+      }
+
+      .messages {
+        position: relative; z-index: 5;
+        display: flex; flex-direction: column;
+        gap: 14px;
+        padding: 24px 0;
+      }
+      .msg {
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        padding: 14px 20px;
+        font-size: 18px;
+        line-height: 1.4;
+      }
+      .msg .row1 {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 8px;
+      }
+      .msg .arr {
+        font-size: 22px;
+      }
+      .msg .method {
+        font-weight: 600; color: var(--ink);
+      }
+      .msg .id {
+        margin-left: auto;
+        font-size: 13px; color: var(--dim);
+        letter-spacing: 0.12em;
+      }
+      .msg .json {
+        font-size: 15px; color: var(--dim);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .msg .json .k { color: var(--blue); }
+      .msg .json .s { color: var(--green); }
+      .msg .json .n { color: var(--amber); }
+      .msg.req {
+        border-left: 3px solid var(--amber);
+      }
+      .msg.req .arr { color: var(--amber); }
+      .msg.req .method { color: var(--amber); }
+      .msg.res {
+        border-left: 3px solid var(--blue);
+      }
+      .msg.res .arr { color: var(--blue); }
+      .msg.res .method { color: var(--blue); }
+
+      .pulse-dot {
+        position: absolute;
+        top: 50%; transform: translateY(-50%);
+        width: 14px; height: 14px;
+        background: var(--amber);
+        box-shadow: 0 0 16px rgba(217,183,91,0.7);
+        opacity: 0;
+        z-index: 3;
+      }
+
+      .endpoint-bullet {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        width: 18px; height: 18px;
+        background: var(--bg);
+        border: 2px solid var(--line-strong);
+        z-index: 4;
+      }
+      .endpoint-bullet.left-bullet { left: -8px; }
+      .endpoint-bullet.right-bullet { right: -8px; }
+      .endpoint-bullet.lit-amber { border-color: var(--amber); background: var(--amber); box-shadow: 0 0 18px rgba(217,183,91,0.7); }
+      .endpoint-bullet.lit-blue { border-color: var(--blue); background: var(--blue); box-shadow: 0 0 18px rgba(125,164,255,0.7); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+      <div class="grid"></div>
+      <div class="vignette"></div>
+      <div class="scanlines"></div>
+      <div class="crt-flicker" id="crtFlicker"></div>
+      <div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="corner-bl"></div><div class="corner-br"></div>
+      <div class="brand">CONTEXT COURSE · UNIT 2</div>
+
+      <div class="stage">
+        <div class="header">
+          <div class="chip" id="chip"><span class="dot"></span>UNIT 2 · MCP HANDSHAKE</div>
+          <h1 class="title" id="title"><span class="accent">&gt;</span>mcp handshake</h1>
+          <p class="subtitle" id="subtitle">json-rpc<span class="arr"> · </span>initialize<span class="arr">→</span>tools/list<span class="arr">→</span>tools/call</p>
+        </div>
+
+        <div class="left">
+          <div class="endpoint client" id="clientBox">
+            <div class="role">client</div>
+            <div class="name">agent</div>
+            <div class="meta">claude code · stdio transport</div>
+          </div>
+        </div>
+
+        <div class="wire" id="wire">
+          <div class="wire-line"></div>
+          <div class="endpoint-bullet left-bullet" id="bulletL"></div>
+          <div class="endpoint-bullet right-bullet" id="bulletR"></div>
+          <div class="protocol-tag" id="protoTag">json-rpc 2.0</div>
+          <div class="pulse-dot" id="pulse"></div>
+
+          <div class="messages" id="messages">
+            <div class="msg req" id="m1">
+              <div class="row1">
+                <span class="arr">→</span>
+                <span class="method">initialize</span>
+                <span class="id">id 1</span>
+              </div>
+              <div class="json"><span class="k">"protocolVersion"</span>: <span class="s">"2025-06"</span>, <span class="k">"clientInfo"</span>: { <span class="k">"name"</span>: <span class="s">"claude-code"</span> }</div>
+            </div>
+            <div class="msg res" id="m2">
+              <div class="row1">
+                <span class="arr">←</span>
+                <span class="method">result</span>
+                <span class="id">id 1</span>
+              </div>
+              <div class="json"><span class="k">"capabilities"</span>: { <span class="k">"tools"</span>: { }, <span class="k">"resources"</span>: { } }</div>
+            </div>
+            <div class="msg req" id="m3">
+              <div class="row1">
+                <span class="arr">→</span>
+                <span class="method">tools/list</span>
+                <span class="id">id 2</span>
+              </div>
+              <div class="json"><span class="k">"params"</span>: { } &nbsp;&nbsp;<span class="s">// what tools do you have?</span></div>
+            </div>
+            <div class="msg res" id="m4">
+              <div class="row1">
+                <span class="arr">←</span>
+                <span class="method">result</span>
+                <span class="id">id 2</span>
+              </div>
+              <div class="json"><span class="k">"tools"</span>: [ <span class="s">"read_file"</span>, <span class="s">"search"</span>, <span class="s">"upload"</span> ]</div>
+            </div>
+            <div class="msg req" id="m5">
+              <div class="row1">
+                <span class="arr">→</span>
+                <span class="method">tools/call</span>
+                <span class="id">id 3</span>
+              </div>
+              <div class="json"><span class="k">"name"</span>: <span class="s">"read_file"</span>, <span class="k">"arguments"</span>: { <span class="k">"path"</span>: <span class="s">"auth.py"</span> }</div>
+            </div>
+            <div class="msg res" id="m6">
+              <div class="row1">
+                <span class="arr">←</span>
+                <span class="method">result</span>
+                <span class="id">id 3</span>
+              </div>
+              <div class="json"><span class="k">"content"</span>: [ { <span class="k">"type"</span>: <span class="s">"text"</span>, <span class="k">"text"</span>: <span class="s">"import jwt..."</span> } ]</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right">
+          <div class="endpoint server" id="serverBox">
+            <div class="role">server</div>
+            <div class="name">mcp</div>
+            <div class="meta">read_file · search · upload</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo(".grid",
+        { backgroundPosition: "0 0, 0 0" },
+        { backgroundPosition: "120px 120px, 120px 120px", duration: 12, ease: "none" }, 0);
+
+      [1.4, 4.0, 6.6, 9.4, 11.0].forEach(t => {
+        tl.to("#crtFlicker", { opacity: 0.32, duration: 0.05, ease: "power2.in" }, t)
+          .to("#crtFlicker", { opacity: 0, duration: 0.18, ease: "power2.out" }, t + 0.05);
+      });
+
+      // Header
+      tl.from("#chip",     { opacity: 0, x: -30, duration: 0.40, ease: "power3.out" }, 0.10);
+      tl.from("#title",    { opacity: 0, y: 50,  duration: 0.60, ease: "expo.out"   }, 0.25);
+      tl.from("#subtitle", { opacity: 0, y: 24,  duration: 0.45, ease: "power3.out" }, 0.50);
+
+      // Endpoints
+      tl.from("#clientBox", { opacity: 0, x: -50, duration: 0.55, ease: "power3.out" }, 0.55);
+      tl.from("#serverBox", { opacity: 0, x:  50, duration: 0.55, ease: "power3.out" }, 0.55);
+      // Wire line
+      tl.from(".wire-line", { scaleX: 0, transformOrigin: "left center", duration: 0.55, ease: "power2.out" }, 0.85);
+      tl.from("#protoTag", { opacity: 0, scale: 0.7, duration: 0.40, ease: "back.out(1.6)", transformOrigin: "center" }, 1.10);
+
+      // Bullets neutral
+      tl.from(["#bulletL", "#bulletR"], {
+        opacity: 0, scale: 0.4, duration: 0.35,
+        stagger: 0.08, ease: "back.out(1.6)", transformOrigin: "center"
+      }, 1.00);
+
+      // Messages start hidden
+      tl.set(["#m1","#m2","#m3","#m4","#m5","#m6"], { opacity: 0 }, 0);
+
+      // ============================
+      // Helper: send a request from client → server
+      // bullet on the originating side lights up, pulse travels, message reveals
+      // ============================
+      function sendRequest(msgSel, t) {
+        // Light client bullet
+        tl.to("#bulletL", { className: "endpoint-bullet left-bullet lit-amber", duration: 0.0 }, t);
+        // Pulse from left to right
+        tl.set("#pulse", { left: 0, opacity: 0, backgroundColor: "#d9b75b" }, t + 0.05);
+        tl.to("#pulse", { opacity: 1, duration: 0.10, ease: "power2.out" }, t + 0.05);
+        tl.to("#pulse", { left: "100%", duration: 0.50, ease: "power2.inOut" }, t + 0.05);
+        tl.to("#pulse", { opacity: 0, duration: 0.10, ease: "power2.in" }, t + 0.55);
+        // Message reveal
+        tl.fromTo(msgSel,
+          { opacity: 0, x: -30 },
+          { opacity: 1, x: 0, duration: 0.40, ease: "power3.out" }, t + 0.10);
+        // Light server bullet
+        tl.to("#bulletR", { className: "endpoint-bullet right-bullet lit-blue", duration: 0.0 }, t + 0.55);
+        // Reset client bullet
+        tl.to("#bulletL", { className: "endpoint-bullet left-bullet", duration: 0.0 }, t + 0.85);
+      }
+
+      function sendResponse(msgSel, t) {
+        tl.to("#bulletR", { className: "endpoint-bullet right-bullet lit-blue", duration: 0.0 }, t);
+        tl.set("#pulse", { left: "100%", opacity: 0, backgroundColor: "#7da4ff" }, t + 0.05);
+        tl.to("#pulse", { opacity: 1, duration: 0.10, ease: "power2.out" }, t + 0.05);
+        tl.to("#pulse", { left: 0, duration: 0.50, ease: "power2.inOut" }, t + 0.05);
+        tl.to("#pulse", { opacity: 0, duration: 0.10, ease: "power2.in" }, t + 0.55);
+        tl.fromTo(msgSel,
+          { opacity: 0, x: 30 },
+          { opacity: 1, x: 0, duration: 0.40, ease: "power3.out" }, t + 0.10);
+        tl.to("#bulletL", { className: "endpoint-bullet left-bullet lit-amber", duration: 0.0 }, t + 0.55);
+        tl.to("#bulletR", { className: "endpoint-bullet right-bullet", duration: 0.0 }, t + 0.85);
+      }
+
+      // ============================
+      // Sequence: 3 request/response pairs
+      // ============================
+      sendRequest("#m1", 1.40);   // initialize →
+      sendResponse("#m2", 2.40);  // ← capabilities
+      sendRequest("#m3", 3.80);   // tools/list →
+      sendResponse("#m4", 4.80);  // ← tools array
+      sendRequest("#m5", 6.20);   // tools/call →
+      sendResponse("#m6", 7.40);  // ← result
+
+      // ============================
+      // Phase: handshake established (8.6 — 12.0)
+      // ============================
+      // Both bullets settle lit
+      tl.to("#bulletL", { className: "endpoint-bullet left-bullet lit-amber", duration: 0.0 }, 8.80);
+      tl.to("#bulletR", { className: "endpoint-bullet right-bullet lit-blue", duration: 0.0 }, 8.80);
+
+      // Protocol tag shifts to "established"
+      tl.to("#protoTag", { color: "#6ec588", borderColor: "#6ec588", duration: 0.30, ease: "power2.out" }, 8.90);
+      tl.to("#protoTag", { textContent: "" }, 8.90);
+      tl.set("#protoTag", { innerHTML: "✓ connected" }, 9.00);
+
+      // Wire line glows
+      tl.to(".wire-line", { opacity: 0.85, duration: 0.40, ease: "power2.out" }, 9.00);
+
+      // Subtle data trickle along the line (pulse re-runs)
+      tl.set("#pulse", { left: 0, opacity: 0, backgroundColor: "#6ec588" }, 9.50);
+      tl.to("#pulse", { opacity: 1, duration: 0.10, ease: "power2.out" }, 9.50);
+      tl.to("#pulse", { left: "100%", duration: 1.00, ease: "none" }, 9.50);
+      tl.to("#pulse", { opacity: 0, duration: 0.20, ease: "power2.in" }, 10.40);
+
+      tl.set("#pulse", { left: 0, opacity: 0, backgroundColor: "#6ec588" }, 10.80);
+      tl.to("#pulse", { opacity: 1, duration: 0.10, ease: "power2.out" }, 10.80);
+      tl.to("#pulse", { left: "100%", duration: 1.00, ease: "none" }, 10.80);
+      tl.to("#pulse", { opacity: 0, duration: 0.20, ease: "power2.in" }, 11.70);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

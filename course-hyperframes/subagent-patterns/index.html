@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root {
+        --bg: #07080a; --panel: #0c0e11;
+        --ink: #e8e6df; --dim: #b5b5ab;
+        --line: #2a2c30; --line-strong: #4a4d52;
+        --amber: #d9b75b; --green: #6ec588; --blue: #7da4ff;
+      }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: var(--bg); color: var(--ink);
+        font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      .grid {
+        position: absolute; inset: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+        z-index: 0;
+      }
+      .scanlines {
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(to bottom,
+          rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px,
+          transparent 1px, transparent 4px);
+        pointer-events: none; z-index: 50;
+      }
+      .vignette {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+        pointer-events: none; z-index: 49;
+      }
+      .crt-flicker {
+        position: absolute; inset: 0;
+        background: rgba(217,183,91,0.04);
+        pointer-events: none; z-index: 48; opacity: 0;
+      }
+      .corner-tl, .corner-tr, .corner-bl, .corner-br {
+        position: absolute; width: 32px; height: 32px;
+        border: 3px solid var(--line-strong); z-index: 40;
+      }
+      .corner-tl { top: 24px; left: 24px; border-right: 0; border-bottom: 0; }
+      .corner-tr { top: 24px; right: 24px; border-left: 0; border-bottom: 0; }
+      .corner-bl { bottom: 24px; left: 24px; border-right: 0; border-top: 0; }
+      .corner-br { bottom: 24px; right: 24px; border-left: 0; border-top: 0; }
+      .brand {
+        position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+        font-size: 16px; opacity: 0.45;
+        letter-spacing: 0.32em; text-transform: uppercase; z-index: 40;
+      }
+
+      .stage {
+        position: absolute; inset: 0; z-index: 10;
+        display: grid;
+        grid-template-rows: auto 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px 32px;
+        padding: 56px 80px 80px;
+      }
+      .header {
+        grid-column: 1 / -1; grid-row: 1;
+        display: flex; flex-direction: column; gap: 12px;
+      }
+      .chip {
+        display: inline-flex; align-items: center; gap: 14px;
+        padding: 10px 18px;
+        font-size: 18px; letter-spacing: 0.22em;
+        border: 1px solid var(--line-strong); align-self: flex-start;
+      }
+      .chip .dot {
+        width: 10px; height: 10px;
+        background: var(--amber); box-shadow: 0 0 12px rgba(217,183,91,0.6);
+      }
+      .title { font-size: 72px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.0; text-transform: lowercase; }
+      .title .accent { color: var(--amber); margin-right: 18px; }
+      .subtitle { font-size: 24px; font-weight: 400; color: var(--dim); }
+      .subtitle .arr { color: var(--amber); margin: 0 6px; }
+
+      .pattern {
+        position: relative;
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        padding: 24px 28px;
+        display: flex; flex-direction: column;
+      }
+      .pattern .ptitle {
+        font-size: 26px; font-weight: 600;
+        margin-bottom: 4px;
+        color: var(--ink);
+      }
+      .pattern .ptitle .num {
+        display: inline-block; margin-right: 12px;
+        color: var(--amber);
+      }
+      .pattern .pdesc {
+        font-size: 15px; color: var(--dim);
+        margin-bottom: 16px;
+      }
+      .pattern .pcanvas {
+        flex: 1;
+        position: relative;
+      }
+      .pattern .pcanvas svg {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%;
+      }
+      .pattern .pcanvas .node {
+        position: absolute;
+        background: var(--bg);
+        border: 1px solid var(--line-strong);
+        font-size: 14px;
+        display: grid; place-items: center;
+        padding: 0 10px;
+        text-align: center;
+      }
+      .pattern .pcanvas .node.root,
+      .pattern .pcanvas .node.lead {
+        border-color: var(--amber);
+        color: var(--amber);
+      }
+      .pattern .pcanvas .pulse-dot {
+        position: absolute;
+        width: 10px; height: 10px;
+        background: var(--amber);
+        box-shadow: 0 0 14px rgba(217,183,91,0.7);
+        opacity: 0;
+      }
+
+      .pattern .pcanvas svg path.edge {
+        stroke: var(--line-strong); stroke-width: 2; fill: none;
+        stroke-dasharray: 600; stroke-dashoffset: 600;
+      }
+
+      .p1 { grid-column: 1; grid-row: 2; }
+      .p2 { grid-column: 2; grid-row: 2; }
+      .p3 { grid-column: 1; grid-row: 3; }
+      .p4 { grid-column: 2; grid-row: 3; }
+      .pattern.active { border-color: var(--amber); box-shadow: 0 0 22px rgba(217,183,91,0.30); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+      <div class="grid"></div>
+      <div class="vignette"></div>
+      <div class="scanlines"></div>
+      <div class="crt-flicker" id="crtFlicker"></div>
+      <div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="corner-bl"></div><div class="corner-br"></div>
+      <div class="brand">CONTEXT COURSE · UNIT 4</div>
+
+      <div class="stage">
+        <div class="header">
+          <div class="chip" id="chip"><span class="dot"></span>UNIT 4 · SUBAGENTS</div>
+          <h1 class="title" id="title"><span class="accent">&gt;</span>four patterns</h1>
+          <p class="subtitle" id="subtitle">fan-out<span class="arr"> · </span>pipeline<span class="arr"> · </span>supervisor<span class="arr"> · </span>swarm</p>
+        </div>
+
+        <!-- Pattern 1: Fan-out / Fan-in -->
+        <div class="pattern p1" id="P1">
+          <div class="ptitle"><span class="num">01.</span>fan-out / fan-in</div>
+          <div class="pdesc">parent splits work across parallel children, then merges results</div>
+          <div class="pcanvas">
+            <svg viewBox="0 0 800 360" preserveAspectRatio="none">
+              <path id="p1e1" class="edge" d="M 400 50 C 240 50, 200 80, 200 140" />
+              <path id="p1e2" class="edge" d="M 400 50 L 400 140" />
+              <path id="p1e3" class="edge" d="M 400 50 C 560 50, 600 80, 600 140" />
+              <path id="p1e4" class="edge" d="M 200 220 C 200 280, 240 310, 400 310" />
+              <path id="p1e5" class="edge" d="M 400 220 L 400 310" />
+              <path id="p1e6" class="edge" d="M 600 220 C 600 280, 560 310, 400 310" />
+            </svg>
+            <div class="node root" style="left: 320px; top: 18px; width: 160px; height: 60px;">orchestrator</div>
+            <div class="node" style="left: 120px; top: 138px; width: 160px; height: 60px;">explorer</div>
+            <div class="node" style="left: 320px; top: 138px; width: 160px; height: 60px;">implementer</div>
+            <div class="node" style="left: 520px; top: 138px; width: 160px; height: 60px;">reviewer</div>
+            <div class="node" style="left: 320px; top: 282px; width: 160px; height: 60px;">synthesis</div>
+            <div class="pulse-dot" id="p1pulse1"></div>
+            <div class="pulse-dot" id="p1pulse2"></div>
+            <div class="pulse-dot" id="p1pulse3"></div>
+          </div>
+        </div>
+
+        <!-- Pattern 2: Pipeline -->
+        <div class="pattern p2" id="P2">
+          <div class="ptitle"><span class="num">02.</span>pipeline</div>
+          <div class="pdesc">output of one stage feeds the next — sequential, deterministic</div>
+          <div class="pcanvas">
+            <svg viewBox="0 0 800 360" preserveAspectRatio="none">
+              <defs>
+                <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a8a82" />
+                </marker>
+              </defs>
+              <path id="p2e1" class="edge" d="M 195 180 L 230 180" marker-end="url(#arr2)" />
+              <path id="p2e2" class="edge" d="M 395 180 L 430 180" marker-end="url(#arr2)" />
+              <path id="p2e3" class="edge" d="M 595 180 L 630 180" marker-end="url(#arr2)" />
+            </svg>
+            <div class="node lead" style="left: 30px; top: 150px; width: 160px; height: 60px;">research</div>
+            <div class="node" style="left: 230px; top: 150px; width: 160px; height: 60px;">plan</div>
+            <div class="node" style="left: 430px; top: 150px; width: 160px; height: 60px;">code</div>
+            <div class="node" style="left: 630px; top: 150px; width: 160px; height: 60px;">test</div>
+            <div class="pulse-dot" id="p2pulse"></div>
+          </div>
+        </div>
+
+        <!-- Pattern 3: Supervisor -->
+        <div class="pattern p3" id="P3">
+          <div class="ptitle"><span class="num">03.</span>supervisor</div>
+          <div class="pdesc">router picks a specialist for each task — dynamic dispatch</div>
+          <div class="pcanvas">
+            <svg viewBox="0 0 800 360" preserveAspectRatio="none">
+              <path id="p3e1" class="edge" d="M 400 50 C 240 50, 200 110, 200 170" />
+              <path id="p3e2" class="edge" d="M 400 50 L 400 170" />
+              <path id="p3e3" class="edge" d="M 400 50 C 560 50, 600 110, 600 170" />
+            </svg>
+            <div class="node lead" style="left: 320px; top: 18px; width: 160px; height: 56px;">supervisor</div>
+            <div class="node" style="left: 120px; top: 168px; width: 160px; height: 56px;">sql expert</div>
+            <div class="node" style="left: 320px; top: 168px; width: 160px; height: 56px;">js expert</div>
+            <div class="node" style="left: 520px; top: 168px; width: 160px; height: 56px;">ml expert</div>
+            <div class="pulse-dot" id="p3pulse"></div>
+          </div>
+        </div>
+
+        <!-- Pattern 4: Swarm -->
+        <div class="pattern p4" id="P4">
+          <div class="ptitle"><span class="num">04.</span>swarm</div>
+          <div class="pdesc">peer agents talk laterally — no central authority, emergent coordination</div>
+          <div class="pcanvas">
+            <svg viewBox="0 0 800 360" preserveAspectRatio="none">
+              <path id="p4e1" class="edge" d="M 280 70 L 520 70" />
+              <path id="p4e2" class="edge" d="M 280 230 L 520 230" />
+              <path id="p4e3" class="edge" d="M 220 100 L 220 200" />
+              <path id="p4e4" class="edge" d="M 580 100 L 580 200" />
+              <path id="p4e5" class="edge" d="M 280 100 L 520 200" />
+              <path id="p4e6" class="edge" d="M 520 100 L 280 200" />
+            </svg>
+            <div class="node" style="left: 140px; top: 40px; width: 160px; height: 56px;">peer · alpha</div>
+            <div class="node" style="left: 500px; top: 40px; width: 160px; height: 56px;">peer · beta</div>
+            <div class="node" style="left: 140px; top: 200px; width: 160px; height: 56px;">peer · gamma</div>
+            <div class="node" style="left: 500px; top: 200px; width: 160px; height: 56px;">peer · delta</div>
+            <div class="pulse-dot" id="p4pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo(".grid",
+        { backgroundPosition: "0 0, 0 0" },
+        { backgroundPosition: "120px 120px, 120px 120px", duration: 12, ease: "none" }, 0);
+
+      [1.4, 4.4, 6.8, 9.2, 11.0].forEach(t => {
+        tl.to("#crtFlicker", { opacity: 0.32, duration: 0.05, ease: "power2.in" }, t)
+          .to("#crtFlicker", { opacity: 0, duration: 0.18, ease: "power2.out" }, t + 0.05);
+      });
+
+      // Header
+      tl.from("#chip",     { opacity: 0, x: -30, duration: 0.40, ease: "power3.out" }, 0.10);
+      tl.from("#title",    { opacity: 0, y: 50,  duration: 0.60, ease: "expo.out"   }, 0.25);
+      tl.from("#subtitle", { opacity: 0, y: 24,  duration: 0.45, ease: "power3.out" }, 0.50);
+
+      // All 4 panel frames slide in (small, just to give shape)
+      tl.from("#P1", { opacity: 0, y: 30, duration: 0.50, ease: "power3.out" }, 0.65);
+      tl.from("#P2", { opacity: 0, y: 30, duration: 0.50, ease: "power3.out" }, 0.75);
+      tl.from("#P3", { opacity: 0, y: 30, duration: 0.50, ease: "power3.out" }, 0.85);
+      tl.from("#P4", { opacity: 0, y: 30, duration: 0.50, ease: "power3.out" }, 0.95);
+
+      // Internals start hidden
+      tl.set(["#P1 .node", "#P2 .node", "#P3 .node", "#P4 .node"], { opacity: 0 }, 0);
+
+      // ============================
+      // PATTERN 1: Fan-out (1.5 — 4.0)
+      // ============================
+      tl.to("#P1", { borderColor: "#d9b75b", boxShadow: "0 0 22px rgba(217,183,91,0.30)", duration: 0.30, ease: "power2.out" }, 1.50);
+      tl.to("#P1 .node.root", { opacity: 1, duration: 0.30, ease: "power2.out" }, 1.55);
+      tl.fromTo("#p1e1", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 1.80);
+      tl.fromTo("#p1e2", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 1.90);
+      tl.fromTo("#p1e3", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 2.00);
+      tl.from("#P1 .node:nth-of-type(2)", { opacity: 0, y: -20, duration: 0.35, ease: "back.out(1.4)" }, 2.20);
+      tl.from("#P1 .node:nth-of-type(3)", { opacity: 0, y: -20, duration: 0.35, ease: "back.out(1.4)" }, 2.30);
+      tl.from("#P1 .node:nth-of-type(4)", { opacity: 0, y: -20, duration: 0.35, ease: "back.out(1.4)" }, 2.40);
+      tl.fromTo("#p1e4", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 2.70);
+      tl.fromTo("#p1e5", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 2.80);
+      tl.fromTo("#p1e6", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 2.90);
+      tl.from("#P1 .node:nth-of-type(5)", { opacity: 0, y: 20, duration: 0.35, ease: "back.out(1.4)" }, 3.10);
+      // Three parallel pulses going down
+      function pulseTravel(sel, fromX, fromY, toX, toY, t, dur) {
+        tl.set(sel, { left: fromX - 5, top: fromY - 5, opacity: 0 }, t);
+        tl.to(sel, { opacity: 1, duration: 0.10, ease: "power2.out" }, t);
+        tl.to(sel, { left: toX - 5, top: toY - 5, duration: dur, ease: "power2.inOut" }, t);
+        tl.to(sel, { opacity: 0, duration: 0.15, ease: "power2.in" }, t + dur);
+      }
+      // p1 area is 800×360 viewBox; use percent positions on the absolutely placed pulse
+      // Fan out: from (400, 50) to children (200,170), (400,170), (600,170) — actual node centers
+      pulseTravel("#p1pulse1", 400, 48, 200, 168, 3.30, 0.45);
+      pulseTravel("#p1pulse2", 400, 48, 400, 168, 3.30, 0.45);
+      pulseTravel("#p1pulse3", 400, 48, 600, 168, 3.30, 0.45);
+
+      // ============================
+      // PATTERN 2: Pipeline (4.2 — 6.4)
+      // ============================
+      tl.to("#P2", { borderColor: "#d9b75b", boxShadow: "0 0 22px rgba(217,183,91,0.30)", duration: 0.30, ease: "power2.out" }, 4.20);
+      tl.from("#P2 .node:nth-of-type(1)", { opacity: 0, x: -20, duration: 0.35, ease: "back.out(1.4)" }, 4.30);
+      tl.fromTo("#p2e1", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.30, ease: "power2.out" }, 4.55);
+      tl.from("#P2 .node:nth-of-type(2)", { opacity: 0, x: -20, duration: 0.35, ease: "back.out(1.4)" }, 4.70);
+      tl.fromTo("#p2e2", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.30, ease: "power2.out" }, 4.95);
+      tl.from("#P2 .node:nth-of-type(3)", { opacity: 0, x: -20, duration: 0.35, ease: "back.out(1.4)" }, 5.10);
+      tl.fromTo("#p2e3", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.30, ease: "power2.out" }, 5.35);
+      tl.from("#P2 .node:nth-of-type(4)", { opacity: 0, x: -20, duration: 0.35, ease: "back.out(1.4)" }, 5.50);
+      // Pulse traversing the pipeline
+      pulseTravel("#p2pulse", 110, 180, 310, 180, 5.80, 0.30);
+      tl.set("#p2pulse", { opacity: 0 }, 6.10);
+      pulseTravel("#p2pulse", 310, 180, 510, 180, 6.10, 0.30);
+      tl.set("#p2pulse", { opacity: 0 }, 6.40);
+      pulseTravel("#p2pulse", 510, 180, 710, 180, 6.40, 0.30);
+
+      // ============================
+      // PATTERN 3: Supervisor (6.6 — 8.8)
+      // ============================
+      tl.to("#P3", { borderColor: "#d9b75b", boxShadow: "0 0 22px rgba(217,183,91,0.30)", duration: 0.30, ease: "power2.out" }, 6.60);
+      tl.from("#P3 .node:nth-of-type(1)", { opacity: 0, y: -20, duration: 0.35, ease: "back.out(1.4)" }, 6.70);
+      tl.fromTo("#p3e1", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 6.95);
+      tl.fromTo("#p3e2", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 7.05);
+      tl.fromTo("#p3e3", { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.40, ease: "power2.out" }, 7.15);
+      tl.from("#P3 .node:nth-of-type(2)", { opacity: 0, y: 20, duration: 0.35, ease: "back.out(1.4)" }, 7.30);
+      tl.from("#P3 .node:nth-of-type(3)", { opacity: 0, y: 20, duration: 0.35, ease: "back.out(1.4)" }, 7.40);
+      tl.from("#P3 .node:nth-of-type(4)", { opacity: 0, y: 20, duration: 0.35, ease: "back.out(1.4)" }, 7.50);
+      // Routing pulse: supervisor → sql, then back, then → js, then back, then → ml
+      pulseTravel("#p3pulse", 400, 50, 200, 170, 7.80, 0.30);
+      pulseTravel("#p3pulse", 400, 50, 400, 170, 8.20, 0.30);
+      pulseTravel("#p3pulse", 400, 50, 600, 170, 8.60, 0.30);
+
+      // ============================
+      // PATTERN 4: Swarm (9.0 — 11.4)
+      // ============================
+      tl.to("#P4", { borderColor: "#d9b75b", boxShadow: "0 0 22px rgba(217,183,91,0.30)", duration: 0.30, ease: "power2.out" }, 9.00);
+      tl.from("#P4 .node", { opacity: 0, scale: 0.7, duration: 0.40, stagger: 0.08, ease: "back.out(1.6)", transformOrigin: "center" }, 9.10);
+      // 6 edges complete graph
+      const swarmEdges = ["#p4e1", "#p4e2", "#p4e3", "#p4e4", "#p4e5", "#p4e6"];
+      swarmEdges.forEach((sel, i) => {
+        tl.fromTo(sel, { strokeDashoffset: 600 }, { strokeDashoffset: 0, duration: 0.30, ease: "power2.out" }, 9.40 + i * 0.08);
+      });
+      // Pulses along different edges sequentially
+      // Node centers: alpha (220, 90), beta (580, 90), gamma (220, 270), delta (580, 270)
+      pulseTravel("#p4pulse", 220, 70, 580, 70, 10.10, 0.30);    // alpha → beta
+      pulseTravel("#p4pulse", 580, 70, 580, 230, 10.45, 0.30);   // beta → delta
+      pulseTravel("#p4pulse", 580, 230, 220, 70, 10.80, 0.30);   // delta → alpha (diagonal)
+
+      // Final: clear all "active" highlights so all four shine equally
+      tl.to(["#P1", "#P2", "#P3", "#P4"], {
+        boxShadow: "0 0 18px rgba(217,183,91,0.20)",
+        duration: 0.50, ease: "power2.out"
+      }, 11.20);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

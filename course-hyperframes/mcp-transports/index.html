@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root {
+        --bg: #07080a; --panel: #0c0e11;
+        --ink: #e8e6df; --dim: #b5b5ab;
+        --line: #2a2c30; --line-strong: #4a4d52;
+        --amber: #d9b75b; --green: #6ec588; --blue: #7da4ff;
+      }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: var(--bg); color: var(--ink);
+        font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      .grid {
+        position: absolute; inset: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+        z-index: 0;
+      }
+      .scanlines {
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(to bottom,
+          rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px,
+          transparent 1px, transparent 4px);
+        pointer-events: none; z-index: 50;
+      }
+      .vignette {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+        pointer-events: none; z-index: 49;
+      }
+      .crt-flicker {
+        position: absolute; inset: 0;
+        background: rgba(217,183,91,0.04);
+        pointer-events: none; z-index: 48; opacity: 0;
+      }
+      .corner-tl, .corner-tr, .corner-bl, .corner-br {
+        position: absolute; width: 32px; height: 32px;
+        border: 3px solid var(--line-strong); z-index: 40;
+      }
+      .corner-tl { top: 24px; left: 24px; border-right: 0; border-bottom: 0; }
+      .corner-tr { top: 24px; right: 24px; border-left: 0; border-bottom: 0; }
+      .corner-bl { bottom: 24px; left: 24px; border-right: 0; border-top: 0; }
+      .corner-br { bottom: 24px; right: 24px; border-left: 0; border-top: 0; }
+      .brand {
+        position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+        font-size: 16px; opacity: 0.45;
+        letter-spacing: 0.32em; text-transform: uppercase; z-index: 40;
+      }
+
+      .stage {
+        position: absolute; inset: 0; z-index: 10;
+        display: flex; flex-direction: column;
+        gap: 28px;
+        padding: 64px 80px 80px;
+      }
+      .header { display: flex; flex-direction: column; gap: 14px; }
+      .chip {
+        display: inline-flex; align-items: center; gap: 14px;
+        padding: 10px 18px;
+        font-size: 18px; letter-spacing: 0.22em;
+        border: 1px solid var(--line-strong); align-self: flex-start;
+      }
+      .chip .dot {
+        width: 10px; height: 10px;
+        background: var(--amber); box-shadow: 0 0 12px rgba(217,183,91,0.6);
+      }
+      .title { font-size: 88px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.0; text-transform: lowercase; }
+      .title .accent { color: var(--amber); margin-right: 18px; }
+      .subtitle { font-size: 28px; font-weight: 400; color: var(--dim); }
+      .subtitle .arr { color: var(--amber); margin: 0 6px; }
+
+      .row {
+        flex: 1;
+        position: relative;
+        display: grid;
+        grid-template-columns: 320px 1fr 320px;
+        gap: 28px;
+        align-items: stretch;
+      }
+      .row .row-label {
+        position: absolute;
+        top: -12px; left: 28px;
+        background: var(--bg);
+        padding: 4px 14px;
+        font-size: 14px; letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--dim);
+        z-index: 5;
+      }
+      .row .row-frame {
+        position: absolute; inset: 0;
+        border: 1px dashed var(--line-strong);
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .endpoint {
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        padding: 24px;
+        display: flex; flex-direction: column; gap: 8px;
+        justify-content: center;
+        z-index: 3;
+        margin: 24px;
+      }
+      .endpoint .role {
+        font-size: 13px; letter-spacing: 0.28em;
+        text-transform: uppercase; color: var(--dim);
+      }
+      .endpoint .name {
+        font-size: 36px; font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .endpoint .meta { font-size: 14px; color: var(--dim); }
+      .endpoint.client { border-color: var(--amber); }
+      .endpoint.client .name { color: var(--amber); }
+      .endpoint.server { border-color: var(--blue); }
+      .endpoint.server .name { color: var(--blue); }
+
+      .wire {
+        position: relative;
+        z-index: 2;
+        margin: 24px 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 14px;
+      }
+      .wire-label {
+        text-align: center;
+        font-size: 18px;
+        color: var(--dim);
+        letter-spacing: 0.04em;
+      }
+      .wire-label .syn { color: var(--green); }
+      .wire-label .url { color: var(--blue); }
+      .wire-line {
+        position: relative;
+        height: 4px;
+        background: linear-gradient(90deg, var(--amber), var(--blue));
+        opacity: 0.25;
+      }
+      .wire-line.dashed {
+        background: none;
+        border-top: 4px dashed var(--line-strong);
+        height: 0;
+      }
+      .wire-meta {
+        text-align: center;
+        font-size: 14px;
+        color: var(--dim);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .pulse {
+        position: absolute; top: 50%;
+        transform: translate(-50%, -50%);
+        width: 16px; height: 16px;
+        opacity: 0;
+      }
+      .pulse.amber { background: var(--amber); box-shadow: 0 0 18px rgba(217,183,91,0.7); }
+      .pulse.blue  { background: var(--blue);  box-shadow: 0 0 18px rgba(125,164,255,0.7); }
+
+      .row.stdio .row-label { color: var(--green); }
+      .row.stdio .row-frame { border-color: rgba(110,197,136,0.35); }
+      .row.http .row-label { color: var(--blue); }
+      .row.http .row-frame { border-color: rgba(125,164,255,0.35); }
+
+      .conclusion {
+        position: absolute;
+        bottom: 84px; left: 50%; transform: translateX(-50%);
+        padding: 14px 28px;
+        background: var(--bg);
+        border: 1px solid var(--amber);
+        color: var(--amber);
+        font-size: 22px; letter-spacing: 0.04em;
+        z-index: 6;
+        opacity: 0;
+      }
+      .conclusion .accent2 { color: var(--ink); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+      <div class="grid"></div>
+      <div class="vignette"></div>
+      <div class="scanlines"></div>
+      <div class="crt-flicker" id="crtFlicker"></div>
+      <div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="corner-bl"></div><div class="corner-br"></div>
+      <div class="brand">CONTEXT COURSE · UNIT 2</div>
+
+      <div class="stage">
+        <div class="header">
+          <div class="chip" id="chip"><span class="dot"></span>UNIT 2 · MCP TRANSPORTS</div>
+          <h1 class="title" id="title"><span class="accent">&gt;</span>same protocol, different wire</h1>
+          <p class="subtitle" id="subtitle">stdio<span class="arr"> · </span>local subprocess<span class="arr"> | </span>http+sse<span class="arr"> · </span>remote server</p>
+        </div>
+
+        <div class="row stdio" id="rowStdio">
+          <div class="row-frame"></div>
+          <div class="row-label" id="stdioLabel">stdio · subprocess</div>
+
+          <div class="endpoint client" id="stdioClient">
+            <div class="role">client</div>
+            <div class="name">agent</div>
+            <div class="meta">claude code</div>
+          </div>
+
+          <div class="wire" id="stdioWire">
+            <div class="wire-label" id="stdioCmd">$ <span class="syn">exec</span> python -m mcp_server <span class="syn">|</span> stdin/stdout</div>
+            <div class="wire-line" id="stdioLine"></div>
+            <div class="pulse amber" id="stdioPulse"></div>
+            <div class="wire-meta" id="stdioMeta">latency · ~2 ms · same machine</div>
+          </div>
+
+          <div class="endpoint server" id="stdioServer">
+            <div class="role">server</div>
+            <div class="name">mcp</div>
+            <div class="meta">child process</div>
+          </div>
+        </div>
+
+        <div class="row http" id="rowHttp">
+          <div class="row-frame"></div>
+          <div class="row-label" id="httpLabel">http+sse · remote</div>
+
+          <div class="endpoint client" id="httpClient">
+            <div class="role">client</div>
+            <div class="name">agent</div>
+            <div class="meta">claude code</div>
+          </div>
+
+          <div class="wire" id="httpWire">
+            <div class="wire-label" id="httpCmd"><span class="url">POST</span> https://api.example.com/mcp · <span class="url">accept: text/event-stream</span></div>
+            <div class="wire-line" id="httpLine"></div>
+            <div class="pulse blue" id="httpPulse"></div>
+            <div class="wire-meta" id="httpMeta">latency · ~120 ms · network</div>
+          </div>
+
+          <div class="endpoint server" id="httpServer">
+            <div class="role">server</div>
+            <div class="name">mcp</div>
+            <div class="meta">remote host</div>
+          </div>
+        </div>
+
+        <div class="conclusion" id="conclusion">
+          identical jsonrpc payload<span class="accent2"> · </span>tools/call read_file<span class="accent2"> · </span>same protocol, different wire
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo(".grid",
+        { backgroundPosition: "0 0, 0 0" },
+        { backgroundPosition: "120px 120px, 120px 120px", duration: 12, ease: "none" }, 0);
+
+      [1.4, 4.6, 7.7, 9.8, 11.0].forEach(t => {
+        tl.to("#crtFlicker", { opacity: 0.32, duration: 0.05, ease: "power2.in" }, t)
+          .to("#crtFlicker", { opacity: 0, duration: 0.18, ease: "power2.out" }, t + 0.05);
+      });
+
+      // Header
+      tl.from("#chip",     { opacity: 0, x: -30, duration: 0.40, ease: "power3.out" }, 0.10);
+      tl.from("#title",    { opacity: 0, y: 50,  duration: 0.60, ease: "expo.out"   }, 0.25);
+      tl.from("#subtitle", { opacity: 0, y: 24,  duration: 0.45, ease: "power3.out" }, 0.50);
+
+      // STDIO row
+      tl.from("#rowStdio .row-frame", { opacity: 0, scaleX: 0, transformOrigin: "left center", duration: 0.55, ease: "power3.out" }, 0.65);
+      tl.from("#stdioLabel", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 0.95);
+      tl.from("#stdioClient", { opacity: 0, x: -30, duration: 0.45, ease: "back.out(1.4)" }, 0.85);
+      tl.from("#stdioServer", { opacity: 0, x:  30, duration: 0.45, ease: "back.out(1.4)" }, 0.85);
+      tl.from("#stdioCmd",  { opacity: 0, y: -10, duration: 0.35, ease: "power2.out" }, 1.10);
+      tl.from("#stdioLine", { opacity: 0, scaleX: 0, transformOrigin: "left center", duration: 0.45, ease: "power2.out" }, 1.20);
+      tl.from("#stdioMeta", { opacity: 0, y: 10, duration: 0.35, ease: "power2.out" }, 1.40);
+
+      // HTTP row
+      tl.from("#rowHttp .row-frame", { opacity: 0, scaleX: 0, transformOrigin: "left center", duration: 0.55, ease: "power3.out" }, 0.95);
+      tl.from("#httpLabel", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 1.25);
+      tl.from("#httpClient", { opacity: 0, x: -30, duration: 0.45, ease: "back.out(1.4)" }, 1.15);
+      tl.from("#httpServer", { opacity: 0, x:  30, duration: 0.45, ease: "back.out(1.4)" }, 1.15);
+      tl.from("#httpCmd",  { opacity: 0, y: -10, duration: 0.35, ease: "power2.out" }, 1.40);
+      tl.from("#httpLine", { opacity: 0, scaleX: 0, transformOrigin: "left center", duration: 0.45, ease: "power2.out" }, 1.50);
+      tl.from("#httpMeta", { opacity: 0, y: 10, duration: 0.35, ease: "power2.out" }, 1.70);
+
+      // Pulses fly across both wires (request)
+      // Stdio: faster, near-instant
+      function flyPulse(sel, t, durOut, durIn) {
+        tl.fromTo(sel, { left: "0%", opacity: 0 }, { opacity: 1, duration: 0.10, ease: "power2.out" }, t);
+        tl.fromTo(sel, { left: "0%" }, { left: "100%", duration: durOut, ease: "power2.inOut" }, t);
+        tl.to(sel, { opacity: 0, duration: 0.15, ease: "power2.in" }, t + durOut);
+        // Response
+        tl.fromTo(sel, { left: "100%", opacity: 0 }, { opacity: 1, duration: 0.10, ease: "power2.out" }, t + durOut + 0.30);
+        tl.fromTo(sel, { left: "100%" }, { left: "0%", duration: durIn, ease: "power2.inOut" }, t + durOut + 0.30);
+        tl.to(sel, { opacity: 0, duration: 0.15, ease: "power2.in" }, t + durOut + 0.30 + durIn);
+      }
+
+      // STDIO request/response (fast — small wait)
+      flyPulse("#stdioPulse", 2.20, 0.45, 0.45);
+      // HTTP request/response (slower)
+      flyPulse("#httpPulse", 2.30, 1.10, 1.10);
+
+      // Wire glow on activity
+      tl.to("#stdioLine", { opacity: 0.85, duration: 0.30, ease: "power2.out" }, 2.20);
+      tl.to("#stdioLine", { opacity: 0.55, duration: 0.50, ease: "power2.in"  }, 3.40);
+      tl.to("#httpLine",  { opacity: 0.85, duration: 0.30, ease: "power2.out" }, 2.30);
+      tl.to("#httpLine",  { opacity: 0.55, duration: 0.50, ease: "power2.in"  }, 4.80);
+
+      // Second cycle
+      flyPulse("#stdioPulse", 5.00, 0.45, 0.45);
+      flyPulse("#httpPulse",  5.10, 1.10, 1.10);
+      tl.to("#stdioLine", { opacity: 0.85, duration: 0.30, ease: "power2.out" }, 5.00);
+      tl.to("#stdioLine", { opacity: 0.55, duration: 0.50, ease: "power2.in"  }, 6.20);
+      tl.to("#httpLine",  { opacity: 0.85, duration: 0.30, ease: "power2.out" }, 5.10);
+      tl.to("#httpLine",  { opacity: 0.55, duration: 0.50, ease: "power2.in"  }, 7.60);
+
+      // Conclusion banner
+      tl.fromTo("#conclusion",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "back.out(1.4)" }, 8.40);
+      tl.to("#conclusion", {
+        boxShadow: "0 0 32px rgba(217,183,91,0.5)",
+        duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 3
+      }, 9.20);
+
+      // Final: lit the wire lines fully
+      tl.to("#stdioLine", { opacity: 1, duration: 0.40, ease: "power2.out" }, 9.40);
+      tl.to("#httpLine",  { opacity: 1, duration: 0.40, ease: "power2.out" }, 9.40);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root {
+        --bg: #07080a; --panel: #0c0e11;
+        --ink: #e8e6df; --dim: #b5b5ab;
+        --line: #2a2c30; --line-strong: #4a4d52;
+        --amber: #d9b75b; --green: #6ec588; --blue: #7da4ff; --red: #d96b5b;
+      }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: var(--bg); color: var(--ink);
+        font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      .grid {
+        position: absolute; inset: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+        z-index: 0;
+      }
+      .scanlines {
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(to bottom,
+          rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px,
+          transparent 1px, transparent 4px);
+        pointer-events: none; z-index: 50;
+      }
+      .vignette {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+        pointer-events: none; z-index: 49;
+      }
+      .crt-flicker {
+        position: absolute; inset: 0;
+        background: rgba(217,183,91,0.04);
+        pointer-events: none; z-index: 48; opacity: 0;
+      }
+      .corner-tl, .corner-tr, .corner-bl, .corner-br {
+        position: absolute; width: 32px; height: 32px;
+        border: 3px solid var(--line-strong); z-index: 40;
+      }
+      .corner-tl { top: 24px; left: 24px; border-right: 0; border-bottom: 0; }
+      .corner-tr { top: 24px; right: 24px; border-left: 0; border-bottom: 0; }
+      .corner-bl { bottom: 24px; left: 24px; border-right: 0; border-top: 0; }
+      .corner-br { bottom: 24px; right: 24px; border-left: 0; border-top: 0; }
+      .brand {
+        position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+        font-size: 16px; opacity: 0.45;
+        letter-spacing: 0.32em; text-transform: uppercase; z-index: 40;
+      }
+
+      .stage {
+        position: absolute; inset: 0; z-index: 10;
+        display: grid;
+        grid-template-columns: 1fr 720px;
+        grid-template-rows: auto 1fr;
+        gap: 28px 56px;
+        padding: 64px 80px 80px;
+      }
+      .header {
+        grid-column: 1 / -1; grid-row: 1;
+        display: flex; flex-direction: column; gap: 14px;
+      }
+      .chip {
+        display: inline-flex; align-items: center; gap: 14px;
+        padding: 10px 18px;
+        font-size: 18px; letter-spacing: 0.22em;
+        border: 1px solid var(--line-strong); align-self: flex-start;
+      }
+      .chip .dot {
+        width: 10px; height: 10px;
+        background: var(--amber); box-shadow: 0 0 12px rgba(217,183,91,0.6);
+      }
+      .title { font-size: 88px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.0; text-transform: lowercase; }
+      .title .accent { color: var(--amber); margin-right: 18px; }
+      .subtitle { font-size: 28px; font-weight: 400; color: var(--dim); }
+      .subtitle .arr { color: var(--amber); margin: 0 6px; }
+
+      /* Sandbox panel (left) */
+      .sandbox-panel {
+        grid-column: 1; grid-row: 2;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .sandbox {
+        position: relative;
+        width: 920px; height: 720px;
+      }
+      .layer {
+        position: absolute;
+        border: 2px solid var(--line-strong);
+        background: rgba(12, 14, 17, 0.4);
+      }
+      .layer.l1 { left: 0;   top: 0;   right: 0;   bottom: 0; }
+      .layer.l2 { left: 100px; top: 100px; right: 100px; bottom: 100px; }
+      .layer.l3 { left: 220px; top: 200px; right: 220px; bottom: 200px; }
+      .layer .tag {
+        position: absolute; top: -14px; left: 24px;
+        background: var(--bg);
+        padding: 4px 14px;
+        font-size: 14px; letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .layer.l1 .tag { color: var(--blue); border: 1px solid var(--blue); }
+      .layer.l2 .tag { color: var(--amber); border: 1px solid var(--amber); }
+      .layer.l3 .tag { color: var(--green); border: 1px solid var(--green); }
+      .layer.l1 { border-color: var(--blue); }
+      .layer.l2 { border-color: var(--amber); }
+      .layer.l3 { border-color: var(--green); }
+
+      .layer .meta {
+        position: absolute; bottom: -12px; right: 24px;
+        background: var(--bg);
+        padding: 4px 12px;
+        font-size: 12px; color: var(--dim);
+        letter-spacing: 0.04em;
+      }
+
+      .tool-core {
+        position: absolute;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: 240px; padding: 18px 22px;
+        background: var(--panel);
+        border: 1px solid var(--green);
+        text-align: center;
+      }
+      .tool-core .tname {
+        font-size: 24px; font-weight: 600;
+        color: var(--green);
+      }
+      .tool-core .tmeta {
+        font-size: 14px; color: var(--dim);
+        margin-top: 4px;
+      }
+
+      .call {
+        position: absolute;
+        background: var(--bg);
+        border: 1px solid var(--line-strong);
+        padding: 10px 14px;
+        font-size: 16px; color: var(--ink);
+        white-space: nowrap;
+        opacity: 0;
+        z-index: 5;
+      }
+      .call .verb { color: var(--amber); margin-right: 8px; }
+      .call .arg { color: var(--blue); }
+      .call.bad { border-color: var(--red); color: var(--ink); }
+      .call.bad .verb { color: var(--red); }
+      .call.good { border-color: var(--green); }
+      .call.good .verb { color: var(--green); }
+      .call .verdict {
+        display: inline-block;
+        margin-left: 10px;
+        padding: 2px 8px;
+        font-size: 13px;
+        letter-spacing: 0.14em; text-transform: uppercase;
+      }
+      .call .verdict.blk { color: var(--red); border: 1px solid var(--red); }
+      .call .verdict.ok  { color: var(--green); border: 1px solid var(--green); }
+
+      /* Terminal panel */
+      .terminal-panel { grid-column: 2; grid-row: 2; min-width: 0; }
+      .terminal {
+        width: 100%; height: 100%;
+        background: var(--panel);
+        border: 1px solid var(--line-strong);
+        display: flex; flex-direction: column;
+      }
+      .terminal-bar {
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 22px;
+        border-bottom: 1px solid var(--line);
+        font-size: 16px; color: var(--dim); letter-spacing: 0.12em;
+      }
+      .terminal-bar .tdot { width: 12px; height: 12px; }
+      .terminal-bar .tdot.r { background: #d96b5b; }
+      .terminal-bar .tdot.y { background: #d9b75b; }
+      .terminal-bar .tdot.g { background: #6ec588; }
+      .terminal-bar .bar-title { margin-left: 12px; text-transform: uppercase; }
+      .terminal-bar .bar-meta { margin-left: auto; opacity: 0.55; }
+      .terminal-body {
+        flex: 1; padding: 28px 32px;
+        font-size: 22px; line-height: 1.6;
+      }
+      .log-line { margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .log-line .lo-tag { display: inline-block; margin-right: 12px; font-size: 18px; letter-spacing: 0.04em; }
+      .log-line .blk { color: var(--red); }
+      .log-line.blocked .lo-tag { color: var(--red); }
+      .log-line.allowed { color: var(--green); }
+      .log-line.allowed .lo-tag { color: var(--green); }
+      .log-line .ln { color: var(--blue); }
+      .log-line.dim { color: var(--dim); font-size: 18px; }
+      .cursor {
+        display: inline-block; width: 12px; height: 22px;
+        background: var(--green); vertical-align: -3px; margin-left: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+      <div class="grid"></div>
+      <div class="vignette"></div>
+      <div class="scanlines"></div>
+      <div class="crt-flicker" id="crtFlicker"></div>
+      <div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="corner-bl"></div><div class="corner-br"></div>
+      <div class="brand">CONTEXT COURSE · UNIT 6</div>
+
+      <div class="stage">
+        <div class="header">
+          <div class="chip" id="chip"><span class="dot"></span>UNIT 6 · TOOL SANDBOX</div>
+          <h1 class="title" id="title"><span class="accent">&gt;</span>tool sandbox</h1>
+          <p class="subtitle" id="subtitle">layered defense<span class="arr"> · </span>workspace<span class="arr">→</span>allowlist<span class="arr">→</span>tool fn</p>
+        </div>
+
+        <div class="sandbox-panel">
+          <div class="sandbox">
+            <div class="layer l1" id="l1">
+              <div class="tag" id="l1tag">L1 · workspace boundary</div>
+              <div class="meta">paths confined to ./</div>
+            </div>
+            <div class="layer l2" id="l2">
+              <div class="tag" id="l2tag">L2 · command allowlist</div>
+              <div class="meta">ls · cat · rg · head</div>
+            </div>
+            <div class="layer l3" id="l3">
+              <div class="tag" id="l3tag">L3 · tool function</div>
+              <div class="meta">size cap · timeout</div>
+            </div>
+            <div class="tool-core" id="toolCore">
+              <div class="tname">read_file()</div>
+              <div class="tmeta">safe_path · clip · utf-8</div>
+            </div>
+
+            <div class="call bad" id="call1">
+              <span class="verb">exec_cmd</span><span class="arg">("rm", "-rf", "/")</span>
+              <span class="verdict blk" id="v1">blocked</span>
+            </div>
+            <div class="call bad" id="call2">
+              <span class="verb">read_file</span><span class="arg">("/etc/passwd")</span>
+              <span class="verdict blk" id="v2">blocked</span>
+            </div>
+            <div class="call good" id="call3">
+              <span class="verb">read_file</span><span class="arg">("auth.py")</span>
+              <span class="verdict ok" id="v3">allowed</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="terminal-panel">
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span>
+              <span class="bar-title">sandbox.log</span>
+              <span class="bar-meta" id="barMeta">live</span>
+            </div>
+            <div class="terminal-body">
+              <div class="log-line dim" id="ll0">$ tail -f ./sandbox.log</div>
+              <div class="log-line blocked" id="ll1"><span class="lo-tag">✗</span>L2 deny · "rm" not in allowlist</div>
+              <div class="log-line dim" id="ll1b"><span class="lo-tag">·</span>raised PermissionError</div>
+              <div class="log-line blocked" id="ll2"><span class="lo-tag">✗</span>L1 deny · path outside workspace</div>
+              <div class="log-line dim" id="ll2b"><span class="lo-tag">·</span>safe_path("/etc/passwd") → reject</div>
+              <div class="log-line allowed" id="ll3"><span class="lo-tag">✓</span>L1 ok · L2 ok · L3 ok</div>
+              <div class="log-line dim" id="ll3b"><span class="lo-tag">·</span>read_file → 412 lines, clipped to 8000<span class="cursor" id="cursor"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo(".grid",
+        { backgroundPosition: "0 0, 0 0" },
+        { backgroundPosition: "120px 120px, 120px 120px", duration: 12, ease: "none" }, 0);
+
+      [1.4, 4.2, 7.0, 9.6, 11.0].forEach(t => {
+        tl.to("#crtFlicker", { opacity: 0.32, duration: 0.05, ease: "power2.in" }, t)
+          .to("#crtFlicker", { opacity: 0, duration: 0.18, ease: "power2.out" }, t + 0.05);
+      });
+
+      tl.from("#chip",     { opacity: 0, x: -30, duration: 0.40, ease: "power3.out" }, 0.10);
+      tl.from("#title",    { opacity: 0, y: 50,  duration: 0.60, ease: "expo.out"   }, 0.25);
+      tl.from("#subtitle", { opacity: 0, y: 24,  duration: 0.45, ease: "power3.out" }, 0.50);
+
+      // Layers from outer to inner
+      tl.from("#l1", { opacity: 0, scale: 1.05, duration: 0.55, ease: "power3.out", transformOrigin: "center" }, 0.55);
+      tl.from("#l1tag", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 0.85);
+      tl.from("#l2", { opacity: 0, scale: 1.05, duration: 0.55, ease: "power3.out", transformOrigin: "center" }, 0.75);
+      tl.from("#l2tag", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 1.05);
+      tl.from("#l3", { opacity: 0, scale: 1.05, duration: 0.55, ease: "power3.out", transformOrigin: "center" }, 0.95);
+      tl.from("#l3tag", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 1.25);
+      tl.from("#toolCore", { opacity: 0, scale: 0.7, duration: 0.50, ease: "back.out(1.6)", transformOrigin: "center" }, 1.20);
+
+      // Terminal
+      tl.from(".terminal", { opacity: 0, x: 60, duration: 0.55, ease: "power3.out" }, 0.55);
+      tl.from(".terminal-bar > *", { opacity: 0, y: -8, duration: 0.30, stagger: 0.05, ease: "power2.out" }, 0.95);
+      tl.from("#ll0", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 1.30);
+
+      // ============================
+      // CALL 1 — exec_cmd("rm", "-rf", "/") — blocked at L2 (1.8 — 3.8)
+      // ============================
+      // Sandbox is 920×720. Position calls along left edge moving right.
+      tl.set("#call1", { left: -460, top: 50, opacity: 0 }, 1.80);
+      tl.to("#call1", { opacity: 1, x: 0, duration: 0.20, ease: "power2.out" }, 1.80);
+      tl.to("#call1", { left: 60, duration: 0.50, ease: "power2.out" }, 1.85);  // enters L1
+      tl.to("#l1", { borderColor: "#7da4ff", boxShadow: "0 0 22px rgba(125,164,255,0.45)", duration: 0.20, ease: "power2.out" }, 2.05);
+      tl.to("#l1", { borderColor: "#7da4ff", boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.40, ease: "power2.in" }, 2.25);
+      tl.to("#call1", { left: 110, duration: 0.40, ease: "power2.out" }, 2.35);  // hits L2
+      // L2 flashes red — blocked
+      tl.to("#l2", { borderColor: "#d96b5b", boxShadow: "0 0 26px rgba(217,107,91,0.6)", duration: 0.18, ease: "power2.out" }, 2.55);
+      tl.to("#call1", { x: -20, duration: 0.10, ease: "power2.out" }, 2.55);
+      tl.to("#call1", { x: 20, duration: 0.10, ease: "power2.in" }, 2.65);
+      tl.to("#call1", { x: 0, duration: 0.10, ease: "power2.out" }, 2.75);
+      tl.to("#l2", { borderColor: "#d9b75b", boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.35, ease: "power2.in" }, 2.85);
+      // Verdict appears
+      tl.from("#v1", { opacity: 0, scale: 0.5, duration: 0.30, ease: "back.out(1.6)", transformOrigin: "center" }, 2.65);
+      // Log line
+      tl.from("#ll1", { opacity: 0, x: -10, duration: 0.30, ease: "power3.out" }, 2.75);
+      tl.from("#ll1b", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 2.95);
+      // Call fades after rejection
+      tl.to("#call1", { opacity: 0, x: -200, duration: 0.40, ease: "power2.in" }, 3.40);
+
+      // ============================
+      // CALL 2 — read_file("/etc/passwd") — blocked at L1 (4.0 — 5.8)
+      // ============================
+      tl.set("#call2", { left: -460, top: 320, opacity: 0 }, 4.00);
+      tl.to("#call2", { opacity: 1, x: 0, duration: 0.20, ease: "power2.out" }, 4.00);
+      tl.to("#call2", { left: 30, duration: 0.50, ease: "power2.out" }, 4.05);  // approaches L1
+      // L1 flashes red — blocked
+      tl.to("#l1", { borderColor: "#d96b5b", boxShadow: "0 0 26px rgba(217,107,91,0.6)", duration: 0.18, ease: "power2.out" }, 4.40);
+      tl.to("#call2", { x: -16, duration: 0.10, ease: "power2.out" }, 4.45);
+      tl.to("#call2", { x: 16, duration: 0.10, ease: "power2.in" }, 4.55);
+      tl.to("#call2", { x: 0, duration: 0.10, ease: "power2.out" }, 4.65);
+      tl.to("#l1", { borderColor: "#7da4ff", boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.35, ease: "power2.in" }, 4.75);
+      tl.from("#v2", { opacity: 0, scale: 0.5, duration: 0.30, ease: "back.out(1.6)", transformOrigin: "center" }, 4.55);
+      tl.from("#ll2", { opacity: 0, x: -10, duration: 0.30, ease: "power3.out" }, 4.65);
+      tl.from("#ll2b", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 4.85);
+      tl.to("#call2", { opacity: 0, x: -200, duration: 0.40, ease: "power2.in" }, 5.30);
+
+      // ============================
+      // CALL 3 — read_file("auth.py") — passes all layers (5.8 — 9.5)
+      // ============================
+      tl.set("#call3", { left: -460, top: 590, opacity: 0 }, 5.80);
+      tl.to("#call3", { opacity: 1, x: 0, duration: 0.20, ease: "power2.out" }, 5.80);
+      // Cross L1 — green flash
+      tl.to("#call3", { left: 30, duration: 0.45, ease: "power2.out" }, 5.85);
+      tl.to("#l1", { borderColor: "#6ec588", boxShadow: "0 0 22px rgba(110,197,136,0.45)", duration: 0.18, ease: "power2.out" }, 6.20);
+      tl.to("#l1", { borderColor: "#7da4ff", boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.45, ease: "power2.in" }, 6.50);
+      // Cross L2
+      tl.to("#call3", { left: 130, duration: 0.45, ease: "power2.out" }, 6.45);
+      tl.to("#l2", { borderColor: "#6ec588", boxShadow: "0 0 22px rgba(110,197,136,0.45)", duration: 0.18, ease: "power2.out" }, 6.80);
+      tl.to("#l2", { borderColor: "#d9b75b", boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.45, ease: "power2.in" }, 7.10);
+      // Cross L3 — execute
+      tl.to("#call3", { left: 250, duration: 0.45, ease: "power2.out" }, 7.05);
+      tl.to("#l3", { borderColor: "#6ec588", boxShadow: "0 0 26px rgba(110,197,136,0.55)", duration: 0.18, ease: "power2.out" }, 7.40);
+      tl.to("#toolCore", {
+        boxShadow: "0 0 36px rgba(110,197,136,0.7)",
+        duration: 0.30, ease: "power2.out"
+      }, 7.50);
+      tl.to("#l3", { boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.45, ease: "power2.in" }, 7.80);
+
+      tl.from("#v3", { opacity: 0, scale: 0.5, duration: 0.30, ease: "back.out(1.6)", transformOrigin: "center" }, 7.50);
+      tl.from("#ll3", { opacity: 0, x: -10, duration: 0.30, ease: "power3.out" }, 7.60);
+      tl.from("#ll3b", { opacity: 0, x: -10, duration: 0.30, ease: "power2.out" }, 7.85);
+
+      // Tool core breathes
+      tl.to("#toolCore", {
+        boxShadow: "0 0 24px rgba(110,197,136,0.4)",
+        duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: 3
+      }, 8.50);
+
+      // Cursor blink
+      tl.fromTo("#cursor",
+        { opacity: 1 },
+        { opacity: 0, duration: 0.45, ease: "none", repeat: 22, yoyo: true },
+        1.5);
+      tl.fromTo("#barMeta",
+        { opacity: 0.55 },
+        { opacity: 1, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 10 },
+        1.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
