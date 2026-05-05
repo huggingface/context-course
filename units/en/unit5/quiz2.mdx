@@ -16,8 +16,8 @@ Test your ability to wire hooks into real workflows.
       correct: true
     },
     {
-      text: "You can only receive hook events from Claude Code — Codex and OpenCode cannot post JSON",
-      explain: "False. All three platforms can POST JSON to an HTTP endpoint: Claude Code uses `type: \"http\"`, Codex pipes the stdin payload to `curl`, and OpenCode plugins call `fetch()`."
+      text: "You can only receive hook events from Claude Code — Codex, OpenCode, and Pi cannot post JSON",
+      explain: "False. All four platforms can POST JSON to an HTTP endpoint: Claude Code uses `type: \"http\"`, Codex pipes the stdin payload to `curl`, and OpenCode plugins and Pi extensions call `fetch()`."
     },
     {
       text: "Hook events should be written to a file rather than served over HTTP",
@@ -103,13 +103,13 @@ Test your ability to wire hooks into real workflows.
 <Question
   choices={[
     {
-      text: "The same dashboard works for Claude Code, Codex, and OpenCode because the server normalizes three different payload shapes into one consistent record",
+      text: "The same dashboard works for Claude Code, Codex, OpenCode, and Pi because the server normalizes four different payload shapes into one consistent record",
       explain: "Correct! The `_normalize` function maps each platform's field names onto `{platform, event, tool, args}` so the UI doesn't need platform-specific branches.",
       correct: true
     },
     {
       text: "The dashboard only works for one platform at a time; you must redeploy it when switching agents",
-      explain: "False. The normalizer accepts any of the three platforms simultaneously — they just arrive with different `X-Platform` values."
+      explain: "False. The normalizer accepts any of the four platforms simultaneously — they just arrive with different platform values from either the body or headers."
     },
     {
       text: "OpenCode events are incompatible with the same receiver because OpenCode plugins can't make HTTP calls",
@@ -117,7 +117,7 @@ Test your ability to wire hooks into real workflows.
     },
     {
       text: "You have to run a separate dashboard per platform, then merge the logs afterwards",
-      explain: "False. A single receiver handles all three because they can all POST JSON to the same URL."
+      explain: "False. A single receiver handles all four because they can all POST JSON to the same URL."
     }
   ]}
 />
@@ -130,7 +130,7 @@ If you got 4-5 correct, you can wire hooks into a real observability and guardra
 
 - One FastAPI + Gradio process is enough for a lightweight live dashboard
 - Hook handlers should fail fast, sanitize payloads, and avoid shell-injection patterns
-- A shared receiver works across Claude Code, Codex, and OpenCode once you normalize the event shape
+- A shared receiver works across Claude Code, Codex, OpenCode, and Pi once you normalize the event shape
 
 ## What's Next
 

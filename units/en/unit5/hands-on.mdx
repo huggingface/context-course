@@ -229,21 +229,23 @@ Make sure `~/.codex/config.toml` has:
 codex_hooks = true
 ```
 
+These examples assume `jq` and `curl` are installed and available on your `PATH`.
+
 `.codex/hooks.json`:
 
 ```json
 {
   "hooks": {
-    "PreToolUse":  [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"PreToolUse\", tool:.tool_name, args:.tool_input}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
-    "PostToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"PostToolUse\", tool:.tool_name, result:.tool_response}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
-    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"UserPromptSubmit\", args:.prompt}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
-    "Stop":            [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"Stop\", args:.last_assistant_message}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }],
-    "SessionStart":    [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"SessionStart\"}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event" }] }]
+    "PreToolUse":  [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"PreToolUse\", tool:.tool_name, args:.tool_input}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event || true" }] }],
+    "PostToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"PostToolUse\", tool:.tool_name, args:.tool_response}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event || true" }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"UserPromptSubmit\", args:.prompt}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event || true" }] }],
+    "Stop":            [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"Stop\", args:.last_assistant_message}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event || true" }] }],
+    "SessionStart":    [{ "hooks": [{ "type": "command", "command": "jq -c '{platform:\"codex\", event:\"SessionStart\"}' | curl -s --max-time 2 -X POST -H 'Content-Type: application/json' --data-binary @- http://localhost:8000/event || true" }] }]
   }
 }
 ```
 
-Each hook reshapes Codex's payload into the normalized `{platform, event, tool, args}` shape, then POSTs it. The `--max-time 2` on `curl` protects the agent from hanging if the dashboard is slow.
+Each hook reshapes Codex's payload into the normalized `{platform, event, tool, args}` shape, then POSTs it. The `--max-time 2` on `curl` protects the agent from hanging if the dashboard is slow, and `|| true` keeps logging best-effort if the dashboard is offline.
 
 Restart Codex to pick up the hooks, then try:
 
@@ -414,10 +416,22 @@ Add a second hook handler for `PreToolUse` that runs before the dashboard logger
 }
 ```
 
-Now the same `PreToolUse` event does two things: denies obviously destructive shell patterns (exit code `2` with a stderr message) and logs everything else to the dashboard. Try asking the agent to run `rm -rf ~/` — you'll see it refuse, and you'll see the guardrail event in the dashboard.
+Now the same `PreToolUse` event does two things: denies obviously destructive shell patterns (exit code `2` with a stderr message) and logs everything else to the dashboard. Create a disposable test folder:
+
+```bash
+mkdir -p /tmp/hook-guardrail-demo-delete-me
+```
+
+Then ask the agent to run:
+
+```text
+rm -rf /tmp/hook-guardrail-demo-delete-me
+```
+
+You'll see it refuse before the command executes, and you'll see the guardrail event in the dashboard.
 
 > [!TIP]
-> The equivalent OpenCode guard is a `throw new Error("blocked: dangerous shell pattern")` inside `"tool.execute.before"`. For Codex, the hook prints `jq -c '{hookSpecificOutput:{hookEventName:"PreToolUse", permissionDecision:"deny", permissionDecisionReason:"…"}}'` on stdout instead of exiting 2.
+> The equivalent OpenCode guard is a `throw new Error("blocked: dangerous shell pattern")` inside `"tool.execute.before"`. For Codex, the hook can either exit `2` with a stderr reason or print `jq -c '{hookSpecificOutput:{hookEventName:"PreToolUse", permissionDecision:"deny", permissionDecisionReason:"…"}}'` on stdout.
 
 ## Step 5: Deploy (Optional)
 
@@ -439,17 +453,20 @@ agent-activity-dashboard/
 │   └── settings.json                   # Claude Code hooks
 ├── .codex/
 │   └── hooks.json                      # Codex hooks
-└── .opencode/
-    └── plugins/
-        └── dashboard.ts                # OpenCode plugin
+├── .opencode/
+│   └── plugins/
+│       └── dashboard.ts                # OpenCode plugin
+└── .pi/
+    └── extensions/
+        └── dashboard.ts                # Pi extension
 ```
 
 ## Best Practices Demonstrated
 
-This project shows how to pick the right event for observability (`PreToolUse` and `PostToolUse`), how to collapse three different payload shapes into one normalized record, and how to use exit codes / `hookSpecificOutput` / thrown errors to enforce policy. The Gradio + FastAPI pattern — one process, two surfaces — keeps the whole thing short and makes it easy to host on Spaces.
+This project shows how to pick the right event for observability (`PreToolUse` and `PostToolUse`), how to collapse four different payload shapes into one normalized record, and how to use exit codes / `hookSpecificOutput` / thrown errors / returned values to enforce policy. The Gradio + FastAPI pattern — one process, two surfaces — keeps the whole thing short and makes it easy to host on Spaces.
 
 ## Key Takeaways
 
-A hook is only useful if its output goes somewhere. A Gradio dashboard is a fast way to turn raw hook events into something you can actually learn from: you can watch an agent work, see where it's stuck, and prove that guardrails fire. The same dashboard works across Claude Code, Codex, and OpenCode because the event shape is narrow and the normalizer is small.
+A hook is only useful if its output goes somewhere. A Gradio dashboard is a fast way to turn raw hook events into something you can actually learn from: you can watch an agent work, see where it's stuck, and prove that guardrails fire. The same dashboard works across Claude Code, Codex, OpenCode, and Pi because the event shape is narrow and the normalizer is small.
 
 Next, one more quiz to wrap up the unit.
