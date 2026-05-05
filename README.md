@@ -6,7 +6,7 @@ The Context Course teaches you **context engineering for code agents** — the s
 
 The course covers the full context engineering stack: **skills, MCP, plugins, subagents**, and even building your own agent from scratch.
 
-Sign up here (it's free) 👉 [huggingface.co/context-course](https://huggingface.co/context-course)
+Sign up here (it's free) 👉 [Follow the Context Course org on Hugging Face](https://huggingface.co/organizations/context-course/share/BcsYJAxCofWDZncivkBzafSjAcuAxOMWua)
 
 | Unit | Topic | Description |
 | ---- | ----- | ----------- |

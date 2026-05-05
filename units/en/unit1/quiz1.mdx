@@ -7,14 +7,14 @@ Test your understanding of skills and the Agent Skills Specification. Answer the
 <Question
 choices={[
   {
-    text: "A skill is a reusable package of knowledge (instructions, scripts, and references) that makes agents expert at a specific task",
-    explain: "Correct! Skills are portable, structured packages that include instructions, helper scripts, documentation, and metadata—all designed to make agents reliable at completing specific tasks.",
-    correct: true
-  },
-  {
     text: "A skill is a long prompt you paste into every conversation",
     explain: "Not quite. While skills contain similar information to detailed prompts, they're structured and reusable. The key difference is that skills work across projects and teams automatically.",
     correct: false
+  },
+  {
+    text: "A skill is a reusable package of knowledge (instructions, scripts, and references) that makes agents expert at a specific task",
+    explain: "Correct! Skills are portable, structured packages that include instructions, helper scripts, documentation, and metadata—all designed to make agents reliable at completing specific tasks.",
+    correct: true
   },
   {
     text: "A skill is a feature only available in Claude Code",
@@ -34,11 +34,6 @@ choices={[
 <Question
 choices={[
   {
-    text: "A standard format for packaging agent knowledge, including directory structure, metadata fields, and how agents discover and load skills",
-    explain: "Correct! The Agent Skills Specification (at agentskills.io) defines the portable format that allows skills to work across different agents and platforms.",
-    correct: true
-  },
-  {
     text: "The best practices for writing Python code in helper scripts",
     explain: "Not quite. While the spec does cover script storage, it doesn't define Python best practices. The spec focuses on the overall skill structure and metadata format.",
     correct: false
@@ -52,6 +47,11 @@ choices={[
     text: "Guidelines for writing instruction text in skills",
     explain: "The spec covers some guidance, but it's primarily about the overall structure (directories, metadata, file names) rather than the instruction content itself.",
     correct: false
+  },
+  {
+    text: "A standard format for packaging agent knowledge, including directory structure, metadata fields, and how agents discover and load skills",
+    explain: "Correct! The Agent Skills Specification (at agentskills.io) defines the portable format that allows skills to work across different agents and platforms.",
+    correct: true
   }
 ]}
 />
@@ -61,11 +61,6 @@ choices={[
 <Question
 choices={[
   {
-    text: "name and description",
-    explain: "Correct! The Agent Skills Specification requires two fields: 'name' (the identifier for the skill) and 'description' (what the skill does and when to use it). Other fields like license, compatibility, and metadata are optional.",
-    correct: true
-  },
-  {
     text: "name, description, version, and author",
     explain: "While version and author are useful metadata, they're optional. Only 'name' and 'description' are required by the specification.",
     correct: false
@@ -74,6 +69,11 @@ choices={[
     text: "Any metadata the creator wants to include",
     explain: "Not quite. The spec defines specific required fields (name and description) to ensure compatibility and discoverability. Without these, agents can't properly identify and load the skill.",
     correct: false
+  },
+  {
+    text: "name and description",
+    explain: "Correct! The Agent Skills Specification requires two fields: 'name' (the identifier for the skill) and 'description' (what the skill does and when to use it). Other fields like license, compatibility, and metadata are optional.",
+    correct: true
   },
   {
     text: "There is no required frontmatter—skills can be just Markdown files",
@@ -88,14 +88,14 @@ choices={[
 <Question
 choices={[
   {
-    text: "Agents read skill metadata to decide if the skill applies, then load the full SKILL.md only when needed—this is called 'progressive disclosure'",
-    explain: "Correct! The discovery process is progressive: agents first check metadata (~100 tokens), then load full skill content only when the task matches. This keeps agent startup fast.",
-    correct: true
-  },
-  {
     text: "Agents automatically load all available skills into context at startup",
     explain: "No, that would be inefficient. Agents use progressive disclosure: they load only skill metadata initially, then activate full skills when the task matches.",
     correct: false
+  },
+  {
+    text: "Agents read skill metadata to decide if the skill applies, then load the full SKILL.md only when needed—this is called 'progressive disclosure'",
+    explain: "Correct! The discovery process is progressive: agents first check metadata (~100 tokens), then load full skill content only when the task matches. This keeps agent startup fast.",
+    correct: true
   },
   {
     text: "Users must manually activate skills by typing a command like '/skill dataset-publishing'",
@@ -115,11 +115,6 @@ choices={[
 <Question
 choices={[
   {
-    text: "Many agents, including Claude Code, Codex, OpenCode, and others",
-    explain: "Correct! The Agent Skills Specification is an open standard adopted by many agents. This means a single skill works across multiple platforms.",
-    correct: true
-  },
-  {
     text: "Only Claude Code and Codex",
     explain: "No, while Claude Code and Codex are major supporters, the spec is adopted by many agents including OpenCode and other commercial tools.",
     correct: false
@@ -133,6 +128,11 @@ choices={[
     text: "Only agents from a single vendor or registry",
     explain: "No, skills can be used with agents available anywhere. Agents can load skills from local directories, team repositories, or other registries as long as they support the spec.",
     correct: false
+  },
+  {
+    text: "Many agents, including Claude Code, Codex, OpenCode, and others",
+    explain: "Correct! The Agent Skills Specification is an open standard adopted by many agents. This means a single skill works across multiple platforms.",
+    correct: true
   }
 ]}
 />
