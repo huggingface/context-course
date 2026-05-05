@@ -1,0 +1,22 @@
+--- train_orig.py	2026-03-26 14:20:53.042174510 +0000
++++ train.py	2026-03-26 14:33:30.709952262 +0000
+@@ -447,8 +447,8 @@
+ HEAD_DIM = 128          # target head dimension for attention
+ WINDOW_PATTERN = "SSSL" # sliding window pattern: L=full, S=half context
+ 
+-# Optimization (b64rep57)
+-TOTAL_BATCH_SIZE = 2**17 # ~524K tokens per optimizer step
++# Optimization
++TOTAL_BATCH_SIZE = 96 * 2048
+ EMBEDDING_LR = 0.74      # learning rate for token embeddings (Adam)
+ UNEMBEDDING_LR = 0.01  # learning rate for lm_head (Adam)
+ MATRIX_LR = 0.042        # learning rate for matrix parameters (Muon)
+@@ -461,7 +461,7 @@
+ 
+ # Model size
+ DEPTH = 8               # number of transformer layers
+-DEVICE_BATCH_SIZE = 64  # per-device batch size (reduce if OOM)
++DEVICE_BATCH_SIZE = 96  # per-device batch size (reduce if OOM)
+ 
+ # ---------------------------------------------------------------------------
+ # Setup: tokenizer, model, optimizer, dataloader

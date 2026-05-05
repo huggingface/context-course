@@ -1,0 +1,42 @@
+We want to train the small LLM `{model}` to excel at {benchmark}.
+Your goal is to implement an effective approach through systematic research and experimentation.
+
+## Objective
+
+Post-train `{model}` to achieve the highest possible score on {benchmark}.
+You can query the benchmark with the fixed `evaluate.py` script.
+
+Store your best trained model in the folder `final_model`.
+
+## Autonomy & Exploration
+
+- You have freedom in your post-training approach: supervised fine-tuning, data
+  generation, curriculum design, distillation from your own generated labels,
+  rejection sampling, reward training, optimizer changes, schedules, or other
+  methods.
+- You can do multiple iterations on the model and approach.
+- Internet access may be used for ideas, but the final model must remain the
+  local NanoChat architecture.
+
+## Information on the Setup
+
+- The project uses PyTorch, nanochat-style chat special tokens, deterministic
+  task objects, and a single local NanoChat base checkpoint.
+{gpu_info}
+- Use `--limit` on `evaluate.py` for faster iteration.
+- Query the remaining time with `bash timer.sh`.
+
+## Rules
+
+1. There will be no user interaction during a task run. Operate autonomously.
+2. You have a maximum of {num_hours} hours.
+3. Do not use {benchmark} eval examples as training targets.
+4. Do not modify `evaluate.py`.
+5. Do not modify `model.py` to change the architecture submitted for evaluation.
+6. Work only in the current task directory and subdirectories.
+7. You are not allowed to substitute a different model. Only post-train the
+   fixed `{model}` base checkpoint and submit that NanoChat architecture as
+   `final_model`.
+
+Remember: never ask for feedback during the task. Execute the most sensible
+actions and finish with a valid `final_model`.

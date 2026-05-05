@@ -1,0 +1,6 @@
+{
+  "packages": [
+    "npm:pi-subagents@0.22.0"
+  ],
+  "sessionDir": ".runtime/pi-sessions"
+}

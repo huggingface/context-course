@@ -1,0 +1,1 @@
+llama-server --hf-repo <owner/repo> --hf-file <file.gguf> -c 4096 --port 8080

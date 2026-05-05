@@ -1,0 +1,12 @@
+{
+  "packages": [
+    "npm:pi-subagents"
+  ],
+  "sessionDir": ".runtime/pi-sessions",
+  "skills": [
+    "../.agents/skills"
+  ],
+  "prompts": [
+    "prompts"
+  ]
+}

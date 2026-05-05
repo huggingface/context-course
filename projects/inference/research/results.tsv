@@ -1,0 +1,1 @@
+timestamp	experiment_id	model	server_command	base_url	runs	warmup	max_tokens	prompt_sha256	completion_tokens_mean	seconds_mean	tokens_per_second_mean	tokens_per_second_median	prompt_tokens_mean	success	notes	output_json

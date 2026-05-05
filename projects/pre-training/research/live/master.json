@@ -1,0 +1,19 @@
+{
+  "hash": "935fdbf9f4ae8a5ef5bcb76552acea2bc5801965",
+  "parent_hash": "be362ca5961675d3c7557e164b656cf0d0a0b1ae",
+  "val_bpb": 0.962777,
+  "created_at": "2026-03-18T02:37:20Z",
+  "job_id": "",
+  "campaign": "legacy-baseline",
+  "experiment_id": "legacy-seed",
+  "worker_id": "seed",
+  "hypothesis": "seed local master from current train_orig.py",
+  "status": "legacy_seed",
+  "comment": "Inductor opts + Muon buffer pre-alloc + CUDA event timing + cudagraph_mark_step_begin. Eliminates torch.stack allocation overhead in Muon optimizer.",
+  "message": "Inductor opts + Muon buffer pre-alloc + CUDA event timing + cudagraph_mark_step_begin. Eliminates torch.stack allocation overhead in Muon optimizer.",
+  "promoted": true,
+  "source": "local-results-tsv",
+  "contributor_id": "Mikeapedia",
+  "platform": "NVIDIA-H100-80GB-HBM3",
+  "patch_id": 3915
+}
