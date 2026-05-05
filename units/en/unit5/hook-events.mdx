@@ -21,14 +21,14 @@ At the abstract level, every agent session moves through the same phases:
 └─────────────────────────────────────────────┘
 ```
 
-Any hook system worth using exposes at least these five moments. The platforms in this course all do — they just use different names and offer different amounts of extra granularity.
+This is the shared mental model. The platforms in this course map onto these moments with different names, different configuration surfaces, and a few gaps or extra events.
 
 ## Events by Platform
 
 <hfoptions id="tool">
 <hfoption id="Claude Code">
 
-Claude Code has the richest event set of the three platforms. Every event uses `PascalCase` and is configured in `.claude/settings.json` (or inside a plugin's `hooks/hooks.json`).
+Claude Code has the richest event set of the four platforms. Every event uses `PascalCase` and is configured in `.claude/settings.json` (or inside a plugin's `hooks/hooks.json`).
 
 **Core lifecycle events:**
 - `SessionStart` — New session begins (fresh, resume, or compaction continuation).
@@ -36,7 +36,7 @@ Claude Code has the richest event set of the three platforms. Every event uses `
 - `UserPromptSubmit` — User submitted a prompt, before the model sees it.
 - `PreToolUse` — Before a tool call runs.
 - `PermissionRequest` — Permission prompt about to be shown.
-- `PermissionDenied` — User denied a permission.
+- `PermissionDenied` — A tool call was denied by the auto-mode classifier.
 - `PostToolUse` — After a tool call returns.
 - `PostToolUseFailure` — Tool call failed.
 - `Stop` — Turn finished.
@@ -52,7 +52,7 @@ Claude Code has the richest event set of the three platforms. Every event uses `
 - `PreCompact`, `PostCompact` — Context compaction about to happen / just finished.
 - `ConfigChange`, `Notification` — Settings changed; Claude raised a notification.
 
-Each event can match on tool name, command pattern, or permission rules. Matchers use the same permission-rule syntax you see elsewhere in Claude Code (e.g. `"matcher": "Bash"`, `"matcher": "Edit(src/**)"`).
+Matcher groups filter on event-specific fields. Tool events match tool names (for example, `"matcher": "Bash"` or `"matcher": "Edit|Write"`), while handler-level `if` conditions can use permission-rule syntax to inspect tool arguments (for example, `"if": "Bash(rm *)"`).
 
 </hfoption>
 <hfoption id="Codex">
@@ -66,15 +66,16 @@ codex_hooks = true
 
 Codex ships a smaller core set of events, all `PascalCase`, configured in `~/.codex/hooks.json` or `<repo>/.codex/hooks.json`:
 
-- `SessionStart` — Session begins. Matcher filters the `source` field: `startup` or `resume`.
+- `SessionStart` — Session begins. Matcher filters the `source` field: `startup`, `resume`, or `clear`.
 - `UserPromptSubmit` — User prompt submitted.
-- `PreToolUse` — Before a tool call. Today this only fires for the `Bash` tool.
-- `PostToolUse` — After a tool call. Today this also only fires for `Bash`.
+- `PreToolUse` — Before a supported tool call, including `Bash`, `apply_patch` (`Edit|Write` aliases), and MCP tools.
+- `PermissionRequest` — Permission prompt about to be shown.
+- `PostToolUse` — After a supported tool call, including `Bash`, `apply_patch` (`Edit|Write` aliases), and MCP tools.
 - `Stop` — Turn finished.
 
-The Codex event set is intentionally close to the classic Claude Code lifecycle, which makes cross-agent hook scripts easier to share — but note the current Bash-only scope on the tool events.
+The Codex event set is intentionally close to the classic Claude Code lifecycle, which makes cross-agent hook scripts easier to share — but note that the tool-event surface is still narrower than Claude Code's and does not intercept every tool path.
 
-Matchers are regexes evaluated against `tool_name` for tool events or `source` for `SessionStart`. Windows is not yet supported.
+Matchers are regexes evaluated against `tool_name` for tool events or `source` for `SessionStart`. Codex hooks are changing quickly, so small details may differ between Codex versions. The examples below show the event set used in this course.
 
 </hfoption>
 <hfoption id="OpenCode">
@@ -158,7 +159,7 @@ Command hooks receive JSON on stdin. Common fields:
 }
 ```
 
-Turn-scoped events add `turn_id`. Tool events add `tool_name`, `tool_use_id`, and `tool_input.command`. `PostToolUse` also includes `tool_response`. `UserPromptSubmit` adds `prompt`. `Stop` adds `stop_hook_active` and `last_assistant_message`.
+Turn-scoped events add `turn_id`. Tool events add `tool_name`, `tool_use_id`, and `tool_input`; for `Bash` and `apply_patch`, the command is in `tool_input.command`. `PostToolUse` also includes `tool_response`. `UserPromptSubmit` adds `prompt`. `Stop` adds `stop_hook_active` and `last_assistant_message`.
 
 </hfoption>
 <hfoption id="OpenCode">
@@ -244,15 +245,15 @@ Also supported: top-level `continue`, `stopReason`, `suppressOutput`, `systemMes
 - `0` — success.
 - `2` with stderr message — block or continue per event.
 
-**JSON on stdout** mirrors Claude Code's shape:
+**JSON on stdout** uses a shape similar to Claude Code's:
 
 ```json
 {
-  "continue": true,
   "systemMessage": "Injected context for the model",
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",
-    "permissionDecision": "deny"
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "No network access in this project"
   }
 }
 ```

@@ -1,6 +1,6 @@
 # Quiz 1: Hook Fundamentals
 
-Test your understanding of hooks, the events they cover, and how they differ across Claude Code, Codex, and OpenCode.
+Test your understanding of hooks, the events they cover, and how they differ across Claude Code, Codex, OpenCode, and Pi.
 
 ## Question 1: What is a hook?
 
@@ -31,21 +31,21 @@ Test your understanding of hooks, the events they cover, and how they differ acr
 <Question
   choices={[
     {
-      text: "Claude Code uses PascalCase JSON events (PreToolUse, Stop); Codex uses a smaller PascalCase JSON set behind a feature flag; OpenCode uses TS/JS plugin modules with keys like 'tool.execute.before'",
-      explain: "Correct! The three platforms share the same lifecycle but differ in syntax and surface.",
+      text: "Claude Code uses PascalCase JSON events (PreToolUse, Stop); Codex uses a smaller PascalCase JSON set behind a feature flag; OpenCode uses TS/JS plugin modules; Pi uses TS/JS extensions with lower_snake_case events like tool_call",
+      explain: "Correct! The four platforms share the same lifecycle but differ in syntax and surface.",
       correct: true
     },
     {
-      text: "All three platforms use the exact same settings.json format for hook events",
-      explain: "False. Only Claude Code uses settings.json. Codex uses hooks.json, and OpenCode uses code-first plugins."
+      text: "All four platforms use the exact same settings.json format for hook events",
+      explain: "False. Only Claude Code uses settings.json. Codex uses hooks.json, OpenCode uses code-first plugins, and Pi uses extensions."
     },
     {
       text: "OpenCode exposes hooks through JSON configuration, like Claude Code",
       explain: "False. OpenCode has no JSON event config — plugins are TS/JS modules exporting hook handlers as object keys."
     },
     {
-      text: "Only Claude Code supports HTTP hooks; Codex and OpenCode only support shell commands",
-      explain: "Close but not quite. Claude Code's 'http' handler type is unique, but Codex command hooks can call curl, and OpenCode plugins can call fetch() — both achieve HTTP delivery."
+      text: "Only Claude Code supports HTTP hooks; Codex, OpenCode, and Pi cannot send events to an HTTP receiver",
+      explain: "Close but not quite. Claude Code's 'http' handler type is unique, but Codex command hooks can call curl, and OpenCode and Pi extensions can call fetch() — all can deliver events to HTTP."
     }
   ]}
 />
@@ -60,7 +60,7 @@ Test your understanding of hooks, the events they cover, and how they differ acr
     },
     {
       text: "UserPromptSubmit fires when the user submits a prompt, before the model sees it — ideal for injecting extra context",
-      explain: "Correct! This is the right event for prepending or modifying the prompt, and both Claude Code and Codex support it.",
+      explain: "Correct! This is the right event for prepending or modifying the prompt. Claude Code and Codex support UserPromptSubmit directly; Pi's nearest equivalent is before_agent_start.",
       correct: true
     },
     {
@@ -68,8 +68,8 @@ Test your understanding of hooks, the events they cover, and how they differ acr
       explain: "False. Stop fires at the end of each turn; SessionEnd (Claude Code) is the session-level event."
     },
     {
-      text: "PostToolUse in Codex fires for every tool, just like in Claude Code",
-      explain: "False. Codex PreToolUse and PostToolUse currently fire for the Bash tool only. Claude Code fires them for every tool."
+      text: "PostToolUse in Codex fires for every possible tool path, just like in Claude Code",
+      explain: "False. Codex PreToolUse and PostToolUse cover supported tool calls such as Bash, apply_patch, and MCP tools, but the surface is narrower than Claude Code's."
     }
   ]}
 />
@@ -93,7 +93,7 @@ Test your understanding of hooks, the events they cover, and how they differ acr
     },
     {
       text: "Hooks cannot block or modify tool calls; they are observe-only",
-      explain: "False. All three platforms support influencing the agent: Claude Code and Codex via exit codes or JSON output, OpenCode via mutating `output` or throwing."
+      explain: "False. All four platforms support influencing the agent: Claude Code and Codex via exit codes or JSON output, OpenCode via mutating `output` or throwing, and Pi via returned values or event mutation."
     }
   ]}
 />
@@ -131,7 +131,7 @@ If you got 4-5 correct, you understand the core hook model well enough to start 
 ## Key Takeaways
 
 - Hooks are deterministic runtime handlers, not prompts or plugins
-- Claude Code, Codex, and OpenCode expose similar lifecycle moments with different configuration surfaces
+- Claude Code, Codex, OpenCode, and Pi expose similar lifecycle moments with different configuration surfaces
 - Hooks are the right tool when behavior must happen every time rather than relying on the model to remember
 
 ## Next Steps
