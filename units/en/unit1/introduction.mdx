@@ -27,7 +27,18 @@ They typically exist in the form of a directory that contains a `SKILL.md` markd
 
 ## From Prompts to Portable Knowledge
 
-Skills differ from long prompts in one key way: they are structured, reusable, and discoverable. They live beyond a single conversation and can be loaded only when relevant. The next lesson goes deeper on this.
+Skills differ from long prompts in one key way: they are structured, reusable, and discoverable.
+Unlike a one-time prompt, a Skill is a reusable capability module that can include instructions, references, and scripts that an agent loads dynamically.
+
+This creates a layered context system where prompts, system prompts, and skills each play different roles.
+
+| Layer | Scope | Purpose | Persistence | Controlled By |
+|---|---|---|---|---|
+| **System Prompt** | Global | Defines the agent’s overall behavior, rules, and personality | Always active during runtime | Developer |
+| **Skill** | Domain capability | Provides reusable task knowledge, workflows, scripts, and references | Loaded dynamically when relevant | Developer |
+| **Prompt** | Task request | Tells the agent what to do for a specific interaction | Temporary / one-time | User |
+
+The next lesson goes deeper into how Skills are structured, discovered, and loaded by agents.
 
 ## What You'll Learn in Unit 1
 
