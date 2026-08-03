@@ -14,7 +14,7 @@ With the architecture in hand, this lesson builds real servers — first with th
 FastMCP is the easiest way to build MCP servers. Install it with:
 
 ```bash
-pip install "mcp[cli]"
+pip install fastmcp
 ```
 
 The `mcp` package includes the FastMCP SDK; the `[cli]` extra adds the `mcp` command used for testing further down.
@@ -24,7 +24,7 @@ The `mcp` package includes the FastMCP SDK; the `[cli]` extra adds the `mcp` com
 Let's build a simple calculator server. Create `calculator_server.py`:
 
 ```python
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 mcp = FastMCP("calculator")
 
@@ -61,7 +61,7 @@ The server listens on stdin/stdout for JSON-RPC requests.
 Let's build a tool that reads and analyzes files:
 
 ```python
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 import os
 
 mcp = FastMCP("file-analyzer")
@@ -130,7 +130,7 @@ Key features:
 Resources provide read-only data. Use the `@mcp.resource()` decorator:
 
 ```python
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 mcp = FastMCP("documentation")
 
@@ -197,7 +197,7 @@ Resources:
 Prompts are instruction templates that guide agent behavior:
 
 ```python
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 mcp = FastMCP("prompts-server")
 
@@ -241,7 +241,7 @@ if __name__ == "__main__":
 Handle errors gracefully by returning error messages:
 
 ```python
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 mcp = FastMCP("safe-operations")
 
@@ -308,7 +308,7 @@ The official inspector is a web UI that connects to any MCP server and lets you 
 Using the `mcp` CLI from `mcp[cli]`:
 
 ```bash
-mcp dev calculator_server.py
+fastmcp dev inspector calculator_server.py
 ```
 
 Or run the inspector directly with npx:
