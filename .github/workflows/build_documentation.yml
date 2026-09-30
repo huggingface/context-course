@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@main
+    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@61704e23fa97c0502ce5355c489c6bec4194bff1  # main
     with:
       commit_sha: ${{ github.sha }}
       package: context-course
