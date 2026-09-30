@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  # Lets a maintainer republish the course without a dummy commit, e.g. after
+  # an upstream doc-builder fix that only reaches readers on a rebuild.
+  workflow_dispatch:
 
 jobs:
   build:
