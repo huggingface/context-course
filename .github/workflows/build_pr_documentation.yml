@@ -17,4 +17,4 @@ jobs:
       package_name: context-course
       path_to_docs: context-course/units/
       additional_args: --not_python_module
-      languages: en 
+      languages: en zh-CN

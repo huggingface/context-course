@@ -1,0 +1,163 @@
+![banner](https://huggingface.co/context-course/images/resolve/main/banner.png)
+
+# 欢迎学习上下文课程
+
+本课程介绍面向 AI 代码智能体的**上下文工程**：以合适的结构组织知识，使智能体能够在需要时高效找到所需信息，从而改善生成结果。
+
+## 代码智能体的关键技能
+
+Claude Code、Codex 和 OpenCode 都面临同一项限制：智能体能达到怎样的表现，取决于它所获得的上下文。良好的上下文意味着少走弯路、代码差异更清晰、返工更少。
+
+在六个单元中，将学习如何构建可移植的技能、通过模型上下文协议（MCP）接入工具、将这些组成部分封装为插件、协调子智能体处理大型任务，以及研究最小智能体循环的底层工作原理。
+
+## 学习内容
+
+本课程包含 6 个核心单元：
+
+| 单元 | 主题 | 学习内容 |
+|------|------|----------|
+| **单元 0** | 入门 | 课程概览、工具设置与前置要求 |
+| **单元 1** | 智能体技能 | 技能是什么、如何构建和共享技能，以及智能体如何加载技能 |
+| **单元 2** | 模型上下文协议 | MCP 原理，以及如何将工具和 API 接入智能体 |
+| **单元 3** | 插件 | 构建插件和设计智能体工作流 |
+| **单元 4** | 子智能体 | 创建专用智能体和多智能体模式 |
+| **单元 5** | Hook | 观察和拦截智能体生命周期事件，并实现自动化 |
+| **单元 6** | 附加单元：Nano Harness | 从头构建最小智能体循环 |
+
+## 前置要求
+
+开始学习前，应掌握 Python 基础知识（变量、函数、循环和文件 I/O），能够通过命令行切换目录和运行脚本，并拥有 Hugging Face 账号（[huggingface.co](https://huggingface.co)）。还需要安装并配置至少一个代码智能体，具体方法见下方的工具设置部分。
+
+## 工具设置
+
+本课程适用于多种代码智能体。至少选择一种，以便跟随课程操作：
+
+> [!NOTE]
+> 本版课程以 Claude Code、Codex 和 OpenCode 作为参考智能体。如果使用 Cursor 或 GitHub Copilot，同样的原理仍然适用，但它们的 MCP 和扩展功能交互方式存在较大差异，因此本课程不提供分步说明。
+
+<hfoptions id="tool">
+
+<hfoption id="Claude Code">
+
+Claude Code 是 Anthropic 的官方代码智能体，可通过 Web、桌面应用或 CLI 使用。
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+**开始使用**：访问 [claude.ai/code](https://claude.ai/code)，在 Web 端使用 Claude Code；也可以通过上面的命令安装 CLI，然后在任意项目目录中运行 `claude`。首次使用时会提示登录。
+
+</hfoption>
+
+<hfoption id="Codex">
+
+Codex 是 OpenAI 推出的代码智能体，具备多智能体能力。
+
+```bash
+npm install -g @openai/codex
+```
+
+**开始使用**：运行 `codex`，然后选择 **Sign in with ChatGPT**。可以使用付费 ChatGPT 套餐（Plus、Pro、Business、Edu 或 Enterprise）完成认证，也可以使用 OpenAI API 密钥。
+
+</hfoption>
+
+<hfoption id="OpenCode">
+
+OpenCode 是来自 [opencode.ai](https://opencode.ai) 的开源代码智能体：
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+也可以通过 npm 安装：
+
+```bash
+npm install -g opencode-ai
+```
+
+**开始使用**：在任意项目目录中运行 `opencode`。OpenCode 支持多种 LLM 提供商，首次启动时可配置首选提供商。
+
+</hfoption>
+
+<hfoption id="Pi">
+
+Pi 是一个精简的终端智能体运行框架，可通过技能、提示模板和 TypeScript 扩展进行定制。
+
+```bash
+npm install -g @mariozechner/pi-coding-agent
+```
+
+**开始使用**：在任意项目目录中运行 `pi`。运行 `/login` 可使用支持订阅认证的提供商；也可以在启动前导出 `ANTHROPIC_API_KEY` 等 API 密钥。
+
+</hfoption>
+
+</hfoptions>
+
+## 课程导航
+
+### 建议进度
+
+建议每周学习一个单元，每个单元约需 2–3 小时。上下文工程重视实践，因此应实际构建示例，而不是只浏览内容。
+
+### 学习形式
+
+每个单元都包含概念讲解、可运行代码、实践项目和简短测验。
+
+### 自定义学习路线
+
+建议按顺序学习各单元，也可以根据需要调整：
+- **只学习技能？** 从单元 1 开始，需要时再回顾 MCP
+- **为团队构建插件？** 从单元 3 开始
+- **关注多智能体系统？** 从单元 4 开始，并将单元 1–2 作为参考
+- **使用开源工具跟练？** 所有课程都在 Claude Code 和 Codex 之外提供 OpenCode 示例
+
+## 认证
+
+本课程提供两个级别的认证：
+
+### 上下文基础证书
+
+该证书表明已理解上下文工程的核心概念。单元 1–2 的测验达到 70% 或更高分数，即可在 2–3 周内获得证书。证书可以分享，并会显示在 Hugging Face 个人资料中。
+
+### 上下文工程证书
+
+该证书表明已掌握各个领域的上下文工程知识。单元 1–5 的所有测验均达到 70% 或更高分数，并完成结课项目，即可在 5–8 周内获得证书。证书会显示在 Hugging Face 个人资料中，并附带项目展示。
+
+> [!TIP]
+> 结课项目将在课程直播中公布。关注 [Hugging Face 上的 Context Course 组织](https://huggingface.co/organizations/context-course/share/BcsYJAxCofWDZncivkBzafSjAcuAxOMWua) 以获取更新。
+
+两项证书均可证明持有者能够构建和维护智能体技能、通过 MCP 连接外部工具、设计多智能体系统，以及优化上下文，尽可能提高智能体性能。
+
+## 课程结构
+
+每个单元都采用相同结构：简介、概念讲解、实践演练、动手项目和测验。课程全程提供起始模板和可直接复制使用的代码，从而将时间用于理解核心概念，而不是编写样板代码。
+
+## 讲师介绍
+
+**Ben Burtenshaw** — Hugging Face 机器学习工程师
+
+Ben 专注于 LLM 应用，重点研究后训练和智能体方法。他在 Hugging Face 负责推进智能体最佳实践与上下文工程相关工作。
+
+**Atin Kumar Singh** — Data Pigeon 机器学习研究员兼创始工程师
+
+Atin 在加州大学戴维斯分校 DARE 实验室研究世界模型和机器人技术。他是 AI 驱动的电动汽车充电平台 Data Pigeon 的创始工程师，其他工作还涉及应用机器学习和 AI 智能体基础设施。
+
+**Maya Nielan**
+
+Maya 参与编写了本课程的 Claude Code 相关部分。
+
+**Ryan Whitehead**
+
+Ryan 参与编写了本课程的 Claude Code 相关部分。
+
+## 参与社区
+
+共同学习效果更好。可通过以下方式参与讨论：
+
+- **Discord**：[discord.gg/huggingface](https://discord.gg/huggingface)
+- **分享学习成果**：在社交媒体上添加 #ContextCourse 标签
+- **报告问题**：在 GitHub Issues 中报告课程内容错误
+
+## 后续步骤
+
+安装上述至少一个智能体，确认满足前置要求，然后前往单元 1，开始学习智能体技能。
