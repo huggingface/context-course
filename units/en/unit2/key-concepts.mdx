@@ -274,7 +274,7 @@ The agent's client can communicate with multiple servers simultaneously and comp
 |--------|-------|-----------|---------|
 | **Control** | Model-controlled | Application-controlled | User-controlled |
 | **Mutability** | Can modify state | Read-only | Static |
-| **Invocation** | Agent decides when | Agent requests by URI | Host provides |
+| **Invocation** | Called via `tools/call` with a tool name and optional arguments | Read via `resources/read` with a resource URI | Retrieved via `prompts/get` with a prompt name and optional arguments |
 | **Use Case** | Actions, functions | Data, context | Instructions |
 | **Example** | Call an API | Read a file | Code review template |
 
