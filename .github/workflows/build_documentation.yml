@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@main
+    uses: huggingface/doc-builder/.github/workflows/build_main_documentation.yml@7e31a94f70994bd73656a81690b13aaed439e798 # includes fix(kit): preserve /learn course navigation
     with:
       commit_sha: ${{ github.sha }}
       package: context-course
