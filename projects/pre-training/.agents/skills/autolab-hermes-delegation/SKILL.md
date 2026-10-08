@@ -1,6 +1,6 @@
 ---
 name: autolab-hermes-delegation
-description: "Use Hermes delegate_task cleanly in this repo for planner, reviewer, researcher, reporter, experiment-worker, and memory-keeper roles."
+description: "Delegates Autolab subtasks to specialized agent roles (planner, reviewer, researcher, reporter, experiment-worker, memory-keeper) via Hermes delegate_task, managing task handoffs and result aggregation. Use when orchestrating multi-agent Autolab workflows, delegating experiment planning or review, assigning research tasks, coordinating parallel workers, or splitting work across specialized agents."
 version: 1.0.0
 metadata:
   hermes:
@@ -126,12 +126,14 @@ Do not edit repo markdown or code.""",
 3. Paste the emitted `delegate_task(...)` block into the parent session.
 4. The child must:
    - `cd` into the reserved worktree
+   - **Verify worktree is clean** — `git status --porcelain` must be empty before editing
    - export `AUTOLAB_CAMPAIGN`, `AUTOLAB_EXPERIMENT_ID`, `AUTOLAB_WORKER_ID`, `AUTOLAB_HYPOTHESIS`, `AUTOLAB_LOG_PATH`, and `AUTOLAB_EXPERIMENT_NOTE`
    - refresh local master
    - edit `train.py` only
    - run one managed experiment
-   - parse the metric
+   - **Validate metric output** — confirm `val_bpb` is present and numeric before proceeding
    - run `submit_patch.py`
+   - **If submission fails**: check the error output, verify the worktree diff is a single-change patch, and retry once before reporting failure to the parent
 
 ## Memory-Keeper Template
 
