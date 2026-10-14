@@ -103,7 +103,7 @@ cp -R /local/path/to/text-processor-plugin ~/.codex/plugins/text-processor-plugi
 
 Then edit or create `~/.agents/plugins/marketplace.json`:
 
-Because `source.path` is resolved relative to `~/.agents/plugins/marketplace.json`, the path needs to walk up from `~/.agents/plugins/` before pointing at `~/.codex/plugins/`.
+Because `source.path` is resolved relative to the marketplace root, the path below points from your home directory to `~/.codex/plugins/`.
 
 ```json
 {
@@ -116,7 +116,7 @@ Because `source.path` is resolved relative to `~/.agents/plugins/marketplace.jso
       "name": "text-processor-plugin",
       "source": {
         "source": "local",
-        "path": "../../.codex/plugins/text-processor-plugin"
+        "path": "./.codex/plugins/text-processor-plugin"
       },
       "policy": {
         "installation": "AVAILABLE",
