@@ -212,8 +212,11 @@ for i, chunk in enumerate(chunks):
 df.columns = df.columns.str.lower().str.replace(' ', '_')
 print(df.columns)
 ```
+````
 
-## Helper Scripts
+## Step 3: Add Helper Scripts
+
+Add reusable scripts for validating datasets and generating reports:
 
 ### scripts/validate_dataset.py
 
@@ -360,9 +363,8 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-````
 
-## Step 3: Add Documentation
+## Step 4: Add Documentation
 
 Create references/ directory with examples:
 
@@ -402,7 +404,7 @@ print(report)
 ```
 ````
 
-## Step 4: Create requirements.txt
+## Step 5: Create requirements.txt
 
 List your dependencies:
 
@@ -412,7 +414,7 @@ datasets>=2.0.0
 numpy>=1.20.0
 ```
 
-## Step 5: Test Your Skill
+## Step 6: Test Your Skill
 
 Before you rely on it in real work, test it thoroughly:
 
@@ -440,7 +442,7 @@ Expected output shows:
 - Duplicate rows (if any)
 - Quality recommendations
 
-## Step 6: Optional Version Control Hygiene
+## Step 9: Optional Version Control Hygiene
 
 This part is not specific to skills, but it is worth doing if you plan to keep iterating on the skill or share it with others:
 
@@ -452,7 +454,7 @@ git commit -m "Initial dataset validation skill"
 
 Treat the skill directory like any other small software project: keep a `.gitignore`, add a `LICENSE` when you're ready to publish, and use version control so instruction changes are easy to review.
 
-## Step 7: Test with Your Agent
+## Step 8: Test with Your Agent
 
 For local iteration, symlink the skill into your agent's skills directory so edits take effect immediately. Copying still works, but symlinks make mid-session iteration much easier.
 
@@ -544,7 +546,7 @@ Your agent should:
 3. Load the SKILL.md instructions into context
 4. Execute helper scripts as needed
 
-## Step 8: Debug Activation and Tighten the Description
+## Step 9: Debug Activation and Tighten the Description
 
 Now test whether the skill fires reliably:
 
